@@ -1,0 +1,12 @@
+# React
+turgo_frontend/node_modules
+
+# Laravel
+turgo_backend/vendor
+turgo_backend/.env
+
+# Logs
+*.log
+
+# OS
+.DS_Store
