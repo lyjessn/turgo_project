@@ -11,8 +11,6 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/getRole', [AuthController::class, 'getRole']);
-    Route::post('/update-fcm-token', [AuthController::class, 'updateFcmToken']);
-    Route::post('/remove-fcm-token', [AuthController::class, 'removeToken']);
     Route::get('/getUserData', [AuthController::class, 'getUserData']);
 });
 
