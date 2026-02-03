@@ -14,7 +14,7 @@ class CekRole
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      * @param  string  $role  Role yang diizinkan mengakses route ini
      */
-    public function handle(Request $request, Closure $next, $role): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
         $user = $request->user();
 
@@ -25,13 +25,14 @@ class CekRole
             ], 401);
         }
 
-        if (!$user->role || $user->role->name != $role) {
+        if (!$user->role || !in_array($user->role->name, $roles)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Akses ditolak: Role tidak sesuai: ' . ($user->role->name ?? 'tidak ada role') . ', harus ' . $role,
+                'message' => 'Akses ditolak: Role tidak sesuai: ' . ($user->role->name ?? 'tidak ada role') . ', harus salah satu dari: ' . implode(', ', $roles),
             ], 403);
         }
 
         return $next($request);
     }
+
 }

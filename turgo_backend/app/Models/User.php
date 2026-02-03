@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'user'; // karena tabel kamu namanya user, bukan users
+    protected $table = 'user';
 
     protected $fillable = [
         'username', 'email', 'password', 'nama_lengkap', 'nomor_telepon', 'role_id', 'foto_profil', 'is_aktif'
