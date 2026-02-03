@@ -1,12 +1,21 @@
+<?php
+
+use App\Http\Controllers\UmkmController;
+use App\Models\Homestay;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\KebudayaanController;
+use App\Http\Controllers\HomestayController;
+use App\Http\Controllers\PaketWisataController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Middleware\CekRole;
 
-Route::post('/register', [AuthController::class, 'register']);
 
-Route::middleware('guest')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-});
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -14,30 +23,35 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/getUserData', [AuthController::class, 'getUserData']);
 });
 
+// ADMIN & OWNER
+Route::middleware(['auth:sanctum', 'cekrole:owner,admin'])->group(function () {
+    Route::post('/umkm/{id}/aktifkan', [UmkmController::class, 'aktifkan']);
+    Route::post('/umkm/{id}/nonaktifkan', [UmkmController::class, 'nonaktifkan']);
+});
+
+// OWNER
+Route::middleware(['auth:sanctum', 'cekrole:owner'])->group(function () {
+
+    Route::delete('/kebudayaan/{id}', [KebudayaanController::class, 'destroy']);
+    Route::delete('/paket-wisata/{id}', [PaketWisataController::class, 'destroy']);
+    Route::delete('/homestay/{id}', [HomestayController::class, 'destroy']);
+    Route::delete('/umkm/{id}', [UmkmController::class, 'destroy']);
+  
+});
+
+// ADMIN ONLY
 Route::middleware(['auth:sanctum', 'cekrole:admin'])->group(function () {
-    // Route khusus admin
-    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
-    // Tambah route admin lainnya
+    Route::post('/registerByAdmin', [AuthController::class, 'registerByAdmin']);
 });
 
-Route::middleware(['auth:sanctum', 'cekrole:tour_guide'])->group(function () {
-    // Route khusus tour_guide
-    Route::get('/tourguide/profile', [TourGuideController::class, 'profile']);
-    // Tambah route tour_guide lainnya
+// ADMIN & PEMILIK UMKM
+Route::middleware(['auth:sanctum', 'cekrole:admin, umkm'])->group(function () {
+    Route::post('/umkm', [UmkmController::class, 'store']);
+    Route::put('/umkm/{id}', [UmkmController::class, 'update']);
 });
 
-Route::middleware(['auth:sanctum', 'cekrole:pelaku_wisata'])->group(function () {
-    // Route khusus pelaku_wisata
-    Route::get('/pelaku_wisata/dashboard', [PelakuWisataController::class, 'dashboard']);
-    // Tambah route pelaku_wisata lainnya
-});
-
+// PEMILIK UMKM ONLY
 Route::middleware(['auth:sanctum', 'cekrole:umkm'])->group(function () {
-    // Route khusus umkm
-    Route::get('/umkm/dashboard', [UmkmController::class, 'dashboard']);
-    // Tambah route umkm lainnya
+    Route::post('/umkm/{id}/buka', [UmkmController::class, 'buka']);
+    Route::post('/umkm/{id}/tutup', [UmkmController::class, 'tutup']);
 });
-
-// Route publik
-Route::get('/paket-wisata', [PaketWisataController::class, 'index']);
-Route::get('/homestay', [HomestayController::class, 'index']);
