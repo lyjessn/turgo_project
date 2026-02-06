@@ -7,7 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Homestay extends Model
 {
     protected $fillable = [
-        'nama', 'id_pemilik', 'lokasi', 'rating', 'is_aktif', 'url_thumbnail', 'check_in', 'check_out', 'rokok', 'peliharaan'
+        'nama',
+        'id_pemilik',
+        'lokasi',
+        'rating',
+        'is_aktif',
+        'url_thumbnail',
+        'check_in',
+        'check_out',
+        'rokok',
+        'peliharaan'
     ];
 
     public function pemilik()

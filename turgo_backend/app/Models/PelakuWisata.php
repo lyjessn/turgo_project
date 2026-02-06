@@ -6,8 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class PelakuWisata extends Model
 {
+    protected $table = 'pelaku_wisata';
     protected $fillable = [
-        'user_id', 'nama_usaha', 'deskripsi', 'alamat', 'nomor_telepon', 'foto_profil', 'is_aktif'
+        'user_id',
+        'nama_usaha',
+        'deskripsi',
+        'lokasi',
+        'nomor_telepon',
+        'foto_profil',
+        'is_aktif'
     ];
 
     public function user()

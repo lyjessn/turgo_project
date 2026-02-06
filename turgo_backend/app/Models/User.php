@@ -14,7 +14,15 @@ class User extends Authenticatable
     protected $table = 'user';
 
     protected $fillable = [
-        'username', 'email', 'password', 'nama_lengkap', 'nomor_telepon', 'role_id', 'foto_profil', 'is_aktif'
+        'username',
+        'email',
+        'password',
+        'nama_lengkap',
+        'nomor_telepon',
+        'role_id',
+        'foto_profil',
+        'is_aktif',
+        'profile_completed'
     ];
 
     protected $hidden = ['password'];
@@ -37,6 +45,13 @@ class User extends Authenticatable
     public function umkm()
     {
         return $this->hasOne(Umkm::class);
+    }
+
+        public function paketWisatas()
+    {
+        return $this->belongsToMany(PaketWisata::class, 'paket_wisata_participants')
+                    ->withPivot('persentase')
+                    ->withTimestamps();
     }
 
     public function homestays()

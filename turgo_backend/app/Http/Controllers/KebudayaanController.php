@@ -3,111 +3,150 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+
 use App\Models\Kebudayaan;
-use Carbon\Carbon;
 
 class KebudayaanController extends Controller
 {
     public function index()
     {
-        $kebudayaan = Kebudayaan::orderBy('id')->get();
+        $data = Kebudayaan::where('is_aktif', 1)
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json([
-            'message' => 'List kebudayaan berhasil diambil',
-            'data' => $kebudayaan,
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
+    public function show($id)
+    {
+        $data = Kebudayaan::where('is_aktif', 1)->find($id);
+
+        if (!$data) {
+            return response()->json([
+                'message' => 'Kebudayaan tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
         ]);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
-            'foto' => 'required|image|mimes:jpg,png,jpeg|max:2048',
-            'is_aktif' => 'boolean',
-        ]);
+        $user = $request->user();
 
-        $fotoPath = null;
-        if ($request->hasFile('foto')) {
-            $fileName = strtolower(str_replace(' ', '_', $validated['nama'])) . '.' . $request->file('foto')->getClientOriginalExtension();
-            $fotoPath = $request->file('foto')->storeAs('kebudayaan', $fileName, 'public');
+        if (!in_array($user->role->name, ['admin','owner'])) {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $kebudayaan = Kebudayaan::create([
-            'nama' => $validated['nama'],
-            'deskripsi' => $validated['deskripsi'],
-            'foto' => $fotoPath,
-            'is_aktif' => $validated['is_aktif'] ?? true,
-            'created_at' => Carbon::now('Asia/Jakarta'),
-            'updated_at' => Carbon::now('Asia/Jakarta'),
+        $validator = Validator::make($request->all(), [
+            'nama'      => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'foto'      => 'required|image|mimes:jpg,jpeg,png|max:2048'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $fotoPath = $request->file('foto')
+            ->store('kebudayaan', 'public');
+
+        $data = Kebudayaan::create([
+            'nama'      => $request->nama,
+            'deskripsi' => $request->deskripsi,
+            'foto'      => $fotoPath,
+            'is_aktif'  => 1
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Kebudayaan berhasil ditambahkan',
-            'data' => $kebudayaan,
+            'data' => $data
         ], 201);
     }
 
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'nama' => 'nullable|string|max:255',
+        $user = $request->user();
+        $data = Kebudayaan::find($id);
+
+        if (!$data) {
+            return response()->json(['message' => 'Kebudayaan tidak ditemukan'], 404);
+        }
+
+        if (!in_array($user->role->name, ['admin','owner'])) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'nama'      => 'nullable|string|max:255',
             'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'is_aktif' => 'nullable|boolean',
+            'foto'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'is_aktif'  => 'nullable|boolean'
         ]);
 
-        $kebudayaan = Kebudayaan::findOrFail($id);
-        $kebudayaan->fill($validated);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         if ($request->hasFile('foto')) {
-            if ($kebudayaan->foto && Storage::disk('public')->exists($kebudayaan->foto)) {
-                Storage::disk('public')->delete($kebudayaan->foto);
+            if ($data->foto && Storage::disk('public')->exists($data->foto)) {
+                Storage::disk('public')->delete($data->foto);
             }
-            $fileName = strtolower(str_replace(' ', '_', $kebudayaan->nama)) . '.' . $request->file('foto')->getClientOriginalExtension();
-            $fotoPath = $request->file('foto')->storeAs('kebudayaan', $fileName, 'public');
-            $kebudayaan->foto = $fotoPath;
+
+            $data->foto = $request->file('foto')
+                ->store('kebudayaan', 'public');
         }
 
-        $kebudayaan->updated_at = Carbon::now('Asia/Jakarta');
-        $kebudayaan->save();
+        $data->update($request->only([
+            'nama',
+            'deskripsi',
+            'is_aktif'
+        ]));
 
         return response()->json([
-            'message' => 'Kebudayaan berhasil diperbarui',
-            'data' => $kebudayaan,
+            'success' => true,
+            'message' => 'Kebudayaan berhasil diupdate',
+            'data' => $data
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $kebudayaan = Kebudayaan::findOrFail($id);
+        $user = $request->user();
+        $data = Kebudayaan::find($id);
 
-        if ($kebudayaan->foto && Storage::disk('public')->exists($kebudayaan->foto)) {
-            Storage::disk('public')->delete($kebudayaan->foto);
+        if (!$data) {
+            return response()->json(['message' => 'Kebudayaan tidak ditemukan'], 404);
         }
 
-        $kebudayaan->delete();
-
-        return response()->json(['message' => 'Kebudayaan berhasil dihapus']);
-    }
-
-    public function show($id)
-    {
-        try {
-            $kebudayaan = Kebudayaan::findOrFail($id);
-            return response()->json([
-                'status' => true,
-                'message' => 'Data kebudayaan',
-                'data' => $kebudayaan,
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('GetKebudayaanById Error: ' . $e->getMessage());
-            return response()->json([
-                'status' => false,
-                'message' => 'Kebudayaan tidak ditemukan',
-            ], 404);
+        if (!in_array($user->role->name, ['admin','owner'])) {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
+
+        if ($data->foto && Storage::disk('public')->exists($data->foto)) {
+            Storage::disk('public')->delete($data->foto);
+        }
+
+        $data->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kebudayaan berhasil dihapus'
+        ]);
     }
 }
