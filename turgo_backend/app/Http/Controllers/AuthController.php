@@ -88,23 +88,15 @@ class AuthController extends Controller
             'foto_profil'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        if ($request->role_id == 1) {
-            return response()->json([
-                'message' => 'Admin tidak boleh membuat akun Owner'
-            ], 403);
-        }
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => $validator->errors()->first()
-            ], 400);
-        }
+        return response()->json([
+        'success' => false,
+        'errors' => $validator->errors()
+        ], 422);
 
         $fotoPath = null;
 
         if ($request->hasFile('foto_profil')) {
-            $namaFile = strtolower(str_replace(' ', '_', $request->username))
-                . '.' . $request->file('foto_profil')->extension();
+            $namaFile = $namaFile = time().'_'.$request->username.'.'.$ext;
 
             $fotoPath = $request->file('foto_profil')
                 ->storeAs('foto_profil', $namaFile, 'public');
@@ -121,12 +113,20 @@ class AuthController extends Controller
             'foto_profil'   => $fotoPath,
 
             'is_aktif'      => 1,
+            'profile_completed' => 0
         ]);
 
         return response()->json([
             'message' => 'User berhasil dibuat oleh admin',
-            'user'    => $user
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role_id' => $user->role_id,
+                'profile_completed' => $user->profile_completed
+            ]
         ], 201);
+
     }
 
     public function login(Request $request)

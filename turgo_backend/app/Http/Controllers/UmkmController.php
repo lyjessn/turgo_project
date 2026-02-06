@@ -3,188 +3,265 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+
 use App\Models\Umkm;
 use App\Models\UmkmFoto;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class UmkmController extends Controller
 {
+    public function index(Request $request)
+    {
+        $user = $request->user();
+
+        if (!in_array($user->role->name, ['admin','owner'])) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $data = Umkm::with(['user','fotos'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if (!in_array($user->role->name, ['admin','owner'])) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $umkm = Umkm::with(['user','fotos'])->find($id);
+
+        if (!$umkm) {
+            return response()->json(['message' => 'UMKM tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $umkm
+        ]);
+    }
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:user,id',
-            'nama_usaha' => 'required|string|max:255',
-            'lokasi' => 'required|string',
-            'nomor_telepon' => 'required|string|max:255',
-            'jam_operasional' => 'required|string',
-            'menu_tersedia' => 'required|string',
-            'is_aktif' => 'sometimes|boolean',
-            'is_buka' => 'sometimes|boolean',
-            'foto.*' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        $admin = $request->user();
+
+        if (!in_array($admin->role->name, ['admin','owner'])) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'user_id'          => 'required|exists:user,id|unique:umkms,user_id',
+            'nama_usaha'       => 'required|string|max:255',
+            'lokasi'           => 'required|string',
+            'nomor_telepon'    => 'required|string|max:255',
+            'jam_operasional'  => 'required|string',
+            'menu_tersedia'    => 'required|string',
+
+            'thumbnail'        => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'photos'           => 'required|array|min:1',
+            'photos.*'         => 'image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        DB::beginTransaction();
-
-        try {
-            $umkm = Umkm::create([
-                'user_id' => $validated['user_id'],
-                'nama_usaha' => $validated['nama_usaha'],
-                'lokasi' => $validated['lokasi'],
-                'nomor_telepon' => $validated['nomor_telepon'],
-                'jam_operasional' => $validated['jam_operasional'],
-                'menu_tersedia' => $validated['menu_tersedia'],
-                'is_aktif' => $validated['is_aktif'] ?? 1,
-                'is_buka' => $validated['is_buka'] ?? 1,
-            ]);
-
-            if ($request->hasFile('foto')) {
-                foreach ($request->file('foto') as $file) {
-                    $path = $file->store('umkm/fotos', 'public');
-
-                    UmkmFoto::create([
-                        'umkm_id' => $umkm->id,
-                        'url_foto' => $path,
-                    ]);
-                }
-            }
-
-            DB::commit();
-
+        if ($validator->fails()) {
             return response()->json([
-                'message' => 'UMKM berhasil ditambahkan',
-                'data' => $umkm->load('fotos'),
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Gagal menambahkan UMKM: ' . $e->getMessage(),
-            ], 500);
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
+
+        $user = User::find($request->user_id);
+
+        if ($user->role_id != 6) {
+            return response()->json([
+                'message' => 'User ini bukan UMKM'
+            ], 400);
+        }
+
+        $thumbPath = $request->file('thumbnail')
+            ->store('umkm/thumbnails', 'public');
+
+        $umkm = Umkm::create([
+            'user_id'         => $user->id,
+            'nama_usaha'      => $request->nama_usaha,
+            'lokasi'          => $request->lokasi,
+            'nomor_telepon'   => $request->nomor_telepon,
+            'jam_operasional' => $request->jam_operasional,
+            'menu_tersedia'   => $request->menu_tersedia,
+            'url_thumbnail'   => $thumbPath,
+            'is_aktif'        => 1,
+            'is_buka'         => 1
+        ]);
+
+        foreach ($request->file('photos') as $photo) {
+            $path = $photo->store('umkm/photos', 'public');
+
+            UmkmFoto::create([
+                'umkm_id' => $umkm->id,
+                'url_foto' => $path
+            ]);
+        }
+
+        $user->update(['profile_completed' => 1]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'UMKM berhasil dibuat',
+            'data' => $umkm->load('fotos')
+        ], 201);
     }
 
     public function update(Request $request, $id)
     {
-        $umkm = Umkm::findOrFail($id);
+        $userLogin = $request->user();
+        $umkm = Umkm::find($id);
 
-        $validated = $request->validate([
-            'nama_usaha' => 'sometimes|string|max:255',
-            'lokasi' => 'sometimes|string',
-            'nomor_telepon' => 'sometimes|string|max:255',
-            'jam_operasional' => 'sometimes|string',
-            'menu_tersedia' => 'sometimes|string',
-            'is_aktif' => 'sometimes|boolean',
-            'is_buka' => 'sometimes|boolean',
-            'foto.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        if (!$umkm) {
+            return response()->json(['message' => 'UMKM tidak ditemukan'], 404);
+        }
+
+        if (
+            !in_array($userLogin->role->name, ['admin','owner']) &&
+            $userLogin->id !== $umkm->user_id
+        ) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'nama_usaha'      => 'nullable|string|max:255',
+            'lokasi'          => 'nullable|string',
+            'nomor_telepon'   => 'nullable|string',
+            'jam_operasional' => 'nullable|string',
+            'menu_tersedia'   => 'nullable|string',
+            'thumbnail'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'is_aktif'        => 'nullable|boolean',
         ]);
 
-        try {
-            $umkm->update($validated);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
-            if ($request->hasFile('foto')) {
-                foreach ($request->file('foto') as $file) {
-                    $path = $file->store('umkm/fotos', 'public');
-
-                    UmkmFoto::create([
-                        'umkm_id' => $umkm->id,
-                        'url_foto' => $path,
-                    ]);
-                }
+        if ($request->hasFile('thumbnail')) {
+            if ($umkm->url_thumbnail &&
+                Storage::disk('public')->exists($umkm->url_thumbnail)) {
+                Storage::disk('public')->delete($umkm->url_thumbnail);
             }
 
-            return response()->json([
-                'message' => 'UMKM berhasil diperbarui',
-                'data' => $umkm->load('fotos'),
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Gagal memperbarui UMKM: ' . $e->getMessage(),
-            ], 500);
+            $umkm->url_thumbnail = $request->file('thumbnail')
+                ->store('umkm/thumbnails', 'public');
         }
-    }
 
-    public function destroy($id)
-    {
-        $umkm = Umkm::with('fotos')->findOrFail($id);
-
-        try {
-            foreach ($umkm->fotos as $foto) {
-                if (Storage::disk('public')->exists($foto->url_foto)) {
-                    Storage::disk('public')->delete($foto->url_foto);
-                }
-                $foto->delete();
-            }
-
-            $umkm->delete();
-
-            return response()->json([
-                'message' => 'UMKM dan semua foto berhasil dihapus',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Gagal menghapus UMKM: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function aktifkan($id)
-    {
-        $umkm = Umkm::findOrFail($id);
-        $umkm->is_aktif = 1;
-        $umkm->save();
+        $umkm->update($request->only([
+            'nama_usaha',
+            'lokasi',
+            'nomor_telepon',
+            'jam_operasional',
+            'menu_tersedia',
+            'is_aktif'
+        ]));
 
         return response()->json([
-            'message' => 'UMKM berhasil diaktifkan',
-            'data' => $umkm,
+            'success' => true,
+            'message' => 'UMKM berhasil diupdate',
+            'data' => $umkm
         ]);
     }
 
-    public function nonaktifkan($id)
+    public function destroy(Request $request, $id)
     {
-        $umkm = Umkm::findOrFail($id);
-        $umkm->is_aktif = 0;
-        $umkm->save();
+        $user = $request->user();
+
+        if ($user->role->name !== 'owner') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $umkm = Umkm::find($id);
+
+        if (!$umkm) {
+            return response()->json(['message' => 'UMKM tidak ditemukan'], 404);
+        }
+
+        if ($umkm->url_thumbnail) {
+            Storage::disk('public')->delete($umkm->url_thumbnail);
+        }
+
+        foreach ($umkm->fotos as $foto) {
+            Storage::disk('public')->delete($foto->url_foto);
+            $foto->delete();
+        }
+
+        $umkm->user->update(['profile_completed' => 0]);
+        $umkm->delete();
 
         return response()->json([
-            'message' => 'UMKM berhasil dinonaktifkan',
-            'data' => $umkm,
+            'success' => true,
+            'message' => 'UMKM berhasil dihapus'
         ]);
     }
 
-    public function buka($id)
+    public function toggleAktif(Request $request, $id)
     {
-        $user = auth()->user();
-        $umkm = Umkm::findOrFail($id);
+        $user = $request->user();
+
+        if (!in_array($user->role->name, ['admin','owner'])) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $umkm = Umkm::find($id);
+
+        if (!$umkm) {
+            return response()->json(['message' => 'UMKM tidak ditemukan'], 404);
+        }
+
+        $umkm->update([
+            'is_aktif' => !$umkm->is_aktif
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status UMKM berhasil diubah',
+            'data' => $umkm
+        ]);
+    }
+
+    public function toggleBuka(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $umkm = Umkm::find($id);
+
+        if (!$umkm) {
+            return response()->json([
+                'message' => 'UMKM tidak ditemukan'
+            ], 404);
+        }
 
         if ($user->id !== $umkm->user_id) {
-            return response()->json(['message' => 'Akses ditolak: Anda bukan pemilik UMKM ini'], 403);
+            return response()->json([
+                'message' => 'Forbidden'
+            ], 403);
         }
 
-        $umkm->is_buka = 1;
-        $umkm->save();
-
-        return response()->json(['message' => 'UMKM berhasil dibuka']);
-    }
-
-
-    public function tutup($id)
-    {
-        $user = auth()->user();
-        $umkm = Umkm::findOrFail($id);
-
-        if ($user->id !== $umkm->user_id) {
-            return response()->json(['message' => 'Akses ditolak: Anda bukan pemilik UMKM ini'], 403);
-        }
-
-        $umkm->is_buka = 0;
-        $umkm->save();
+        $umkm->update([
+            'is_buka' => !$umkm->is_buka
+        ]);
 
         return response()->json([
-            'message' => 'UMKM ditutup',
-            'data' => $umkm,
+            'success' => true,
+            'message' => 'Status buka UMKM berhasil diubah',
+            'data' => $umkm
         ]);
     }
+
 }

@@ -15,6 +15,7 @@ class Kamar extends Model
         'deskripsi_kasur',
         'jumlah_toilet',
         'deskripsi_toilet',
+        'foto',
         'is_aktif'
     ];
 

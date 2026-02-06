@@ -1,4 +1,4 @@
-import useAxios from ".";
+import axiosClient from "./axiosClient";
 
 export const SignUp = async (data) => {
     try {
@@ -8,48 +8,50 @@ export const SignUp = async (data) => {
             formData.append(key, value);
         });
          
-        const response = await useAxios.post("/register", formData); 
+        const res = await axiosClient.post("/register", formData); 
         
-        return response.data;
+        return res.data;
     } catch (error) {
-        throw error.response.data;
+        throw error.res.data;
     }
 };
 
 export const SignIn = async (data) => {
     try {
-        const response = await useAxios.post("/login", data); return response.data;
+        const res = await axiosClient.post("/login", data);
+
+        return res.data;
     } catch (error) {
-        throw error.response.data;
+        throw error.res.data;
     }
 };
 
 export const LogOut = async () => {
     try {
-        const response = await useAxios.post("/logout", {},
+        const res = await axiosClient.post("/logout", {},
             { headers: 
                 { 
                     Authorization: `Bearer ${sessionStorage.getItem("token")}` 
                 } 
             },
         ); 
-        return response.data;
+        return res.data;
     } catch (error) {
-        throw error.response.data;
+        throw error.res.data;
     }
 }
 
 export const getRole = async () => {
     try {
-        const response = await useAxios.get("/getrole",
+        const res = await axiosClient.get("/getrole",
             { headers: 
                 { 
                     Authorization: `Bearer ${sessionStorage.getItem("token")}` 
                 } 
             }
         ); 
-        return response.data;
+        return res.data;
     } catch (error) {
-        throw error.response.data;
+        throw error.res.data;
     }
 }
