@@ -16,6 +16,9 @@ class Booking extends Model
         'status_pemesanan',
         'total_harga',
         'bukti_pembayaran',
+        'norek_refund',
+        'bank_refund',
+        'nama_rekening_refund',
     ];
 
    public function user()
@@ -42,4 +45,10 @@ class Booking extends Model
     {
         return $this->hasOne(BookingCustomDetail::class, 'booking_id');
     }
+    
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
 }

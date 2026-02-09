@@ -9,7 +9,12 @@ class BookingTourGuideDetail extends Model
     protected $fillable = [
         'booking_id',
         'tour_guide_id',
+        'durasi',
+        'sesi',
     ];
+
+    protected $primaryKey = 'booking_id';
+    public $incrementing = false;
 
     public $timestamps = true;
 

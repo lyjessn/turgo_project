@@ -14,6 +14,9 @@ use App\Http\Controllers\PaketWisataController;
 use App\Http\Controllers\TourGuideController;
 use App\Http\Controllers\KamarController;
 use App\Http\Controllers\PelakuWisataController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BlockoutController;
+use App\Http\Controllers\RatingController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Middleware\CekRole;
 use App\Http\Controllers\HomepageController;
@@ -23,6 +26,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/homepage', [HomepageController::class, 'index']);
+Route::get('/rating/summary/{tipe}/{id}', [RatingController::class, 'summary']);
 
 //PAKET WISATA
 Route::get('/paket-wisata', [PaketWisataController::class, 'index']);
@@ -45,6 +49,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/getRole', [AuthController::class, 'getRole']);
     Route::get('/getUserData', [AuthController::class, 'getUserData']);
+});
+
+// PENGUNJUNG ONLY
+Route::middleware(['auth:sanctum', 'cekrole:pengunjung'])->group(function () {
+    Route::post('/booking', [BookingController::class, 'store']);
+    Route::get('/booking', [BookingController::class, 'index']);
+    Route::get('/booking/{id}', [BookingController::class, 'show']);
+    Route::post('/booking/{id}/cancel', [BookingController::class, 'cancel']);
+    Route::get('/rating/available/{bookingId}', [RatingController::class, 'available']);
+    Route::post('/rating',  [RatingController::class, 'store']);
+});
+
+// ADMIN, OWNER, UMKM, PELAKU WISATA, TOUR GUIDE, HOMESTAY
+Route::middleware(['auth:sanctum', 'cekrole:owner,admin,pelaku_wisata,tour_guide,homestay'])->group(function () {
+    Route::get('/blockout/global', [BlockoutController::class, 'indexGlobal']);
+    Route::get('/blockout/spesifik', [BlockoutController::class, 'indexSpesifik']);
+    Route::post('/blockout/spesifik', [BlockoutController::class, 'storeSpesifik']);
+    Route::put('/blockout/spesifik/{id}', [BlockoutController::class, 'updateSpesifik']);
+    Route::delete('/blockout/spesifik/{id}', [BlockoutController::class, 'destroySpesifik']);
 });
 
 // ADMIN & OWNER
@@ -74,9 +97,17 @@ Route::middleware(['auth:sanctum', 'cekrole:owner,admin'])->group(function () {
     Route::put('/kebudayaan/{id}', [KebudayaanController::class, 'update']);
     Route::post('/kebudayaan/{id}/toggle', [KebudayaanController::class, 'toggleAktif']);
 
+    Route::get('/admin/bookings', [BookingController::class, 'indexAdmin']);
+    Route::get('/admin/bookings/{id}', [BookingController::class, 'showAdmin']);
+    Route::post('/booking/{id}/status', [BookingController::class, 'updateStatus']);
+
+    //blockout
+    Route::post('/blockout/global', [BlockoutController::class, 'storeGlobal']);
+    Route::put('/blockout/global/{id}', [BlockoutController::class, 'updateGlobal']);
+    Route::delete('/blockout/global/{id}', [BlockoutController::class, 'destroyGlobal']);
 });
 
-// OWNER
+// OWNER ONLY
 Route::middleware(['auth:sanctum', 'cekrole:owner'])->group(function () {
     Route::delete('/kebudayaan/{id}', [KebudayaanController::class, 'destroy']);
     Route::delete('/paket-wisata/{id}', [PaketWisataController::class, 'destroy']);
@@ -84,12 +115,31 @@ Route::middleware(['auth:sanctum', 'cekrole:owner'])->group(function () {
     Route::delete('/umkm/{id}', [UmkmController::class, 'destroy']);
     Route::delete('/tour-guide/{id}', [TourGuideController::class, 'destroy']);
     Route::delete('/pelaku-wisata/{id}', [PelakuWisataController::class, 'destroy']);
+    Route::delete('/booking/{id}', [BookingController::class, 'destroy']);
   
 });
 
 // ADMIN ONLY
 Route::middleware(['auth:sanctum', 'cekrole:admin'])->group(function () {
     Route::post('/registerByAdmin', [AuthController::class, 'registerByAdmin']);
+});
+
+// TOUR GUIDE ONLY
+Route::middleware(['auth:sanctum','cekrole:tour_guide'])->group(function () {
+    Route::get('/booking/provider/tour-guide', [BookingController::class, 'indexByTourGuide']);
+    Route::get('/booking/provider/tour-guide/{id}', [BookingController::class, 'showByTourGuide']);
+});
+
+// HOMESTAY ONLU
+Route::middleware(['auth:sanctum','cekrole:homestay'])->group(function () {
+    Route::get('/booking/provider/homestay', [BookingController::class, 'indexByHomestay']);
+    Route::get('/booking/provider/homestay/{id}', [BookingController::class, 'showByHomestay']);
+});
+
+// PELAKU WISATA ONLY
+Route::middleware(['auth:sanctum','cekrole:pelaku_wisata'])->group(function () {
+    Route::get('/booking/provider/pelaku-wisata', [BookingController::class, 'indexByPelakuWisata']);
+    Route::get('/booking/provider/pelaku-wisata/{id}', [BookingController::class, 'showByPelakuWisata']);
 });
 
 // ADMIN & PEMILIK UMKM

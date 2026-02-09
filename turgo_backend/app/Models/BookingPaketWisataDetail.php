@@ -12,6 +12,9 @@ class BookingPaketWisataDetail extends Model
         'jumlah_orang',
     ];
 
+    protected $primaryKey = 'booking_id';
+    public $incrementing = false;
+
     public $timestamps = true;
 
     public function booking()

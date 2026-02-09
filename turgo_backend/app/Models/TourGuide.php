@@ -22,4 +22,11 @@ class TourGuide extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class, 'id_target')
+            ->where('tipe_target', 'tour_guide');
+    }
+
 }
