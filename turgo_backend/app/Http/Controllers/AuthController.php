@@ -84,7 +84,7 @@ class AuthController extends Controller
             'password'      => 'required|string|min:8|confirmed',
             'nama_lengkap'  => 'required|string|max:255',
             'nomor_telepon' => 'nullable|string|max:20',
-            'role_id'       => 'required|in:2,3,4,5,6,7',
+            'role_id'       => 'required|in:3,4,5,6',
             'foto_profil'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 

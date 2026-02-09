@@ -12,6 +12,9 @@ class BookingHomestayDetail extends Model
         'kamar_id',
     ];
 
+    protected $primaryKey = 'booking_id';
+    public $incrementing = false;
+
     public $timestamps = true;
 
     public function booking()

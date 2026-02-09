@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use App\Services\BlockoutService;
 
 use App\Models\Umkm;
 use App\Models\UmkmFoto;
@@ -238,7 +239,6 @@ class UmkmController extends Controller
     public function toggleBuka(Request $request, $id)
     {
         $user = $request->user();
-
         $umkm = Umkm::find($id);
 
         if (!$umkm) {
@@ -253,6 +253,17 @@ class UmkmController extends Controller
             ], 403);
         }
 
+        if (BlockoutService::isGlobalBlocked(today(), today())) {
+            if ($umkm->is_buka == 1) {
+                $umkm->update(['is_buka' => 0]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'UMKM tidak bisa dibuka karena sedang blockout global'
+            ], 422);
+        }
+
         $umkm->update([
             'is_buka' => !$umkm->is_buka
         ]);
@@ -260,7 +271,7 @@ class UmkmController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Status buka UMKM berhasil diubah',
-            'data' => $umkm
+            'data'    => $umkm
         ]);
     }
 

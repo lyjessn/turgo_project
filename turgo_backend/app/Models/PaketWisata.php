@@ -33,4 +33,11 @@ class PaketWisata extends Model
                     ->withPivot('persentase')
                     ->withTimestamps();
     }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class, 'id_target')
+            ->where('tipe_target', 'paket_wisata');
+    }
+
 }

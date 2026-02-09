@@ -33,4 +33,11 @@ class Homestay extends Model
     {
         return $this->hasMany(Kamar::class);
     }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class, 'id_target')
+            ->where('tipe_target', 'homestay');
+    }
+
 }
