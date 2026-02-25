@@ -26,24 +26,31 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/homepage', [HomepageController::class, 'index']);
+Route::get('/kebudayaan', [KebudayaanController::class, 'index']);
+Route::get('/umkm', [UmkmController::class, 'index']);
 Route::get('/rating/summary/{tipe}/{id}', [RatingController::class, 'summary']);
+Route::get('/ratings/{tipe}/{id}', [RatingController::class, 'listByTarget']);
 
 //PAKET WISATA
+Route::get('/paket-wisata/homepage', [PaketWisataController::class, 'homepage']);
+Route::get('/paket-wisata/available', [PaketWisataController::class, 'available']);
 Route::get('/paket-wisata', [PaketWisataController::class, 'index']);
 Route::get('/paket-wisata/{id}', [PaketWisataController::class, 'show']);
 
 //HOMESTAY & KAMAR
+Route::get('/homestay/homepage', [HomestayController::class, 'homepage']);
+Route::get('/homestay/available', [HomestayController::class, 'available']);
 Route::get('/homestay', [HomestayController::class, 'index']);
 Route::get('/homestay/{id}', [HomestayController::class, 'show']);
 Route::get('/kamar', [KamarController::class, 'index']);
 Route::get('/kamar/{id}', [KamarController::class, 'show']);
 
 //TOUR GUIDE
+Route::get('/tour-guide/homepage', [TourGuideController::class, 'homepage']);
+Route::get('/tour-guide/available', [TourGuideController::class, 'available']);
 Route::get('/tour-guide', [TourGuideController::class, 'index']);
 Route::get('/tour-guide/{id}', [TourGuideController::class, 'show']);
 
-//KEBUDAYAAN
-Route::get('/kebudayaan', [KebudayaanController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -54,11 +61,16 @@ Route::middleware('auth:sanctum')->group(function () {
 // PENGUNJUNG ONLY
 Route::middleware(['auth:sanctum', 'cekrole:pengunjung'])->group(function () {
     Route::post('/booking', [BookingController::class, 'store']);
+    Route::post('/booking/{id}/confirm-payment', [BookingController::class, 'confirmPayment']);
     Route::get('/booking', [BookingController::class, 'index']);
     Route::get('/booking/{id}', [BookingController::class, 'show']);
     Route::post('/booking/{id}/cancel', [BookingController::class, 'cancel']);
-    Route::get('/rating/available/{bookingId}', [RatingController::class, 'available']);
+    Route::get('/rating/available/{id}', [RatingController::class, 'available']);
     Route::post('/rating',  [RatingController::class, 'store']);
+    Route::get('/booking/my/active', [BookingController::class, 'myActive']);
+    Route::get('/booking/my/history', [BookingController::class, 'myHistory']);
+    Route::post('/booking/{id}/cancel', [BookingController::class, 'cancel']);
+    Route::get('/booking/{id}', [BookingController::class, 'show']);
 });
 
 // ADMIN, OWNER, UMKM, PELAKU WISATA, TOUR GUIDE, HOMESTAY
@@ -92,7 +104,7 @@ Route::middleware(['auth:sanctum', 'cekrole:owner,admin'])->group(function () {
     Route::put('/pelaku-wisata/{id}', [PelakuWisataController::class, 'update']);
     Route::post('/pelaku-wisata/{id}/toggle', [PelakuWisataController::class, 'toggleAktif']);
 
-    Route::get('/kebudayaan', [KebudayaanController::class, 'index']);
+    // Route::get('/kebudayaan', [KebudayaanController::class, 'index']);
     Route::post('/kebudayaan', [KebudayaanController::class, 'store']);
     Route::put('/kebudayaan/{id}', [KebudayaanController::class, 'update']);
     Route::post('/kebudayaan/{id}/toggle', [KebudayaanController::class, 'toggleAktif']);

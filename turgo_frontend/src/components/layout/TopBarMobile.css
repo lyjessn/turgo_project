@@ -1,0 +1,30 @@
+.topbar-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .topbar-mobile {
+    height: 56px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #ffffff;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .menu-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #335c64;
+  }
+
+  .logo {
+    height: 28px;
+  }
+}

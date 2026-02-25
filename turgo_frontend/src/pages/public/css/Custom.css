@@ -1,0 +1,154 @@
+.custom-grid{
+  display:grid;
+  grid-template-columns: 1fr 350px;
+  gap:30px;
+}
+
+.summary-wrapper{
+  position:relative;
+}
+
+
+.summary-card{
+  position:sticky;
+  background:white;
+  border-radius:12px;
+  padding:20px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+
+.summary-section{
+  border-bottom: 1px solid #eee;
+}
+
+.summary-section:not(:first-child) {
+  margin-top: 20px;
+}
+
+.summary-item{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+}
+
+.summary-total{
+  margin-top:20px;
+  font-size:18px;
+  font-weight:600;
+}
+
+.guide-option{
+	display:flex;
+	align-items:center;
+	width:100%;
+	padding:8px 0;
+	cursor:pointer;
+}
+
+.guide-option input{
+	margin-right:10px;
+}
+
+.guide-label{
+	flex:1;
+	font-size:15px;
+	color:#2f4858;
+}
+
+.guide-price{
+	margin-left:auto;
+	font-size:15px;
+	color:#2f4858;
+	font-weight:500;
+}
+
+.guide-note{
+  margin-top:8px;
+  font-size:13px;
+  opacity:0.7;
+}
+
+.summary-sub{
+  font-size:12px;
+  opacity:0.6;
+}
+
+.btn-add{
+  margin-top:10px;
+  border-radius:999px;
+}
+
+.btn-added{
+  margin-top:10px;
+  border-radius:999px;
+  background:#335C64;
+  color:white;
+}
+
+.stepper{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+  align-items:center;
+}
+
+.btn-checkout{
+  width:100%;
+  margin-top:20px;
+  background-color:#335C64;
+  color: white;
+  height: 40px;
+  border-radius: 999px;
+}
+
+.btn-checkout:disabled {
+    background-color: #aaaaaa;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.paket-card-small.unavailable{
+	filter: grayscale(100%);
+	opacity: 0.5;
+}
+
+.unavailable-badge{
+	position:absolute;
+	top:10px;
+	left:10px;
+	background:#6b7280;
+	color:white;
+	padding:4px 8px;
+	font-size:12px;
+	border-radius:6px;
+}
+
+.unavailable-text{
+	color:#9ca3af;
+}
+
+.unavailable-label{
+	color:#9ca3af;
+	font-size:12px;
+}
+
+@media (max-width: 768px) {
+
+  .custom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-wrapper {
+    order: 2;
+  }
+
+  .catalog-grid {
+    order: 1;
+  }
+
+  .summary-card {
+    position: relative;
+    top: unset;
+  }
+
+}

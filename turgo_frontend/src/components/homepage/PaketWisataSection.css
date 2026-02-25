@@ -1,0 +1,401 @@
+.paket-section {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    }
+
+.paket-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.paket-heading {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.paket-subheader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.paket-subheader p {
+    margin: 0;
+    font-size: 16px;
+}
+
+.paket-custom-btn {
+    background: #335c64;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 999px;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.paket-featured {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.paket-card-large {
+    position: relative;
+    height: 450px;
+    border-radius: 20px;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+}
+
+.paket-card-large.left::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 65%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.65) 70%,
+        rgba(0, 0, 0, 0.0)
+    );
+}
+
+.paket-card-large.right::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 65%;
+    height: 100%;
+    background: linear-gradient(
+        to left,
+        rgba(0, 0, 0, 0.65) 70%,
+        rgba(0, 0, 0, 0.0)
+    );
+}
+
+.paket-besar-content {
+    position: relative;
+    z-index: 2;
+    padding: 28px;
+    max-width: 55%;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.paket-card-large.left .paket-besar-content { margin-right: auto; }
+
+.paket-card-large.right .paket-besar-content { margin-left: auto; }
+
+.paket-besar-pill-row {
+    display: flex;
+    gap: 8px;
+}
+
+.paket-besar-pill {
+    padding: 4px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+}
+
+.paket-title-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.paket-besar-rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    font-size: 20px;
+}
+
+.paket-besar-rating svg {
+    width: 20px;
+    height: 20px;
+}
+
+.paket-besar-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.paket-besar-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.paket-besar-meta svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.paket-besar-footer {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    margin-top: 8px;
+}
+
+.paket-card-large.right .paket-besar-footer {
+    justify-content: flex-start;
+}
+
+.paket-besar-price {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid white;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-weight: 600;
+    min-width: 30%;
+    text-align: center;
+}
+
+.paket-besar-order-btn {
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: none;
+    background: #fff;
+    color: #000;
+    font-weight: 600;
+    min-width: 70%; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+}
+
+.paket-scroll {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.paket-card-small::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.65) 60%,
+        rgba(0,0,0,0.35),
+        rgba(0,0,0,0.05)
+    );
+    z-index: 1;
+}
+
+.paket-card-small {
+    position: relative;
+    min-width: 300px;
+    height: 300px;
+    border-radius: 16px;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+}
+
+.paket-kecil-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.paket-kecil-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 18px;
+    color: #fff;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    backdrop-filter: blur(1px);
+}
+
+.paket-kecil-rating {
+    align-self: flex-end;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.paket-kecil-rating svg {
+    width: 14px;
+    height: 14px;
+}
+
+.paket-kecil-detail-btn {
+    border: 1px solid #fff;
+    background: transparent;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+.rating-text {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .paket-card-large {
+        display: flex;
+        align-items: flex-end;
+        height: 350px;
+    }
+
+    .paket-besar-content {
+        max-width: 100%;
+        padding: 20px;
+    }
+
+    .paket-besar-note {
+        display: none;
+    }
+
+    .paket-besar-meta {
+        gap: 4px;
+        line-height: 1.1;
+    }
+
+    .paket-besar-meta + .paket-besar-meta {
+        display: none;
+    }
+
+    .paket-besar-note {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    .paket-besar-footer {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .paket-besar-price {
+        min-width: auto;
+        padding: 8px 14px;
+    }
+
+    .paket-besar-order-btn {
+        min-width: auto;
+        flex: 1;
+    }
+
+    .paket-section {
+        gap: 24px;
+    }
+
+    .paket-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .paket-card-large.left::before,
+    .paket-card-large.right::before {
+        content: "";
+        position: absolute;
+        top: auto;
+        bottom: 0;
+        width: 100%;
+        height: 70%;
+        background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.65) 70%,
+            rgba(0, 0, 0, 0.0)
+        );
+    }
+
+    .paket-card-large.left .paket-besar-content,
+    .paket-card-large.right .paket-besar-content {
+        margin: 0;
+        max-width: 100%;
+    }
+
+    .paket-title-row {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .paket-title-row h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.3;
+    }
+
+    .paket-besar-rating {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        margin-top: 4px;
+    }
+
+    .paket-card-small {
+        min-width: 220px;
+        height: 280px;
+    }
+
+    .paket-scroll {
+        scroll-snap-type: x mandatory;
+    }
+
+    .paket-card-small {
+        scroll-snap-align: start;
+    }
+
+    .paket-kecil-content {
+        backdrop-filter: none;
+    }
+
+    .paket-card-small::before {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 75%;
+        background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.65) 70%,
+            rgba(0, 0, 0, 0.0)
+        );
+    }
+}

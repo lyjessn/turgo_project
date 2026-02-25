@@ -1,0 +1,72 @@
+.homestay-kamar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.homestay-kamar-card {
+    display: flex;
+    gap: 20px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+    transition: 0.2s ease;
+}
+
+.homestay-kamar-card.selected {
+    border: 2px solid #0d6efd;
+}
+
+.homestay-kamar-image {
+    width: 300px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.homestay-kamar-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.homestay-kamar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.homestay-kamar-nama {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.homestay-kamar-harga {
+    font-size: 18px;
+    font-weight: 600;
+    color: #007D9B;
+}
+
+.homestay-kamar-harga span {
+    font-size: 14px;
+    color: #777;
+}
+
+.homestay-kamar-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: #555;
+}
+
+.homestay-kamar-meta div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.selected-btn {
+    background: #198754;
+}

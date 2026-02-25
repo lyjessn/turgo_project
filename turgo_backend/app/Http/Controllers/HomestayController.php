@@ -6,19 +6,66 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
+use App\Http\Controllers\Controller;
 use App\Models\Homestay;
 use App\Models\HomestayFoto;
 use App\Models\User;
 use App\Models\Kamar;
 
+use App\Services\BlockoutService;
+use App\Services\AvailabilityService;
+
 class HomestayController extends Controller
 {
+    public function homepage()
+    {
+        $query = Homestay::with('fotos')
+            ->where('is_aktif', 1);
+
+        $featured = (clone $query)
+            ->withCount('bookingDetails')
+            ->orderByDesc('booking_details_count')
+            ->orderByDesc('rating')
+            ->orderByDesc('created_at')
+            ->first();
+
+        if (!$featured) {
+            $featured = (clone $query)
+                ->orderByDesc('rating')
+                ->orderByDesc('created_at')
+                ->first();
+        }
+
+        if (!$featured) {
+            return response()->json([
+                "success" => false,
+                "message" => "Homestay tidak ditemukan"
+            ]);
+        }
+
+        $others = (clone $query)
+            ->where('id', '!=', $featured->id)
+            ->orderByDesc('rating')
+            ->orderByDesc('created_at')
+            ->take(10)
+            ->get();
+
+        return response()->json([
+            "success" => true,
+            "featured" => $featured,
+            "others" => $others
+        ]);
+    }
+
 
     public function index()
     {
-        $data = Homestay::with(['pemilik', 'kamars'])
-            ->orderBy('id', 'desc')
-            ->get();
+        $data = Homestay::query()
+        ->with('pemilik')
+        ->withMin('kamars', 'harga_per_malam')
+        ->withMax('kamars', 'harga_per_malam')
+        ->orderBy('id', 'desc')
+        ->get();
 
         return response()->json([
             'success' => true,
@@ -28,7 +75,14 @@ class HomestayController extends Controller
 
     public function show($id)
     {
-        $homestay = Homestay::with(['pemilik', 'kamars'])->find($id);
+        $homestay = Homestay::with([
+            'pemilik',
+            'kamars',
+            'fotos'
+        ])
+        ->withAvg('ratings', 'bintang')
+        ->withCount('ratings')
+        ->find($id);
 
         if (!$homestay) {
             return response()->json([
@@ -287,4 +341,46 @@ class HomestayController extends Controller
         ]);
     }
 
+    public function available(Request $request)
+    {
+        $checkIn  = $request->check_in;
+        $checkOut = $request->check_out;
+
+        if (BlockoutService::isGlobalBlocked($checkIn, $checkOut)) {
+            return response()->json([]);
+        }
+
+        $blockedIds = BlockoutService::getBlockedIds(
+            'homestay',
+            $checkIn
+        );
+
+        $homestays = Homestay::query()
+            ->withMin('kamars', 'harga_per_malam')
+            ->withMax('kamars', 'harga_per_malam')
+            ->where('is_aktif', 1)
+            ->whereNotIn('id', $blockedIds)
+            ->get()
+
+            ->filter(function ($homestay) use ($checkIn, $checkOut) {
+                $kamars = Kamar::where('homestay_id', $homestay->id)
+                    ->where('is_aktif', 1)
+                    ->get();
+                foreach ($kamars as $kamar) {
+                    if (
+                        AvailabilityService::isHomestayAvailable(
+                            $kamar->id,
+                            $checkIn,
+                            $checkOut
+                        )
+                    ) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            ->values();
+
+        return response()->json($homestays);
+    }
 }

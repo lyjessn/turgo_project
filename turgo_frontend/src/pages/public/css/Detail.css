@@ -1,0 +1,300 @@
+.detail-container {
+    padding: 40px 80px;
+}
+
+.detail-title {
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+.detail-rating {
+  font-size: 16px;
+  margin-left: 8px;
+}
+
+.detail-price {
+    font-size: 18px;
+    color: #335c64;
+}
+
+.detail-price-kamar {
+    font-size: 16px;
+    color: #335c64;
+    margin-left: 8px;
+}
+
+.detail-price-unit {
+    font-size: 14px;
+}
+
+.detail-image-wrapper {
+    margin-top: 20px;
+}
+
+.detail-section {
+    margin-top: 30px;
+}
+
+.detail-section-title {
+    color: #007D9B;
+    font-size: 18px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 6px;
+}
+
+.detail-info-list {
+    margin-top: 12px;
+}
+
+.detail-info-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.detail-description {
+    margin-top: 10px;
+    color: #444;
+}
+
+.detail-warning {
+    color: red;
+    font-size: 14px;
+}
+
+.detail-bottom-bar {
+    position: sticky;
+    bottom: 0;
+    margin-top: 32px;
+    margin-left: -80px;
+    margin-right: -80px;
+    background: #fff;
+    padding: 16px 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #ddd;
+}
+
+.detail-total-label {
+    font-size: 16px;
+    color: #555;
+}
+
+.detail-total-price {
+    font-size: 20px;
+    font-weight: 600;
+    color: #007D9B;
+}
+
+.detail-book-btn {
+    background: #335c64;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.detail-book-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.detail-carousel {
+    position: relative;
+    margin-top: 20px;
+}
+
+.detail-image {
+    width: 100%;
+    height: 480px;
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+.detail-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.detail-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+    cursor: pointer;
+}
+
+.detail-dot.active {
+    background: #335c64;
+}
+
+.detail-booking-row {
+  display: flex;
+  gap: 24px;
+  margin-top: 10px;
+}
+
+.detail-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.uniform-input {
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.detail-date-input {
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.detail-stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.stepper-btn {
+  width: 40px;
+  height: 100%;
+  border: none;
+  background: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.stepper-btn:hover {
+  background: #f3f3f3;
+}
+
+.stepper-value {
+  width: 60px;
+  text-align: center;
+  font-weight: 500;
+
+}
+
+.center {
+  text-align: center;
+}
+
+.review-subtitle {
+  text-align: center;
+  color: #2a7b8c;
+  margin-bottom: 16px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.review-card {
+  display: flex;
+  gap: 12px;
+
+  padding: 14px;
+  margin-top: 12px;
+
+  background: white;
+
+  border-radius: 12px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.review-avatar {
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50%;
+
+  background: #eee;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+}
+
+.review-content {
+  flex: 1;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.review-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.review-rating {
+  font-size: 13px;
+  color: #f59e0b;
+}
+
+.review-date {
+  font-size: 12px;
+  color: #777;
+}
+
+.review-text {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #444;
+}
+
+.review-empty {
+  text-align: center;
+  color: #777;
+  margin-top: 10px;
+}
+
+/**untuk detail pesanan**/
+.detail-thumb-small{
+    width:90px;
+    height:65px;
+    object-fit:cover;
+    border-radius:8px;
+}
+
+.detail-thumb-avatar{
+    width:65px;
+    height:65px;
+    object-fit:cover;
+    border-radius:50%;
+}
+
+.detail-summary-text{
+    font-weight:600;
+}
+
+@media (max-width: 768px) {
+    .detail-container {
+        padding: 24px;
+    }
+
+    .detail-title {
+        font-size: 22px;
+    }
+
+    .detail-price {
+        font-size: 16px;
+    }
+
+    .detail-booking-row {
+        flex-direction: column;
+    }
+}

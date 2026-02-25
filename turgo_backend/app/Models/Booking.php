@@ -19,7 +19,10 @@ class Booking extends Model
         'norek_refund',
         'bank_refund',
         'nama_rekening_refund',
+        'expired_at'
     ];
+
+    protected $appends = ['thumbnail'];
 
    public function user()
     {
@@ -28,27 +31,75 @@ class Booking extends Model
 
     public function paketWisataDetails()
     {
-        return $this->hasMany(BookingPaketWisataDetail::class, 'booking_id');
+        return $this->hasOne(BookingPaketWisataDetail::class, 'booking_id');
     }
 
     public function tourGuideDetails()
     {
-        return $this->hasMany(BookingTourGuideDetail::class, 'booking_id');
+        return $this->hasOne(BookingTourGuideDetail::class, 'booking_id');
     }
 
     public function homestayDetails()
     {
-        return $this->hasMany(BookingHomestayDetail::class, 'booking_id');
+        return $this->hasOne(BookingHomestayDetail::class, 'booking_id');
     }
 
     public function customDetails()
     {
-        return $this->hasOne(BookingCustomDetail::class, 'booking_id');
+        return $this->hasMany(BookingCustomDetail::class, 'booking_id');
     }
     
     public function ratings()
     {
         return $this->hasMany(Rating::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query
+            ->whereIn('status_pemesanan', [
+                'menunggu pembayaran',
+                'menunggu verifikasi',
+                'dikonfirmasi'
+            ])
+            ->where(function ($q) {
+                $q->whereNull('expired_at')
+                ->orWhere('expired_at', '>', now());
+            });
+    }
+
+    public function getThumbnailAttribute()
+    {
+        if ($this->tipe_booking === 'paket_wisata') {
+
+            return $this->paketWisataDetails
+                ?->paketWisata
+                ?->url_thumbnail;
+        }
+
+        if ($this->tipe_booking === 'custom') {
+
+            return $this->customDetails
+                ->first()
+                ?->paketWisata
+                ?->url_thumbnail;
+        }
+
+        if ($this->tipe_booking === 'homestay') {
+
+            return $this->homestayDetails
+                ?->homestay
+                ?->url_thumbnail;
+        }
+
+        if ($this->tipe_booking === 'tour_guide') {
+
+            return $this->tourGuideDetails
+                ?->tourGuide
+                ?->foto_profil;
+        }
+
+        return null;
     }
 
 }

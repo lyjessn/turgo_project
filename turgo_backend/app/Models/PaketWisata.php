@@ -33,6 +33,15 @@ class PaketWisata extends Model
                     ->withPivot('persentase')
                     ->withTimestamps();
     }
+    public function blockouts()
+    {
+        return $this->hasMany(BlockoutSpesifik::class, 'id_target', 'id');
+    }
+
+    public function bookingDetails()
+    {
+        return $this->hasMany(  BookingPaketWisataDetail::class,  'paket_wisata_id' );
+    }
 
     public function ratings()
     {

@@ -1,0 +1,42 @@
+.homepage {
+  width: 100%;
+  background: #ffffff;
+}
+
+.hero-section {
+  padding-top: 96px;
+}
+
+.hero-wrapper {
+  position: relative;
+  height: 72vh;
+  min-height: 520px;
+  max-height: 820px;
+
+  border-radius: 28px;
+  overflow: hidden;
+
+  background-size: cover;
+  background-position: center;
+}
+
+.homepage-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.page-edge {
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 24px;
+}
+
+@media (max-width: 768px) {
+  .homepage-section {
+    padding: 48px 16px;
+  }
+}
+
+
+

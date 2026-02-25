@@ -1,10 +1,27 @@
 import axiosClient from './axiosClient';
 
 export const createBooking = async (formData) => {
-  const res = await axiosClient.post('/booking', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return res.data;
+  try {
+    const res = await axiosClient.post(`/booking`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const confirmPayment = async (bookingId, formData) => {
+  try {
+    const res = await axiosClient.post(`/booking/${bookingId}/confirm-payment`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 
 export const updateBookingStatus = async (id, status) => {
@@ -15,8 +32,13 @@ export const updateBookingStatus = async (id, status) => {
 };
 
 export const getBookingDetail = async (id) => {
-  const res = await axiosClient.get(`/booking/${id}`);
-  return res.data;
+  try {
+    const res = await axiosClient.get(`/booking/${id}`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+
 };
 
 export const getMyActiveBookings = async () => {
@@ -65,3 +87,4 @@ export const getPelakuWisataBookings = async () => {
   const res = await axiosClient.get('/booking/provider/pelaku-wisata');
   return res.data;
 };
+
