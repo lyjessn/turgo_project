@@ -1,0 +1,147 @@
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.auth-card {
+  width: 90%;
+  max-width: 1200px;
+  min-height: 620px;
+  height: auto;
+  display: flex;   
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.auth-form {
+  flex: 1;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-title {
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.auth-caption {
+  color: var(--secondary);
+  margin-bottom: 32px;
+}
+
+.auth-error {
+  color: var(--danger);
+  margin-bottom: 16px;
+}
+
+.auth-group {
+  margin-bottom: 16px;
+}
+
+.auth-group label {
+  color: var(--secondary);
+  font-size: 14px;
+}
+
+.auth-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: 6px;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  padding-right: 42px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--secondary);
+}
+
+.forgot-password {
+  font-size: 12px;
+  color: var(--primary);
+  margin-bottom: 24px;
+  cursor: pointer;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+.auth-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-register {
+  margin-top: 16px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.auth-register span {
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.auth-image {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.auth-image-caption {
+  position: absolute;
+  bottom: 32px;
+  left: 32px;
+  right: 32px;
+  color: var(--white);
+}
+
+.auth-image-caption .title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.auth-image-caption .subtitle {
+  font-style: italic;
+  font-size: 14px;
+  opacity: 0.85;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .password-wrapper input {
+    padding-right: 48px;
+  }
+
+  .password-toggle {
+    right: 10px;
+    font-size: 18px;
+  }
+}

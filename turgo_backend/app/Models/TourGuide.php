@@ -23,6 +23,11 @@ class TourGuide extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function bookingDetails()
+    {
+        return $this->hasMany(BookingTourGuideDetail::class, 'tour_guide_id');
+    }
+
     public function ratings()
     {
         return $this->hasMany(Rating::class, 'id_target')

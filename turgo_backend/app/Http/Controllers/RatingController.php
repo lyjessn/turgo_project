@@ -5,16 +5,24 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Booking;
 use App\Services\RatingService;
+use App\Models\Rating;
 
 class RatingController extends Controller
 {
 
-   public function available($bookingId)
+   public function available($id)
     {
-        $booking = Booking::where('id', $bookingId)
-            ->where('user_id', auth()->id())
-            ->where('status_pemesanan', 'selesai')
-            ->first();
+        $booking = Booking::with([
+            'customDetails.paketWisata',
+            'customDetails.tourGuide',
+            'paketWisataDetails.paketWisata',
+            'homestayDetails.homestay',
+            'tourGuideDetails.tourGuide'
+        ])
+        ->where('id', $id)
+        ->where('user_id', auth()->id())
+        ->where('status_pemesanan', 'selesai')
+        ->first();
 
         if (!$booking) {
             return response()->json([
@@ -63,9 +71,52 @@ class RatingController extends Controller
 
     public function summary($tipe, $id)
     {
+        $breakdown = Rating::where('tipe_target', $tipe)
+            ->where('id_target', $id)
+            ->selectRaw('bintang, COUNT(*) as total')
+            ->groupBy('bintang')
+            ->pluck('total', 'bintang');
+
+        $avg = Rating::where('tipe_target', $tipe)
+            ->where('id_target', $id)
+            ->avg('bintang');
+
+        $count = Rating::where('tipe_target', $tipe)
+            ->where('id_target', $id)
+            ->count();
+
         return response()->json([
             'success' => true,
-            'data' => RatingService::summary($tipe, $id)
+            'data' => [
+                'avg' => round($avg, 1),
+                'count' => $count,
+                'breakdown' => $breakdown
+            ]
+        ]);
+    }
+
+    public function listByTarget(Request $request, $tipe, $id)
+    {
+        if (!in_array($tipe, ['paket_wisata', 'tour_guide', 'homestay'])) {
+            return response()->json([
+                'message' => 'Tipe tidak valid'
+            ], 400);
+        }
+
+        $query = Rating::with('user')
+            ->where('tipe_target', $tipe)
+            ->where('id_target', $id);
+
+        if ($request->filled('bintang')) {
+            $query->where('bintang', $request->bintang);
+        }
+
+        $ratings = $query->orderByDesc('created_at')
+            ->paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'data' => $ratings
         ]);
     }
 }

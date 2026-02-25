@@ -2,16 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
+use App\Http\Controllers\Controller;
 use App\Models\TourGuide;
 use App\Models\User;
 
+use App\Services\BlockoutService;
+use App\Services\AvailabilityService;
+
 class TourGuideController extends Controller
 {
+    public function homepage()
+    {
+        $query = TourGuide::with('user')
+            ->withCount('bookingDetails')
+            ->withAvg('ratings', 'bintang')
+            ->where('is_aktif', 1);
+
+        $best = (clone $query)
+            ->orderByDesc('booking_details_count')
+            ->orderByDesc('ratings_avg_bintang')
+            ->orderByDesc('created_at')
+            ->first();
+
+        $others = (clone $query)
+            ->where('id', '!=', $best?->id)
+            ->latest()
+            ->take(3)
+            ->get();
+
+        return response()->json([
+            "success" => true,
+            "best" => $best,
+            "others" => $others
+        ]);
+    }
+
     public function index()
     {
         $tourGuides = TourGuide::with("user")
@@ -26,7 +55,13 @@ class TourGuideController extends Controller
 
     public function show($id)
     {
-        $tourGuide = TourGuide::with("user")->find($id);
+        $tourGuide = TourGuide::with([
+                'user',
+                'ratings.user'
+            ])
+            ->withAvg('ratings', 'bintang')
+            ->withCount('ratings')
+            ->find($id);
 
         if (!$tourGuide) {
             return response()->json([
@@ -40,6 +75,7 @@ class TourGuideController extends Controller
             "data" => $tourGuide
         ]);
     }
+    
     public function store(Request $request)
     {
         $admin = $request->user();
@@ -233,6 +269,36 @@ class TourGuideController extends Controller
             'message' => 'Status Tour Guide berhasil diubah',
             'data'    => $tourGuide
         ]);
+    }
+
+    public function available(Request $request)
+    {
+        $tanggal = $request->date;
+
+        if (BlockoutService::isGlobalBlocked($tanggal, $tanggal)) {
+            return response()->json([]);
+        }
+
+        $blockedIds = BlockoutService::getBlockedIds( 'tour_guide', $tanggal);
+
+        $guides = TourGuide::query()
+
+            ->with('user')
+            ->where('is_aktif', 1)
+            ->whereNotIn('id', $blockedIds)
+            ->get()
+
+            ->filter(fn ($guide) =>
+                AvailabilityService::isTourGuideAvailable(
+                    $guide->id,
+                    $tanggal,
+                    'full day', 
+                    null
+                )
+            )
+            ->values();
+
+        return response()->json($guides);
     }
 
 }

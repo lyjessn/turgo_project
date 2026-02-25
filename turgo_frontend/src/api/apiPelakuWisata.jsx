@@ -1,7 +1,7 @@
 import axiosClient from './axiosClient';
 
 export const getAllPelakuWisata = async () => {
-  const res = await axiosClient.get('/pelaku-wisata');
+  const res = await axiosClient.get(`/pelaku-wisata`);
   return res.data;
 };
 
@@ -11,18 +11,20 @@ export const getDetailPelakuWisata = async (id) => {
 };
 
 export const createPelakuWisata = async (formData) => {
-  const res = await axiosClient.post('/pelaku-wisata', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+  const res = await axiosClient.post(`/pelaku-wisata`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
   });
   return res.data;
 };
 
 export const updatePelakuWisata = async (id, formData) => {
-  const res = await axiosClient.post(
-    `/pelaku-wisata/${id}?_method=PUT`,
-    formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } }
-  );
+  const res = await axiosClient.post( `/pelaku-wisata/${id}?_method=PUT`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  });
   return res.data;
 };
 

@@ -1,19 +1,62 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Http\Controllers\Controller;
-use App\Models\PaketWisata;
-use App\Models\PaketWisataFoto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
+use App\Http\Controllers\Controller;
+use App\Models\PaketWisata;
+use App\Models\PaketWisataFoto;
+
+use App\Services\BlockoutService;
+use App\Services\AvailabilityService;
+
 class PaketWisataController extends Controller
 {
+    public function homepage()
+    {
+        $query = PaketWisata::with(['participants', 'fotos'])
+            ->withCount(['bookingDetails', 'ratings'])
+            ->withAvg('ratings', 'bintang')
+            ->where('is_aktif', 1);
+
+        $featured = (clone $query)
+            ->orderByDesc('booking_details_count')
+            ->orderByDesc('ratings_avg_bintang')
+            ->orderByDesc('created_at')
+            ->take(2)
+            ->get();
+
+        if ($featured->count() < 2) {
+            $tambahan = (clone $query)
+                ->whereNotIn('id', $featured->pluck('id'))
+                ->orderByDesc('rating')
+                ->orderByDesc('created_at')
+                ->take(2 - $featured->count())
+                ->get();
+
+            $featured = $featured->merge($tambahan);
+        }
+        
+        $others = (clone $query)
+            ->whereNotIn('id', $featured->pluck('id'))
+            ->orderByDesc('rating')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            "success"  => true,
+            "featured" => $featured,
+            "others"   => $others
+        ]);
+    }
+
     public function index()
     {
-        $pakets = PaketWisata::with(['pelakuWisatas', 'fotos'])
+        $pakets = PaketWisata::with(['participants', 'fotos'])
+            ->withCount(['bookingDetails', 'ratings'])
+            ->withAvg('ratings', 'bintang')
             ->where('is_aktif', 1)
             ->latest()
             ->paginate(10);
@@ -126,8 +169,14 @@ class PaketWisataController extends Controller
 
     public function show($id)
     {
-        $paket = PaketWisata::with(['pelakuWisatas', 'fotos'])
-            ->find($id);
+        $paket = PaketWisata::with([
+            'participants',
+            'fotos',
+            'ratings.user'
+        ])
+        ->withAvg('ratings', 'bintang')
+        ->withCount('ratings')
+        ->find($id);
 
         if (!$paket) {
             return response()->json([
@@ -141,6 +190,7 @@ class PaketWisataController extends Controller
             "data" => $paket
         ]);
     }
+
 
     public function update(Request $request, $id)
     {
@@ -187,7 +237,7 @@ class PaketWisataController extends Controller
         $paket->update($request->except(["pelaku_ids", "photos", "thumbnail"]));
 
         if ($request->has("pelaku_ids")) {
-            $paket->pelakuWisatas()->sync($request->pelaku_ids);
+            $paket->participants()->sync($request->pelaku_ids);
         }
 
         if ($request->hasFile("photos")) {
@@ -210,7 +260,7 @@ class PaketWisataController extends Controller
         return response()->json([
             "success" => true,
             "message" => "Paket wisata berhasil diupdate",
-            "data" => $paket->load(['pelakuWisatas', 'fotos'])
+            "data" => $paket->load(['participants', 'fotos'])
         ]);
     }
 
@@ -234,7 +284,7 @@ class PaketWisataController extends Controller
             $foto->delete();
         }
 
-        $paket->pelakuWisatas()->detach();
+        $paket->participants()->detach();
 
         $paket->delete();
 
@@ -243,4 +293,39 @@ class PaketWisataController extends Controller
             "message" => "Paket wisata berhasil dihapus"
         ]);
     }
+
+    public function available(Request $request)
+    {
+        $tanggal = $request->date;
+
+        if (BlockoutService::isGlobalBlocked($tanggal, $tanggal)) {
+            return response()->json([]);
+        }
+
+        $blockedIds = BlockoutService::getBlockedIds(
+            'paket_wisata',
+            $tanggal
+        );
+
+        $pakets = PaketWisata::query()
+            ->with(['participants','fotos'])
+            ->withCount('ratings')
+            ->withAvg('ratings','bintang')
+
+            ->where('is_aktif', 1)
+            ->whereNotIn('id', $blockedIds)
+
+            ->get()
+
+            ->filter(fn ($paket) =>
+                AvailabilityService::isPaketWisataAvailable(
+                    $paket->id,
+                    $tanggal
+                )
+            )
+            ->values();
+
+        return response()->json($pakets);
+    }
+
 }

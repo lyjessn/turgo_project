@@ -1,12 +1,12 @@
 import axiosClient from './axiosClient';
 
 export const getGlobalBlockouts = async () => {
-  const res = await axiosClient.get('/blockout/global');
+  const res = await axiosClient.get(`/blockout/global`);
   return res.data;
 };
 
 export const createGlobalBlockout = async (payload) => {
-  const res = await axiosClient.post('/blockout/global', payload);
+  const res = await axiosClient.post(`/blockout/global`, payload);
   return res.data;
 };
 
@@ -21,12 +21,12 @@ export const deleteGlobalBlockout = async (id) => {
 };
 
 export const getSpesifikBlockouts = async () => {
-  const res = await axiosClient.get('/blockout/spesifik');
+  const res = await axiosClient.get(`/blockout/spesifik`);
   return res.data;
 };
 
 export const createSpesifikBlockout = async (payload) => {
-  const res = await axiosClient.post('/blockout/spesifik', payload);
+  const res = await axiosClient.post(`/blockout/spesifik`, payload);
   return res.data;
 };
 

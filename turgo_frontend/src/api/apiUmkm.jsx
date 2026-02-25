@@ -1,7 +1,7 @@
 import axiosClient from './axiosClient';
 
 export const getAllUmkm = async () => {
-  const res = await axiosClient.get('/umkm');
+  const res = await axiosClient.get(`/umkm`);
   return res.data;
 };
 
@@ -11,15 +11,19 @@ export const getDetailUmkm = async (id) => {
 };
 
 export const createUmkm = async (formData) => {
-  const res = await axiosClient.post('/umkm', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+  const res = await axiosClient.post(`/umkm`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
   });
   return res.data;
 };
 
 export const updateUmkm = async (id, formData) => {
   const res = await axiosClient.post(`/umkm/${id}?_method=PUT`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
   });
   return res.data;
 };

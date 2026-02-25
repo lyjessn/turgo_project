@@ -1,0 +1,49 @@
+.reviews-wrapper {
+  padding: 40px ;
+}
+
+.reviews-filter {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 24px 0 32px 0;
+}
+
+.reviews-filter button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.filter-active {
+  background: #000;
+  color: #fff;
+}
+
+.filter-inactive {
+  background: #f2f2f2;
+  color: #333;
+}
+
+.detail-review-list {
+  margin-top: 10px;
+}
+
+.review-card {
+  margin-bottom: 20px;
+}
+
+.reviews-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.reviews-pagination button {
+  padding: 6px 14px;
+}

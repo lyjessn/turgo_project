@@ -34,6 +34,11 @@ class Homestay extends Model
         return $this->hasMany(Kamar::class);
     }
 
+    public function bookingDetails()
+    {
+        return $this->hasMany(BookingHomestayDetail::class, 'homestay_id');
+    }
+
     public function ratings()
     {
         return $this->hasMany(Rating::class, 'id_target')

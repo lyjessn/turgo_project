@@ -1,0 +1,206 @@
+.profile-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 70vh;
+}
+
+.profile-header {
+    text-align: center;
+    padding: 30px 0 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #e0f1f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 10px;
+}
+
+.profile-header h3 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.profile-header p {
+    margin: 4px 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.profile-tabs {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.profile-tabs button {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 14px 0;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    text-align: center;
+}
+
+.profile-tabs button.active {
+    color: #335C64;
+    border-bottom: 3px solid #335C64;
+    font-weight: 600;
+}
+
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.booking-card {
+    display: flex;
+    gap: 16px;
+    background: white;
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid #eee;
+    align-items: center;
+}
+
+.booking-thumb {
+    width: 100px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.booking-info {
+    flex: 1;
+}
+
+.booking-info h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.booking-info p {
+    margin: 2px 0;
+    font-size: 13px;
+    color: #555;
+}
+
+.status {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.status.menunggu\ pembayaran {
+    color: #e67e22;
+}
+
+.status.menunggu\ verifikasi {
+    color: #f39c12;
+}
+
+.status.dikonfirmasi {
+    color: #16a085;
+}
+
+.status.selesai {
+    color: #2ecc71;
+}
+
+.status.batal {
+    color: #e74c3c;
+}
+
+.status.ditolak {
+    color: #c0392b;
+}
+
+.booking-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.booking-actions button {
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.btn-detail {
+    background: white;
+    border: 1px solid #335C64;
+    color: #335C64;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    background: #c0392b !important;
+    color: white;
+}
+
+.btn-finish {
+    background: #335C64;
+    color: white;
+    border: none;
+}
+
+.btn-review {
+    background: #007d98;
+    color: white;
+}
+
+.profile-info {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.profile-info p {
+    margin: 8px 0;
+}
+
+.booking-card:hover {
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+@media (max-width: 768px) {
+
+    .profile-container {
+        padding: 12px;
+    }
+
+    .booking-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .booking-thumb {
+        width: 100%;
+        height: 140px;
+    }
+
+    .booking-actions {
+        flex-wrap: wrap;
+    }
+
+    .profile-tabs {
+        gap: 20px;
+        font-size: 13px;
+    }
+
+}

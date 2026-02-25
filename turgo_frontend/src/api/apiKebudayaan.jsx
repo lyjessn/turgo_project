@@ -1,8 +1,12 @@
 import axiosClient from './axiosClient';
 
 export const getAllKebudayaan = async () => {
-  const res = await axiosClient.get('/kebudayaan');
-  return res.data;
+  try {
+    const res = await axiosClient.get(`/kebudayaan`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 
 export const getDetailKebudayaan = async (id) => {
@@ -11,24 +15,20 @@ export const getDetailKebudayaan = async (id) => {
 };
 
 export const createKebudayaan = async (formData) => {
-  const res = await axiosClient.post('/kebudayaan', formData, {
+  const res = await axiosClient.post(`/kebudayaan`, formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
   return res.data;
 };
 
 export const updateKebudayaan = async (id, formData) => {
-  const res = await axiosClient.post(
-    `/kebudayaan/${id}?_method=PUT`,
-    formData,
-    {
+  const res = await axiosClient.post(`/kebudayaan/${id}?_method=PUT`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
-    }
-  );
+  });
   return res.data;
 };
 

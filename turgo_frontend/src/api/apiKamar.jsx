@@ -1,26 +1,20 @@
 import axiosClient from './axiosClient';
 
 export const createKamar = async (formData) => {
-  const res = await axiosClient.post('/kamar', formData, {
+  const res = await axiosClient.post(`/kamar`, formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
-
   return res.data;
 };
 
 export const updateKamar = async (id, formData) => {
-  const res = await axiosClient.post(
-    `/kamar/${id}?_method=PUT`,
-    formData,
-    {
+  const res = await axiosClient.post(`/kamar/${id}?_method=PUT`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
-    }
-  );
-
+  });
   return res.data;
 };
 

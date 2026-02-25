@@ -61,5 +61,18 @@ class BlockoutService
             })
             ->exists();
     }
+
+    public static function getBlockedIds(
+        string $kategori,
+        string $tanggal
+    ){
+        return BlockoutSpesifik::where('kategori', $kategori)
+            ->whereDate('tanggal_mulai', '<=', $tanggal)
+            ->whereDate('tanggal_selesai', '>=', $tanggal)
+            ->pluck('id_target');
+    }
+
+
+
 }
 

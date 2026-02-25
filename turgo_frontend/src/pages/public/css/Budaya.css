@@ -1,0 +1,69 @@
+.budaya-content {
+  padding-top: 30px;
+}
+
+.budaya-page {
+  width: 100%;
+}
+
+.budaya-section {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow: hidden;
+}
+
+.budaya-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.budaya-overlay {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 30%;
+  display: flex;
+  align-items: center;
+  padding: 40px;
+  color: white;
+}
+
+.budaya-overlay.left {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.85),
+    rgba(0,0,0,0.6),
+    transparent
+  );
+}
+
+.budaya-overlay.right {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgba(0,0,0,0.85),
+    rgba(0,0,0,0.6),
+    transparent
+  );
+}
+
+.budaya-content {
+  max-width: 400px;
+}
+
+.budaya-content h2 {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.budaya-content p {
+  font-size: 15px;
+  line-height: 1.6;
+  opacity: 0.9;
+}

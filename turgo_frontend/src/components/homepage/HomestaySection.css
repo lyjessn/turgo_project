@@ -1,0 +1,212 @@
+.homestay-section {
+    margin-top: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.homestay-header h2 {
+    font-size: 36px;
+    margin: 0;
+}
+
+.homestay-header p {
+    font-size: 16px;
+    margin-top: 6px;
+    color: #555;
+}
+
+.homestay-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+.homestay-card-main {
+    position: relative;
+    height: 465px;
+    border-radius: 20px;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+}
+
+.homestay-card-main::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 55%;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.85),
+        rgba(0, 0, 0, 0)
+    );
+}
+
+.homestay-favorite-pill {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: #fff;
+    padding: 6px 14px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    z-index: 2;
+}
+
+.homestay-content {
+    position: relative;
+    z-index: 2;
+    padding: 24px;
+    color: #fff;
+    width: 100%;
+}
+
+.homestay-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.homestay-rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+}
+
+.homestay-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.4);
+    margin: 10px 0;
+}
+
+.homestay-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    }
+
+.homestay-footer {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.homestay-price {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid #fff;
+    backdrop-filter: blur(8px);
+    background: rgba(255,255,255,0.2);
+}
+
+.homestay-order-btn {
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: none;
+    background: #fff;
+    color: #000;
+    font-weight: 600;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.homestay-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.homestay-gallery img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+.homestay-scroll {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+}
+
+.homestay-card-small {
+    position: relative;
+    min-width: 240px;
+    height: 220px;
+    border-radius: 16px;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+}
+
+.homestay-card-small::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    height: 55%;
+    width: 100%;
+    background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.75),
+        rgba(0,0,0,0)
+    );
+}
+
+.homestay-small-content {
+    position: absolute;
+    bottom: 0;
+    padding: 14px;
+    color: #fff;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.homestay-small-price {
+    font-weight: 600;
+}
+
+.homestay-small-btn {
+    border: 1px solid #fff;
+    background: transparent;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+
+@media (max-width: 768px) {
+    .homestay-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .homestay-card-main {
+        height: auto;
+        min-height: 300px;
+    }
+
+    .homestay-gallery {
+        flex-direction: row;
+    }
+
+    .homestay-gallery img {
+        height: 120px;
+    }
+}

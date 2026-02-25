@@ -15,11 +15,11 @@ class UmkmController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
+        // $user = $request->user();
 
-        if (!in_array($user->role->name, ['admin','owner'])) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
+        // if (!in_array($user->role->name, ['admin','owner'])) {
+        //     return response()->json(['message' => 'Forbidden'], 403);
+        // }
 
         $data = Umkm::with(['user','fotos'])
             ->orderBy('id', 'desc')

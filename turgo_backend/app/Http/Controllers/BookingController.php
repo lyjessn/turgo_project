@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use App\Services\BlockoutService;
 use App\Services\AvailabilityService;
+use App\Services\RatingService;
 
 use App\Models\Booking;
 use App\Models\PaketWisata;
@@ -31,10 +32,10 @@ class BookingController extends Controller
         $request->validate([
             'tanggal_mulai'         => 'required|date',
             'tanggal_selesai'       => 'required|date|after_or_equal:tanggal_mulai',
-            'bukti_pembayaran'      => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'norek_refund'          => 'required|digits_between:8,20',
-            'bank_refund'           => 'required|string|max:100',
-            'nama_rekening_refund'  => 'required|string|max:150',
+            'bukti_pembayaran'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'norek_refund'          => 'nullable|digits_between:8,20',
+            'bank_refund'           => 'nullable|string|max:100',
+            'nama_rekening_refund'  => 'nullable|string|max:150',
         ]);
 
         $total = 0;
@@ -201,21 +202,19 @@ class BookingController extends Controller
             ], 422);
         }
 
-        $buktiPath = $request->file('bukti_pembayaran')
-            ->store('booking/bukti', 'public');
-
         $booking = Booking::create([
             'user_id'                 => $user->id,
             'tipe_booking'            => $tipe,
             'tanggal_booking'         => now(),
             'tanggal_mulai'           => $request->tanggal_mulai,
             'tanggal_selesai'         => $request->tanggal_selesai,
-            'status_pemesanan'        => 'menunggu verifikasi',
             'total_harga'             => $total,
-            'bukti_pembayaran'        => $buktiPath,
-            'norek_refund'            => $request->norek_refund,
-            'bank_refund'             => $request->bank_refund,
-            'nama_rekening_refund'    => $request->nama_rekening_refund,
+            'status_pemesanan'        => 'menunggu pembayaran',
+            'expired_at'              => now()->addMinutes(30),
+            'bukti_pembayaran'        => null,
+            'norek_refund'            => null,
+            'bank_refund'             => null,
+            'nama_rekening_refund'    => null,
         ]);
 
         if ($tipe === 'homestay') {
@@ -260,12 +259,43 @@ class BookingController extends Controller
             }
         }
 
-
         return response()->json([
             'success' => true,
             'message' => 'Booking berhasil dibuat, menunggu verifikasi',
             'data'    => $booking
         ], 201);
+    }
+
+    public function confirmPayment(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+
+        if ($booking->status_pemesanan !== 'menunggu pembayaran') {
+            return response()->json(['message' => 'Status tidak valid'], 400);
+        }
+
+        $request->validate([
+            'bukti_pembayaran' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'norek_refund' => 'required|digits_between:8,20',
+            'bank_refund' => 'required|string|max:100',
+            'nama_rekening_refund' => 'required|string|max:150',
+        ]);
+
+        $buktiPath = $request->file('bukti_pembayaran')
+            ->store('booking/bukti', 'public');
+
+        $booking->update([
+            'status_pemesanan' => 'menunggu verifikasi',
+            'bukti_pembayaran' => $buktiPath,
+            'norek_refund' => $request->norek_refund,
+            'bank_refund' => $request->bank_refund,
+            'nama_rekening_refund' => $request->nama_rekening_refund,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran berhasil dikirim'
+        ]);
     }
 
 
@@ -357,17 +387,17 @@ class BookingController extends Controller
     }
 
     //SHOW (VIEW DETAIL / VIEW BY ID)
-    public function show(Request $request, $id)
+    public function show(Request $request,$id)
     {
-        $booking = Booking::where('id', $id)
-            ->where('user_id', $request->user()->id)
-            ->first();
-
-        if (!$booking) {
-            return response()->json(['message' => 'Booking tidak ditemukan'], 404);
-        }
-
-        return response()->json($booking);
+        return Booking::with([
+            'customDetails.paketWisata',
+            'paketWisataDetails.paketWisata',
+            'homestayDetails.homestay',
+            'homestayDetails.kamar',
+            'tourGuideDetails.tourGuide'
+        ])
+        ->where('user_id',$request->user()->id)
+        ->findOrFail($id);
     }
 
     public function showAdmin(Request $request, $id)
@@ -438,20 +468,45 @@ class BookingController extends Controller
         return response()->json($booking);
     }
 
-    public function myActive()
+    public function myActive(Request $request)
     {
-        return Booking::where('user_id', auth()->id())
-            ->whereIn('status_pemesanan', ['menunggu verifikasi','dikonfirmasi'])
-            ->latest()->get();
+        return Booking::where('user_id', $request->user()->id)
+            ->whereIn('status_pemesanan', ['menunggu pembayaran', 'menunggu verifikasi', 'dikonfirmasi'])
+            ->with([
+                'paketWisataDetails.paketWisata',
+                'customDetails.paketWisata',
+                'homestayDetails.homestay',
+                'tourGuideDetails.tourGuide'
+            ])
+            ->latest()
+            ->get();
     }
-
-    public function myHistory()
+    public function myHistory(Request $request)
     {
-        return Booking::where('user_id', auth()->id())
-            ->whereIn('status_pemesanan', ['selesai','batal','ditolak'])
-            ->latest()->get();
-    }
+        $bookings = Booking::where('user_id', $request->user()->id)
+            ->whereIn('status_pemesanan', [
+                'selesai',
+                'batal',
+                'ditolak'
+            ])
+            ->with([
+                'paketWisataDetails.paketWisata',
+                'customDetails.paketWisata',
+                'homestayDetails.homestay',
+                'tourGuideDetails.tourGuide'
+            ])
+            ->latest()
+            ->get();
 
+        $bookings->transform(function ($booking) {
+            $booking->sudah_rating_semua =
+                RatingService::bookingSudahRatingSemua($booking);
+
+            return $booking;
+        });
+
+        return $bookings;
+    }
     public function updateStatus(Request $request, $id)
     {
         $admin = $request->user();
