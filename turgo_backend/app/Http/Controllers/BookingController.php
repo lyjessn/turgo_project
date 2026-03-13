@@ -148,11 +148,6 @@ class BookingController extends Controller
             }
 
             elseif ($request->filled('homestay_id') && $request->filled('kamar_id')) {
-                \Log::info('HOMESTAY BOOKING DETECTED', [
-                    'homestay_id' => $request->homestay_id,
-                    'kamar_id' => $request->kamar_id
-                ]);
-
                 if (BlockoutService::isBlocked(
                     'homestay',
                     $request->homestay_id,
@@ -391,7 +386,7 @@ class BookingController extends Controller
         ->latest()
         ->get();
     }
-    
+
     public function indexByHomestay(Request $request)
     {
         $user = $request->user();
