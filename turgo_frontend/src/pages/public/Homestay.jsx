@@ -64,6 +64,10 @@ const Homestay = () => {
         return data;
     }, [homestays, available, checkIn, checkOut, search]);
 
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 2);
+    const minDateString = minDate.toISOString().split("T")[0];
+
     return (
         <div className="catalog-container">
 
@@ -78,6 +82,7 @@ const Homestay = () => {
                         <span className="date-label">Check-in</span>
                         <input
                             type="date"
+                            min={minDateString}
                             value={checkIn}
                             onChange={(e) => setCheckIn(e.target.value)}
                         />
@@ -89,6 +94,7 @@ const Homestay = () => {
                         <span className="date-label">Check-out</span>
                         <input
                             type="date"
+                            min={minDateString}
                             value={checkOut}
                             onChange={(e) => setCheckOut(e.target.value)}
                         />

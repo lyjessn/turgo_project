@@ -120,22 +120,15 @@ class KamarController extends Controller
     public function update(Request $request, $id)
     {
         $user = $request->user();
+        $kamar = Kamar::find($id);
 
-        if (in_array($user->role->name, ['admin','owner'])) {
-            $request->validate([
-                'homestay_id' => 'required|exists:homestays,id'
-            ]);
-
-            $homestay = Homestay::find($request->homestay_id);
-        } else {
-            $homestay = Homestay::where('id_pemilik', $user->id)->first();
-
-            if (!$homestay) {
-                return response()->json([
-                    'message' => 'Homestay belum dibuat'
-                ], 400);
-            }
+        if (!$kamar) {
+            return response()->json([
+                'message' => 'Kamar tidak ditemukan'
+            ], 404);
         }
+
+        $homestay = Homestay::find($kamar->homestay_id);
 
         if (
             !in_array($user->role->name, ['admin','owner']) &&
@@ -173,16 +166,19 @@ class KamarController extends Controller
             ], 422);
         }
 
+        $data = $validator->validated();
+
         if ($request->hasFile('foto')) {
+
             if ($kamar->foto && Storage::disk('public')->exists($kamar->foto)) {
                 Storage::disk('public')->delete($kamar->foto);
             }
 
-            $kamar->foto = $request->file('foto')
+            $data['foto'] = $request->file('foto')
                 ->store('homestays/kamars', 'public');
         }
 
-        $kamar->update($request->except('foto'));
+        $kamar->update($data);
 
         return response()->json([
             'success' => true,
@@ -195,21 +191,15 @@ class KamarController extends Controller
     {
         $user = $request->user();
 
-        if (in_array($user->role->name, ['admin','owner'])) {
-            $request->validate([
-                'homestay_id' => 'required|exists:homestays,id'
-            ]);
+        $kamar = Kamar::find($id);
 
-            $homestay = Homestay::find($request->homestay_id);
-        } else {
-            $homestay = Homestay::where('id_pemilik', $user->id)->first();
-
-            if (!$homestay) {
-                return response()->json([
-                    'message' => 'Homestay belum dibuat'
-                ], 400);
-            }
+        if (!$kamar) {
+            return response()->json([
+                'message' => 'Kamar tidak ditemukan'
+            ], 404);
         }
+
+        $homestay = Homestay::find($kamar->homestay_id);
 
         if (
             !in_array($user->role->name, ['admin','owner']) &&
@@ -218,14 +208,6 @@ class KamarController extends Controller
             return response()->json([
                 'message' => 'Forbidden'
             ], 403);
-        }
-
-        $kamar = Kamar::find($id);
-
-        if (!$kamar) {
-            return response()->json([
-                'message' => 'Kamar tidak ditemukan'
-            ], 404);
         }
 
         if ($kamar->foto && Storage::disk('public')->exists($kamar->foto)) {
@@ -285,6 +267,28 @@ class KamarController extends Controller
             'success' => true,
             'message' => 'Status kamar berhasil diubah',
             'data'    => $kamar
+        ]);
+    }
+
+    public function myKamars(Request $request)
+    {
+        $user = $request->user();
+
+        $homestay = Homestay::where('id_pemilik', $user->id)->first();
+
+        if (!$homestay) {
+            return response()->json([
+                'message' => 'Homestay belum dibuat'
+            ], 404);
+        }
+
+        $kamars = Kamar::where('homestay_id', $homestay->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $kamars
         ]);
     }
 }

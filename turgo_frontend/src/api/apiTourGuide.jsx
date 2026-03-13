@@ -18,6 +18,15 @@ export const getAllTourGuide = async () => {
   }
 };
 
+export const getAllUsersTourGuide = async () => {
+  try {
+    const res = await axiosClient.get(`/users-tour-guide`);
+    return res.data;
+  } catch (err){
+    throw err.response?.data || err;
+  }
+};
+
 export const getDetailTourGuide = async (id) => {
   try {
     const res = await axiosClient.get(`/tour-guide/${id}`);
@@ -79,6 +88,15 @@ export const getAvailableTourGuide = async (date) => {
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
+  }
+};
+
+export const getMyTourGuide = async () => {
+  try {
+    const res = await axiosClient.get(`/my-tour-guide`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
   }
 };
 

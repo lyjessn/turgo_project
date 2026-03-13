@@ -13,24 +13,65 @@ use App\Models\User;
 use App\Services\BlockoutService;
 use App\Services\AvailabilityService;
 
+use Carbon\Carbon;
+
 class TourGuideController extends Controller
 {
     public function homepage()
     {
-        $query = TourGuide::with('user')
-            ->withCount('bookingDetails')
-            ->withAvg('ratings', 'bintang')
-            ->where('is_aktif', 1);
+        $oneMonthAgo = Carbon::now()->subMonth();
 
+        $query = TourGuide::with('user')
+            ->withAvg([
+                'ratings as ratings_avg_bintang' => fn($q) =>
+                    $q->where('tipe_target','tour_guide')
+            ], 'bintang')
+            ->withCount([
+                'ratings as ratings_count' => fn($q) =>
+                    $q->where('tipe_target','tour_guide')
+            ])
+            ->withCount([
+                'bookingDetails as booking_count' => function ($q) use ($oneMonthAgo) {
+                    $q->whereHas('booking', function ($b) use ($oneMonthAgo) {
+                        $b->where('created_at','>=',$oneMonthAgo)
+                        ->where('status_pemesanan','!=','dibatalkan');
+                    });
+                }
+            ])
+            ->where('is_aktif',1);
+
+        // tahap 1 (ideal)
         $best = (clone $query)
-            ->orderByDesc('booking_details_count')
-            ->orderByDesc('ratings_avg_bintang')
-            ->orderByDesc('created_at')
+            ->having('ratings_avg_bintang','>=',4.5)
+            ->orderByDesc('booking_count')
             ->first();
 
+        // tahap 2
+        if(!$best){
+            $best = (clone $query)
+                ->orderByDesc('booking_count')
+                ->first();
+        }
+
+        // tahap 3
+        if(!$best){
+            $best = (clone $query)
+                ->orderByDesc('ratings_avg_bintang')
+                ->first();
+        }
+
+        // tahap 4
+        if(!$best){
+            $best = (clone $query)
+                ->orderByDesc('created_at')
+                ->first();
+        }
+
+        // others (list tour guide lainnya)
         $others = (clone $query)
-            ->where('id', '!=', $best?->id)
-            ->latest()
+            ->where('id','!=',$best?->id)
+            ->orderByDesc('booking_count')
+            ->orderByDesc('ratings_avg_bintang')
             ->take(3)
             ->get();
 
@@ -41,9 +82,25 @@ class TourGuideController extends Controller
         ]);
     }
 
+    public function getAvailableTourGuide()
+    {
+        $users = User::where('role_id', 4)
+            ->where('profile_completed', 0)
+            ->select('id','nama_lengkap')
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $users
+        ]);
+    }
+
     public function index()
     {
         $tourGuides = TourGuide::with("user")
+            ->withAvg('ratings', 'bintang')
+            ->withCount('ratings')
             ->orderBy("id", "desc")
             ->get();
 
@@ -299,6 +356,26 @@ class TourGuideController extends Controller
             ->values();
 
         return response()->json($guides);
+    }
+
+    public function myTourGuide(Request $request)
+    {
+        $user = $request->user();
+
+        $tourGuide = TourGuide::with(['user'])
+            ->withAvg('ratings as ratings_avg_bintang', 'bintang')
+            ->withCount('ratings')
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$tourGuide) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tour Guide tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json($tourGuide);
     }
 
 }

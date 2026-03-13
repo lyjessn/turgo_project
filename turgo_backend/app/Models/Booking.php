@@ -14,6 +14,7 @@ class Booking extends Model
         'tanggal_mulai',
         'tanggal_selesai',
         'status_pemesanan',
+        'alasan_penolakan',
         'total_harga',
         'bukti_pembayaran',
         'norek_refund',

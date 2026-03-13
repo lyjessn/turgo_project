@@ -8,12 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CekRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     * @param  string  $role
-     */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         $user = $request->user();
@@ -25,14 +19,15 @@ class CekRole
             ], 401);
         }
 
-        if (!$user->role || !in_array($user->role->name, $roles)) {
+        $role = strtolower(str_replace(' ', '_', $user->role->name));
+
+        if (!in_array($role, $roles)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Akses ditolak: Role tidak sesuai: ' . ($user->role->name ?? 'tidak ada role') . ', harus salah satu dari: ' . implode(', ', $roles),
+                'message' => 'Akses ditolak: Role tidak sesuai: ' . $role . ', harus salah satu dari: ' . implode(', ', $roles),
             ], 403);
         }
 
         return $next($request);
     }
-
 }

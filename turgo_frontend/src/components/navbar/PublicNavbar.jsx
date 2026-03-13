@@ -114,14 +114,14 @@ const PublicNavbar = ({ variant = "solid" }) => {
 
                         <div className="logout-modal-actions">
                             <button
-                                className="btn-cancel"
+                                className="btn-secondary"
                                 onClick={() => setShowLogoutModal(false)}
                             >
                                 Batal
                             </button>
 
                             <button
-                                className="btn-confirm"
+                                className="btn-danger"
                                 onClick={() => {
                                     logout();
                                     setShowLogoutModal(false);

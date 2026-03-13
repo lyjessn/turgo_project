@@ -1,0 +1,111 @@
+.schedule-page{
+  padding:24px;
+}
+
+.schedule-title{
+  font-size:22px;
+  font-weight:600;
+}
+
+.schedule-calendar{
+  margin-top:20px;
+  height:650px;
+}
+
+.schedule-calendar .rbc-calendar{
+  height:100%;
+}
+
+.schedule-legend{
+  display:flex;
+  gap:20px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:14px;
+}
+
+.legend-color{
+  width:14px;
+  height:14px;
+  border-radius:4px;
+}
+
+/* warna legend */
+
+.legend-color.global{
+  background:#dc3545;
+}
+
+.legend-color.tg{
+  background:#0d6efd;
+}
+
+.legend-color.pw{
+  background:#198754;
+}
+
+.legend-color.hs{
+  background:#6f42c1;
+}
+
+.legend-color.umkm{
+  background:#fd7e14;
+}
+
+/* event colors */
+
+.event-global{
+  background:#dc3545 !important;
+  border:none !important;
+  color:white !important;
+}
+
+.event-tg{
+  background:#0d6efd !important;
+  border:none !important;
+  color:white !important;
+}
+
+.event-pw{
+  background:#198754 !important;
+  border:none !important;
+  color:white !important;
+}
+
+.event-hs{
+  background:#6f42c1 !important;
+  border:none !important;
+  color:white !important;
+}
+
+.event-umkm{
+  background:#fd7e14 !important;
+  border:none !important;
+  color:white !important;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:12px;
+}
+
+.form-group label{
+  font-weight:600;
+}
+
+.form-group input,
+.form-group select{
+  padding:8px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  width:100%;
+  box-sizing:border-box;
+}

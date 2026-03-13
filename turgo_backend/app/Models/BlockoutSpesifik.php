@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\TourGuide;
+use App\Models\PaketWisata;
+use App\Models\Homestay;
 
 class BlockoutSpesifik extends Model
 {
@@ -14,4 +17,18 @@ class BlockoutSpesifik extends Model
         'alasan',
     ];
 
+    public function tourGuide()
+    {
+        return $this->belongsTo(TourGuide::class, 'id_target');
+    }
+
+    public function paketWisata()
+    {
+        return $this->belongsTo(PaketWisata::class, 'id_target');
+    }
+
+    public function homestay()
+    {
+        return $this->belongsTo(Homestay::class, 'id_target');
+    }
 }

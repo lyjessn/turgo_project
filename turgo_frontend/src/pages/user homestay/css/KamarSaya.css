@@ -1,0 +1,150 @@
+.kamar-page{
+  width:100%;
+  padding:20px 60px;
+  box-sizing:border-box;
+}
+
+.kamar-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.kamar-actions{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.kamar-btn-primary{
+  background:#007d9b;
+  color:white;
+  border:none;
+  padding:8px 16px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.kamar-search{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:white;
+  padding:6px 10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+.kamar-search input{
+  border:none;
+  outline:none;
+}
+
+.kamar-filter{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.kamar-filter button{
+  border:none;
+  padding:6px 12px;
+  border-radius:8px;
+  background:#eee;
+  cursor:pointer;
+}
+
+.kamar-filter button.active{
+  background:#335C64;
+  color:white;
+}
+
+.kamar-list{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.kamar-card{
+  display:flex;
+  background:white;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  min-height:220px;
+}
+
+.kamar-image{
+  width:260px;
+  height:220px;
+  flex-shrink:0;
+  position:relative;
+}
+
+.kamar-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.kamar-image .switch{
+  position:absolute;
+  top:10px;
+  right:10px;
+}
+
+.kamar-content{
+  padding:16px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+.kamar-price{
+  font-weight:600;
+  color:#335C64;
+  margin-bottom:6px;
+}
+
+.kamar-fasilitas{
+  display:flex;
+  gap:14px;
+  margin-top:6px;
+}
+
+.kamar-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:14px;
+  color:#555;
+}
+
+.kamar-item svg{
+  color:#335C64;
+}
+
+.kamar-deskripsi{
+  margin-top:6px;
+  font-size:13px;
+  color:#666;
+}
+
+.kamar-card-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:auto;
+}
+
+.kamar-empty{
+  text-align:center;
+  padding:40px;
+  color:#777;
+}
+
+.kamar-loading{
+  padding:40px;
+  text-align:center;
+}

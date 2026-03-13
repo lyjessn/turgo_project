@@ -28,7 +28,7 @@ const Custom = () => {
 	const fetchAll = async () => {
 		try {
 			const res = await getAllPaketWisata();
-			setPakets(res.data.data || []);
+			setPakets(res.data || []);
 		} catch (err) {
 			console.error(err);
 		} finally {
@@ -101,11 +101,17 @@ const Custom = () => {
 	const hasUnavailable = selectedPakets.some(p => !isAvailable(p.id));
 
     const handleBooking = async () => {
-        if (!user) {
-            navigate("/login",{state:{redirectTo:"/custom"}});
+		if (!user) {
+            navigate("/login", {
+                state: {
+                    redirectTo: `/custom`,
+                    tanggal,
+                    jumlahOrang
+                }
+            });
             return;
         }
-
+		
         try {
             const formData = new FormData();
 

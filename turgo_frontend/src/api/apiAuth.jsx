@@ -14,6 +14,34 @@ export const Register = async (formData) => {
   }
 };
 
+export const registerByAdmin = async (formData) => {
+  try {
+    const res = await axiosClient.post("/registerByAdmin", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const registerByOwner = async (formData) => {
+  try {
+    const res = await axiosClient.post("/registerByOwner", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 export const SignIn = async (data) => {
     try {
         const res = await axiosClient.post("/login", data);

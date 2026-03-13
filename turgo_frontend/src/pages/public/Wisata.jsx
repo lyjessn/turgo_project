@@ -21,7 +21,7 @@ const Wisata = () => {
   const fetchData = async () => {
     try {
       const res = await getAllPaketWisata();
-      setPakets(res.data.data || []);
+      setPakets(res.data || []);
     } catch (err) {
       console.error(err);
     }
@@ -58,17 +58,30 @@ const Wisata = () => {
     return data;
   }, [pakets, available, tanggal, search]);
 
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 2);
+  const minDateString = minDate.toISOString().split("T")[0];
+
   return (
     <div className="catalog-container">
       <div className="catalog-header">
         <h1>Paket Wisata</h1>
-        <p>Temukan opsi terbaik untuk jadwalmu!</p>
+        <div className="paket-subheader">
+          <p>Temukan opsi terbaik untuk jadwalmu!</p>
+          <button
+            className="paket-custom-btn"
+            onClick={() => navigate("/paket-wisata/custom")}
+          >
+            custom paket
+          </button>
+        </div>
       </div>
 
       <div className="catalog-filter-row">
         <div className="date-filter">
           <input
             type="date"
+            min={minDateString}
             value={tanggal}
             onChange={(e) => setTanggal(e.target.value)}
             className={showPicker ? "show" : ""}

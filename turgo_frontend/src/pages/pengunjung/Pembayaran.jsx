@@ -3,6 +3,7 @@ import { useAuth } from "../../auth/useAuth";
 import { useEffect, useState } from "react";
 import { confirmPayment } from "../../api/apiBooking";
 import "./css/Pembayaran.css";
+import "../adminDanOwner/css/Modal.css"
 import { FaCalendar, FaUsers } from "react-icons/fa";
 
 const Pembayaran = () => {
@@ -41,13 +42,16 @@ const Pembayaran = () => {
 
   useEffect(() => {
 
-    if (!user)
+    if (!user) {
       navigate("/login");
+      return;
+    }
 
-    if (!location.state)
+    if (!booking) {
       navigate("/");
+    }
 
-  }, []);
+  }, [user, booking, navigate]);
 
   useEffect(() => {
 
@@ -279,7 +283,7 @@ const Pembayaran = () => {
         </div>
         {modal.show && (
           <div className="custom-modal-overlay">
-            <div className="custom-modal">
+            <div className="custom-modal modal-center">
               <div className="modal-icon-wrapper">
                 {modal.type === "success" && (
                   <div className="modal-icon success">✓</div>

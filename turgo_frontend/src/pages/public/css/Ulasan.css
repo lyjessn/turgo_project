@@ -47,3 +47,21 @@
 .reviews-pagination button {
   padding: 6px 14px;
 }
+
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eee;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+  overflow:hidden;
+}
+
+.review-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}

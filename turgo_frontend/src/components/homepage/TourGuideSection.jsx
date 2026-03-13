@@ -11,13 +11,14 @@ const TourGuideSection = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-        try {
-            const res = await getHomepageTourGuide();
-            setBest(res.best || null);
-            setOthers(res.others || []);
-        } catch (err) {
-            console.error(err);
-        }
+            try {
+                const res = await getHomepageTourGuide();
+                console.log(res.others);
+                setBest(res.best || null);
+                setOthers(res.others || []);
+            } catch (err) {
+                console.error(err);
+            }
         };
         fetchData();
     }, []);
@@ -28,32 +29,36 @@ const TourGuideSection = () => {
         <>
             <div className="tg-overlay" />
             <div className="tg-content">
-            <div className="tg-title">
-                {g.user?.nama_lengkap}
-                <span className="tg-capacity">
-                <FiUser /> {g.kapasitas_max}
-                </span>
-            </div>
+                <div className="tg-title">
+                    {g.user?.nama_lengkap}
+                    <span className="tg-rating">
+                        ⭐
+                        {Number(g.ratings_avg_bintang ?? 0).toFixed(1)}
+                        <span className="tg-rating-count">
+                            ({g.ratings_count ?? 0})
+                        </span>
+                    </span>
+                </div>
 
-            <div className="tg-divider" />
+                <div className="tg-divider" />
 
-            <div className="tg-meta">
-                <div><FiGlobe /> {g.bahasa}</div>
-                <div><FiStar /> {g.spesialisasi}</div>
-            </div>
+                <div className="tg-meta">
+                    <div><FiGlobe /> {g.bahasa}</div>
+                    <div><FiStar /> {g.spesialisasi}</div>
+                </div>
 
-            <div className="tg-footer">
-                <span className="tg-price">
-                Rp {Number(g.harga_per_hari).toLocaleString("id-ID")}
-                </span>
-                <button className="tg-btn"
-                    onClick={() =>
-                        navigate(`/tour-guide/${g.id}`)
-                    }
-                >
-                    <FiUserCheck /> Pilih
-                </button>
-            </div>
+                <div className="tg-footer">
+                    <span className="tg-price">
+                    Rp {Number(g.harga_per_hari).toLocaleString("id-ID")}
+                    </span>
+                    <button className="tg-btn"
+                        onClick={() =>
+                            navigate(`/tour-guide/${g.id}`)
+                        }
+                    >
+                        <FiUserCheck /> Pilih
+                    </button>
+                </div>
             </div>
         </>
     );
@@ -76,32 +81,36 @@ const TourGuideSection = () => {
                         <div className="tg-best-badge">🎖️ Guide of The Month</div>
 
                         <div className="tg-content">
-                        <div className="tg-title">
-                            {best.user?.nama_lengkap}
-                            <span className="tg-capacity">
-                            <FiUser /> {best.kapasitas_max} orang
-                            </span>
-                        </div>
+                            <div className="tg-title">
+                                {best.user?.nama_lengkap}
+                                <span className="tg-rating">
+                                    ⭐
+                                    {Number(best.ratings_avg_bintang ?? 0).toFixed(1)}
+                                    <span className="tg-rating-count">
+                                        ({best.ratings_count ?? 0})
+                                    </span>
+                                </span>
+                            </div>
 
-                        <div className="tg-divider" />
+                            <div className="tg-divider" />
 
-                        <div className="tg-meta">
-                            <div><FiGlobe /> {best.bahasa}</div>
-                            <div><FiStar /> {best.spesialisasi}</div>
-                        </div>
+                            <div className="tg-meta">
+                                <div><FiGlobe /> {best.bahasa}</div>
+                                <div><FiStar /> {best.spesialisasi}</div>
+                            </div>
 
-                        <div className="tg-footer">
-                            <span className="tg-price">
-                            Rp {Number(best.harga_per_hari).toLocaleString("id-ID")}
-                            </span>
-                            <button className="tg-btn"
-                                onClick={() =>
-                                    navigate(`/tour-guide/${best.id}`)
-                                }
-                            >
-                                <FiUserCheck /> Pilih
-                            </button>
-                        </div>
+                            <div className="tg-footer">
+                                <span className="tg-price">
+                                Rp {Number(best.harga_per_hari).toLocaleString("id-ID")}
+                                </span>
+                                <button className="tg-btn"
+                                    onClick={() =>
+                                        navigate(`/tour-guide/${best.id}`)
+                                    }
+                                >
+                                    <FiUserCheck /> Pilih
+                                </button>
+                            </div>
                         </div>
                     </div>
                     )}

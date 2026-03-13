@@ -166,6 +166,23 @@
     font-weight: 500;
 }
 
+.tg-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+}
+
+.tg-rating svg {
+    width: 16px;
+    height: 16px;
+}
+
+.tg-rating-count {
+    opacity: 0.8;
+    font-size: 13px;
+}
+
 
 @media (max-width: 768px) {
     .tg-grid {

@@ -24,8 +24,6 @@ const HomestaySection = () => {
 
     if (!featured) return null;
 
-    const gallery = featured.fotos?.slice(0, 2) || [];
-
     return (
         <section className="homestay-section">
             <div className="homestay-header">
@@ -42,53 +40,43 @@ const HomestaySection = () => {
                         backgroundImage: `url(http://127.0.0.1:8000/storage/${featured.url_thumbnail})`,
                     }}
                 >
-                <div className="homestay-favorite-pill">
-                    <FiHeart color="red" />
-                    Favorit Wisatawan
-                </div>
-                <div className="homestay-content">
-                    <div className="homestay-title-row">
-                    <h3>{featured.nama}</h3>
-                    <span className="homestay-rating">
-                        ⭐ {Number(featured.ratings_avg_bintang ?? 0).toFixed(1)}
-                        <span className="rating-count">
-                        ({featured.ratings_count ?? 0})
-                        </span>
-                    </span>
+                    <div className="homestay-favorite-pill">
+                        <FiHeart color="red" />
+                        Favorit Wisatawan
                     </div>
+                    <div className="homestay-content">
+                        <div className="homestay-title-row">
+                            <h3>{featured.nama}</h3>
+                            <span className="homestay-rating">
+                                ⭐ {Number(featured.ratings_avg_bintang ?? 0).toFixed(1)}
+                                <span className="rating-count">
+                                ({featured.ratings_count ?? 0})
+                                </span>
+                            </span>
+                        </div>
 
-                    <div className="homestay-divider" />
+                        <div className="homestay-divider" />
 
-                    <div className="homestay-meta">
-                    <FiMapPin />
-                    {featured.lokasi}
+                        <div className="homestay-meta">
+                            <FiMapPin />
+                            {featured.lokasi}
+                        </div>
+
+                        <div className="homestay-footer">
+
+                            <button className="homestay-order-btn"
+                                onClick={() =>
+                                    navigate(`/homestay/${featured.id}`)
+                                }
+                            >
+                                <FiShoppingCart />
+                                Pesan Sekarang
+                            </button>
+                        </div>
                     </div>
-
-                    <div className="homestay-footer">
-                   
-
-                    <button className="homestay-order-btn"
-                        onClick={() =>
-                            navigate(`/homestay/${featured.id}`)
-                        }
-                    >
-                        <FiShoppingCart />
-                        Pesan Sekarang
-                    </button>
-                    </div>
-                </div>
-                </div>
-
-                <div className="homestay-gallery">
-                    {gallery.map((foto) => (
-                        <img
-                        key={foto.id}
-                        src={`http://127.0.0.1:8000/storage/${foto.url_foto}`}
-                        alt="homestay"
-                        />
-                    ))}
                 </div>
             </div>
+
             {others.length > 0 && (
             <div className="homestay-scroll">
                 {others.map((item) => (
@@ -100,23 +88,29 @@ const HomestaySection = () => {
                     }}
                 >
                     <div className="homestay-small-content">
-                    <h4>{item.nama}</h4>
 
-                    <div className="homestay-small-meta">
-                        <FiMapPin /> {item.lokasi}
-                    </div>
+                        <div className="homestay-small-title-row">
+                            <h4>{item.nama}</h4>
 
-                    <div className="homestay-small-price">
-                        Rp {Number(item.harga ?? 0).toLocaleString("id-ID")}
-                    </div>
+                            <div className="homestay-small-rating">
+                                ⭐ {Number(item.ratings_avg_bintang ?? 0).toFixed(1)}
+                                <span className="rating-count">
+                                    ({item.ratings_count ?? 0})
+                                </span>
+                            </div>
+                        </div>
 
-                    <button className="homestay-small-btn"
-                        onClick={() =>
-                            navigate(`/homestay/${item.id}`)
-                        }
-                    >
-                        Lihat Detail
-                    </button>
+                        <div className="homestay-small-meta">
+                            <FiMapPin /> {item.lokasi}
+                        </div>
+
+                        <button className="homestay-small-btn"
+                            onClick={() =>
+                                navigate(`/homestay/${item.id}`)
+                            }
+                        >
+                            Lihat Detail
+                        </button>
                     </div>
                 </div>
                 ))}

@@ -1,19 +1,15 @@
 export const redirectByRole = (role) => {
-  switch (role) {
+
+  const normalizedRole = role?.toLowerCase().replace(/\s+/g, "_");
+
+  switch (normalizedRole) {
     case "admin":
-        return "/admin/dashboard";
-        
     case "owner":
-      return "/owner/dashboard";
-
     case "tour_guide":
-      return "/tour-guide/dashboard";
-
     case "homestay":
-      return "/homestay/dashboard";
-
     case "pelaku_wisata":
-      return "/pelaku-wisata/dashboard";
+    case "umkm":
+      return "/dashboard";
 
     default:
       return "/";

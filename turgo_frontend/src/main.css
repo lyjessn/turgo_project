@@ -32,7 +32,7 @@ button {
   cursor: pointer;
 }
 
-input {
+input,textarea {
   font-family: inherit;
   outline: none;
 }
