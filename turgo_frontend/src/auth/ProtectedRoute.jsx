@@ -1,7 +1,7 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 
-const ProtectedRoute = ({ children, roles }) => {
+const ProtectedRoute = ({ roles }) => {
   const { user, role, loading } = useAuth();
 
   if (loading) {
@@ -16,11 +16,13 @@ const ProtectedRoute = ({ children, roles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (roles && !roles.includes(role)) {
+  const normalizedRole = role?.toLowerCase().replace(/\s+/g, "_");
+
+  if (roles && !roles.includes(normalizedRole)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  return children;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

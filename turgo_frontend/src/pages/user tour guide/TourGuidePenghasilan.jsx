@@ -1,0 +1,15 @@
+import PenghasilanMitra from "../mitra/PenghasilanMitra";
+import { getMyIncome } from "../../api/apiRiwayatSaldo";
+
+const TourGuidePenghasilan = () => {
+
+  return (
+    <PenghasilanMitra
+      title="Penghasilan Saya"
+      fetchFunction={getMyIncome}
+    />
+  );
+
+};
+
+export default TourGuidePenghasilan;

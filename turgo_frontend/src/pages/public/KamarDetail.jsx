@@ -75,6 +75,10 @@ const KamarDetail = () => {
     }
   };
 
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 2);
+  const minDateString = minDate.toISOString().split("T")[0];
+
   return (
     <div className="detail-container">
 
@@ -199,6 +203,7 @@ const KamarDetail = () => {
 
             <input
               type="date"
+              min={minDateString}
               value={checkIn || ""}
               onChange={(e) =>
                 navigate(".", {
@@ -225,6 +230,7 @@ const KamarDetail = () => {
 
             <input
               type="date"
+              min={minDateString}
               value={checkOut || ""}
               onChange={(e) =>
                 navigate(".", {

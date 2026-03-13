@@ -59,6 +59,10 @@ const TourGuide = () => {
     return data;
   }, [guides, available, tanggal, search]);
 
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 2);
+  const minDateString = minDate.toISOString().split("T")[0];
+
   return (
     <div className="catalog-container">
 
@@ -72,6 +76,7 @@ const TourGuide = () => {
         <div className="date-filter">
           <input
             type="date"
+            min={minDateString}
             value={tanggal}
             onChange={(e) => setTanggal(e.target.value)}
             className={showPicker ? "show" : ""}

@@ -9,7 +9,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { role, user, logout } = useAuth();
-  const menus = MenuConfig[role] || [];
+  const menus = MenuConfig[role?.toLowerCase().replace(/\s+/g, "_")] || [];
 
   const [openMenu, setOpenMenu] = useState(null);
 
@@ -71,7 +71,10 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
                 <div key={idx}>
                   <div
                     className={`sidebar-item ${
-                      isChildActive(menu) ? "active-parent" : ""
+                      location.pathname === menu.path ||
+                      location.pathname.startsWith(menu.path + "/")
+                        ? "active"
+                        : ""
                     }`}
                     onClick={() => toggleMenu(menu.label)}
                   >

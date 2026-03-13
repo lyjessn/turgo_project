@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PaketWisata extends Model
 {
     protected $fillable = [
+        'id_pembuat',
         'nama',
         'kategori_paket',
         'deskripsi',
@@ -21,6 +22,11 @@ class PaketWisata extends Model
         'kapasitas_min',
         'kapasitas_max'
     ];
+
+    public function pembuat()
+    {
+        return $this->belongsTo(User::class, 'id_pembuat');
+    }
 
     public function fotos()
     {

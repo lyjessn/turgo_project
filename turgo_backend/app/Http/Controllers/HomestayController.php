@@ -15,57 +15,99 @@ use App\Models\Kamar;
 use App\Services\BlockoutService;
 use App\Services\AvailabilityService;
 
+use Carbon\Carbon;
 class HomestayController extends Controller
 {
     public function homepage()
     {
-        $query = Homestay::with('fotos')
-            ->where('is_aktif', 1);
+        $oneMonthAgo = Carbon::now()->subMonth();
 
+        $query = Homestay::with('fotos')
+            ->withAvg([
+                'ratings as ratings_avg_bintang' => fn($q) =>
+                    $q->where('tipe_target','homestay')
+            ], 'bintang')
+            ->withCount([
+                'ratings as ratings_count' => fn($q) =>
+                    $q->where('tipe_target','homestay')
+            ])
+            ->withCount([
+                'bookingDetails as booking_count' => function ($q) use ($oneMonthAgo) {
+                    $q->whereHas('booking', function ($b) use ($oneMonthAgo) {
+                        $b->where('created_at','>=',$oneMonthAgo)
+                        ->where('status_pemesanan','!=','dibatalkan');
+                    });
+                }
+            ])
+            ->where('is_aktif',1);
+
+        // tahap 1
         $featured = (clone $query)
-            ->withCount('bookingDetails')
-            ->orderByDesc('booking_details_count')
-            ->orderByDesc('rating')
-            ->orderByDesc('created_at')
+            ->having('ratings_avg_bintang','>=',4.5)
+            ->orderByDesc('booking_count')
             ->first();
 
-        if (!$featured) {
+        // tahap 2
+        if(!$featured){
             $featured = (clone $query)
-                ->orderByDesc('rating')
+                ->orderByDesc('booking_count')
+                ->first();
+        }
+
+        // tahap 3
+        if(!$featured){
+            $featured = (clone $query)
+                ->orderByDesc('ratings_avg_bintang')
+                ->first();
+        }
+
+        // tahap 4
+        if(!$featured){
+            $featured = (clone $query)
                 ->orderByDesc('created_at')
                 ->first();
         }
 
-        if (!$featured) {
-            return response()->json([
-                "success" => false,
-                "message" => "Homestay tidak ditemukan"
-            ]);
-        }
-
+        // others (scroll list)
         $others = (clone $query)
-            ->where('id', '!=', $featured->id)
-            ->orderByDesc('rating')
-            ->orderByDesc('created_at')
+            ->where('id','!=',$featured?->id)
+            ->orderByDesc('booking_count')
+            ->orderByDesc('ratings_avg_bintang')
             ->take(10)
             ->get();
 
         return response()->json([
-            "success" => true,
-            "featured" => $featured,
-            "others" => $others
+            "success"=>true,
+            "featured"=>$featured,
+            "others"=>$others
         ]);
     }
 
+    public function getAvailablePemilik()
+    {
+        $users = User::where('role_id', 4)
+            ->where('profile_completed', 0)
+            ->whereDoesntHave('homestays')
+            ->select('id', 'nama_lengkap', 'email')
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $users
+        ]);
+    }
 
     public function index()
     {
         $data = Homestay::query()
-        ->with('pemilik')
-        ->withMin('kamars', 'harga_per_malam')
-        ->withMax('kamars', 'harga_per_malam')
-        ->orderBy('id', 'desc')
-        ->get();
+            ->with('pemilik')
+            ->withMin('kamars', 'harga_per_malam')
+            ->withMax('kamars', 'harga_per_malam')
+            ->withAvg('ratings', 'bintang')
+            ->withCount('ratings')
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -108,22 +150,16 @@ class HomestayController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-
             'nama'        => 'required|string|max:255',
             'id_pemilik'  => 'required|exists:user,id|unique:homestays,id_pemilik',
-
             'lokasi'      => 'required|string',
-
             'check_in'    => 'required',
             'check_out'   => 'required',
-
             'rokok'       => 'required|string',
             'peliharaan'  => 'required|string',
-
-            'thumbnail'   => 'required|image|mimes:jpg,jpeg,png|max:2048',
-
-            'photos'      => 'required|array|min:1',
-            'photos.*'    => 'image|mimes:jpg,jpeg,png|max:2048',
+            'photos' => 'required|array|min:1',
+            'photos.*' => 'image|mimes:jpg,jpeg,png|max:2048',
+            'thumbnail_index' => 'required|integer|min:0',
 
             'kamars'                              => 'required|array|min:1',
             'kamars.*.nama'                       => 'required|string',
@@ -143,6 +179,7 @@ class HomestayController extends Controller
             ], 422);
         }
 
+
         $user = User::find($request->id_pemilik);
 
         if ($user->role_id != 4) {
@@ -151,20 +188,30 @@ class HomestayController extends Controller
             ], 400);
         }
 
-        $thumbPath = $request->file('thumbnail')
+        $photos = $request->file('photos');
+        $thumbIndex = $request->thumbnail_index;
+
+        if (!isset($photos[$thumbIndex])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Thumbnail index tidak valid'
+            ], 422);
+        }
+
+        $thumbPath = $photos[$thumbIndex]
             ->store('homestays/thumbnails', 'public');
 
         $homestay = Homestay::create([
-            'nama'          => $request->nama,
-            'id_pemilik'    => $request->id_pemilik,
-            'lokasi'        => $request->lokasi,
+            'nama' => $request->nama,
+            'id_pemilik' => $request->id_pemilik,
+            'lokasi' => $request->lokasi,
             'url_thumbnail' => $thumbPath,
-            'check_in'      => $request->check_in,
-            'check_out'     => $request->check_out,
-            'rokok'         => $request->rokok,
-            'peliharaan'    => $request->peliharaan,
-            'rating'        => 0,
-            'is_aktif'      => 1,
+            'check_in' => $request->check_in,
+            'check_out' => $request->check_out,
+            'rokok' => $request->rokok,
+            'peliharaan' => $request->peliharaan,
+            'rating' => 0,
+            'is_aktif' => 1,
         ]);
 
         foreach ($request->kamars as $kamar) {
@@ -188,13 +235,12 @@ class HomestayController extends Controller
             ]);
         }
 
-        foreach ($request->file('photos') as $photo) {
-
+        foreach ($photos as $photo) {
             $photoPath = $photo->store('homestays/photos', 'public');
 
             HomestayFoto::create([
                 'homestay_id' => $homestay->id,
-                'url_foto'    => $photoPath
+                'url_foto' => $photoPath
             ]);
         }
 
@@ -212,34 +258,31 @@ class HomestayController extends Controller
 
     public function update(Request $request, $id)
     {
-        $userLogin = $request->user();
-
-        $homestay = Homestay::find($id);
+        $homestay = Homestay::with('fotos')->find($id);
 
         if (!$homestay) {
             return response()->json([
+                "success" => false,
                 "message" => "Homestay tidak ditemukan"
             ], 404);
         }
 
-        if (
-            !in_array($userLogin->role->name, ['admin','owner']) &&
-            $userLogin->id != $homestay->id_pemilik
-        ) {
-            return response()->json([
-                "message" => "Forbidden"
-            ], 403);
-        }
-
         $validator = Validator::make($request->all(), [
-            'nama'       => 'nullable|string|max:255',
-            'lokasi'     => 'nullable|string',
-            'check_in'   => 'nullable',
-            'check_out'  => 'nullable',
-            'rokok'      => 'nullable|string',
+            'nama' => 'nullable|string|max:255',
+            'lokasi' => 'nullable|string',
+            'check_in' => 'nullable',
+            'check_out' => 'nullable',
+            'rokok' => 'nullable|string',
             'peliharaan' => 'nullable|string',
-            'thumbnail'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'is_aktif'   => 'nullable|boolean',
+
+            'new_photos' => 'sometimes|array',
+            'new_photos.*' => 'image|mimes:jpg,jpeg,png|max:2048',
+
+            'deleted_photos' => 'sometimes|array',
+            'deleted_photos.*' => 'exists:homestay_fotos,id',
+
+            'thumbnail_path' => 'sometimes|string',
+            'thumbnail_index' => 'sometimes|integer|min:0'
         ]);
 
         if ($validator->fails()) {
@@ -249,28 +292,110 @@ class HomestayController extends Controller
             ], 422);
         }
 
-        if ($request->hasFile('thumbnail')) {
+        $homestay->update($request->only([
+            'nama','lokasi','check_in','check_out','rokok','peliharaan'
+        ]));
 
-            if ($homestay->url_thumbnail &&
-                Storage::disk('public')->exists($homestay->url_thumbnail)) {
-                Storage::disk('public')->delete($homestay->url_thumbnail);
+        if ($request->deleted_photos) {
+            foreach ($request->deleted_photos as $photoId) {
+                $foto = HomestayFoto::find($photoId);
+
+                if ($foto) {
+                    Storage::disk('public')->delete($foto->url_foto);
+
+                    if ($homestay->url_thumbnail === $foto->url_foto) {
+                        $homestay->url_thumbnail = null;
+                    }
+
+                    $foto->delete();
+                }
             }
-
-            $homestay->url_thumbnail = $request->file('thumbnail')
-                ->store('homestays/thumbnails', 'public');
         }
 
-        $homestay->update($request->except('thumbnail'));
 
-        \Log::info('UPDATE HOMESTAY', [
-            'request' => $request->all(),
-            'fillable' => $homestay->getFillable(),
-        ]);
+        $uploadedPaths = [];
+
+        if ($request->hasFile('new_photos')) {
+            foreach ($request->file('new_photos') as $photo) {
+                $path = $photo->store('homestays/photos','public');
+
+                HomestayFoto::create([
+                    'homestay_id' => $homestay->id,
+                    'url_foto' => $path
+                ]);
+
+                $uploadedPaths[] = $path;
+            }
+        }
+
+        if ($request->thumbnail_path) {
+
+            $oldThumbnail = $homestay->url_thumbnail;
+            $newThumbnail = $request->thumbnail_path;
+
+            if ($oldThumbnail !== $newThumbnail) {
+
+                // hapus new thumbnail dari gallery jika ada
+                HomestayFoto::where('homestay_id',$homestay->id)
+                    ->where('url_foto',$newThumbnail)
+                    ->delete();
+
+                // masukkan old thumbnail ke gallery jika belum ada
+                if ($oldThumbnail &&
+                    !HomestayFoto::where('homestay_id',$homestay->id)
+                        ->where('url_foto',$oldThumbnail)
+                        ->exists()) {
+
+                    HomestayFoto::create([
+                        'homestay_id'=>$homestay->id,
+                        'url_foto'=>$oldThumbnail
+                    ]);
+                }
+
+                $homestay->update([
+                    'url_thumbnail'=>$newThumbnail
+                ]);
+            }
+
+        } elseif ($request->hasFile('new_photos') && $request->thumbnail_index !== null) {
+
+            if (isset($uploadedPaths[$request->thumbnail_index])) {
+
+                $oldThumbnail = $homestay->url_thumbnail;
+                $newThumbnail = $uploadedPaths[$request->thumbnail_index];
+
+                if ($oldThumbnail && $oldThumbnail !== $newThumbnail) {
+
+                    if (!HomestayFoto::where('homestay_id',$homestay->id)
+                        ->where('url_foto',$oldThumbnail)
+                        ->exists()) {
+
+                        HomestayFoto::create([
+                            'homestay_id'=>$homestay->id,
+                            'url_foto'=>$oldThumbnail
+                        ]);
+                    }
+                }
+
+                $homestay->url_thumbnail = $newThumbnail;
+            }
+
+        }
+
+        if (!$homestay->url_thumbnail) {
+            $firstPhoto = HomestayFoto::where('homestay_id',$homestay->id)->first();
+
+            if ($firstPhoto) {
+                $homestay->url_thumbnail = $firstPhoto->url_foto;
+            }
+        }
+
+        $homestay->save();
 
         return response()->json([
-            'success' => true,
-            'message' => 'Homestay berhasil diupdate',
-            'data'    => $homestay->load(['pemilik','kamars'])
+            'success'=>true,
+            'message'=>'Homestay berhasil diupdate',
+            'data'=>$homestay->load(['pemilik','kamars','fotos'])
         ]);
     }
 
@@ -382,5 +507,28 @@ class HomestayController extends Controller
             ->values();
 
         return response()->json($homestays);
+    }
+
+    public function myHomestay(Request $request)
+    {
+        $user = $request->user();
+
+        $homestay = Homestay::with(['fotos','kamars'])
+            ->where('id_pemilik', $user->id)
+            ->withAvg('ratings', 'bintang')
+            ->withCount('ratings')
+            ->first();
+
+        if (!$homestay) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Homestay tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $homestay
+        ]);
     }
 }

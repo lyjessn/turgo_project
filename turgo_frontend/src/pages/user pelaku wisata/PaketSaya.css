@@ -1,0 +1,68 @@
+.paket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.paket-card {
+  display: flex;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  min-height: 220px;
+}
+
+.paket-image {
+  width: 260px;
+  height: 220px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.paket-image .switch {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.paket-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.paket-content {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.paket-content h3 {
+  margin-bottom: 8px;
+}
+
+.paket-desc {
+  flex: 1;
+}
+
+.paket-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.paket-info svg {
+  color: #335C64;
+}
+
+.paket-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto;
+}

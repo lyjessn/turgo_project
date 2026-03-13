@@ -78,16 +78,16 @@ const DetailPaketWisata = () => {
 
             const res = await createBooking(formData);
 
-            const booking = res.data;
+            const booking = res.data || res;
 
             navigate("/pembayaran", {
-                state: {
-                    booking,
-                    paket,
-                    tanggal,
-                    jumlahOrang,
-                    total: booking.total_harga
-                }
+            state: {
+                booking,
+                paket,
+                tanggal,
+                jumlahOrang,
+                total: booking.total_harga
+            }
             });
 
         } catch (err) {
@@ -127,6 +127,9 @@ const DetailPaketWisata = () => {
 
     const reviews = getTopReviews();
 
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 2);
+    const minDateString = minDate.toISOString().split("T")[0];
 
     return (
         <div className="detail-container">
@@ -226,6 +229,7 @@ const DetailPaketWisata = () => {
 
                         <input
                             type="date"
+                            min={minDateString}
                             value={tanggal}
                             onChange={(e) => setTanggal(e.target.value)}
                             className="detail-date-input uniform-input"

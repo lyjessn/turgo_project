@@ -11,5 +11,5 @@ Artisan::command('inspire', function () {
 Schedule::command('bookings:cancel-expired')
     ->everyMinute();
 
-Schedule::command('bookings:update-status')
-    ->daily();
+Schedule::command('booking:auto-complete')
+    ->everyMinute();

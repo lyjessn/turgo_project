@@ -9,6 +9,15 @@ export const getAllKebudayaan = async () => {
   }
 };
 
+export const getAllKebudayaanAdmin = async () => {
+  try {
+    const res = await axiosClient.get(`/admin/kebudayaan`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+}
+
 export const getDetailKebudayaan = async (id) => {
   const res = await axiosClient.get(`/kebudayaan/${id}`);
   return res.data;

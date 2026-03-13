@@ -12,7 +12,7 @@ class BlockoutController extends Controller
 {
     public function indexGlobal(Request $request)
     {
-        if (!in_array($request->user()->role->name, ['admin','owner'])) {
+        if ($request->user()->role->name ==='pengunjung') {
             abort(403);
         }
 
@@ -22,31 +22,62 @@ class BlockoutController extends Controller
     public function indexSpesifik(Request $request)
     {
         $user = $request->user();
-        $query = BlockoutSpesifik::query();
 
+        $query = BlockoutSpesifik::with([
+            'tourGuide.user',
+            'paketWisata',
+            'homestay'
+        ]);
+
+        // admin & owner lihat semua
         if (in_array($user->role->name, ['admin','owner'])) {
             return $query->orderBy('tanggal_mulai')->get();
         }
 
         switch ($user->role->name) {
-            case 'tour_guide':
-                $query->where('kategori', 'tour_guide')
-                    ->where('id_target', $user->tourGuide->id);
-                break;
+
+            case 'tour guide':
+                if (!$user->tourGuide) {
+                    return [];
+                }
+
+                $query->where('kategori','tour_guide')
+                    ->where('id_target',$user->tourGuide->id);
+
+            break;
 
             case 'homestay':
-                $query->where('kategori', 'homestay')
-                    ->where('id_target', $user->homestay->id);
-                break;
+                if (!$user->homestays) {
+                    return [];
+                }
 
-            case 'pelaku_wisata':
-                $query->where('kategori', 'paket_wisata')
+                $query->where('kategori','homestay')
+                    ->where('id_target',$user->homestays->id);
+
+            break;
+
+            case 'pelaku wisata':
+                $query->where('kategori','paket_wisata')
                     ->whereIn('id_target', function ($q) use ($user) {
-                        $q->select('paket_wisata_id')
-                            ->from('paket_participants')
-                            ->where('user_id', $user->id);
+
+                        $q->select('id')
+                        ->from('paket_wisatas')
+                        ->where('id_pembuat',$user->id)
+
+                        ->union(
+
+                            DB::table('paket_wisata_participants')
+                                ->select('paket_wisata_id')
+                                ->where('user_id',$user->id)
+
+                        );
+
                     });
-                break;
+
+            break;
+
+            default:
+                return [];
         }
 
         return $query->orderBy('tanggal_mulai')->get();
@@ -96,29 +127,31 @@ class BlockoutController extends Controller
                         return response()->json(['message' => 'Forbidden'], 403);
                     }
                 }
-                break;
+            break;
 
             case 'homestay':
                 if ($user->role->name === 'homestay') {
-                    if ($user->homestay->id != $request->id_target) {
+                    if ($user->homestays->id != $request->id_target) {
                         return response()->json(['message' => 'Forbidden'], 403);
                     }
                 }
-                break;
+            break;
 
             case 'paket_wisata':
                 if ($user->role->name === 'pelaku_wisata') {
-                    $allowed = PaketWisata::where('id', $request->id_target)
-                        ->whereHas('participants', function ($q) use ($user) {
-                            $q->where('user_id', $user->id);
-                        })
-                        ->exists();
 
-                    if (!$allowed) {
-                        return response()->json(['message' => 'Forbidden'], 403);
+                    $paket = PaketWisata::where('id',$request->id_target)
+                        ->where('id_pembuat',$user->id)
+                        ->first();
+
+                    if(!$paket){
+                        return response()->json([
+                            'message' => 'Anda tidak berhak memblock paket ini'
+                        ],403);
                     }
                 }
-                break;
+
+            break;
         }
 
         $blockout = BlockoutSpesifik::create([
@@ -222,7 +255,7 @@ class BlockoutController extends Controller
 
         if ($user->role->name === 'homestay') {
             return $blockout->kategori === 'homestay'
-                && $blockout->id_target === $user->homestay->id;
+                && $blockout->id_target === $user->homestays->id;
         }
 
         if ($user->role->name === 'pelaku_wisata') {

@@ -1,39 +1,82 @@
 import axiosClient from './axiosClient';
 
 export const getAllUmkm = async () => {
-  const res = await axiosClient.get(`/umkm`);
-  return res.data;
+  try {
+    const res = await axiosClient.get(`/umkm`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+  
 };
 
+export const getAllUmkmAdmin = async () => {
+  try {
+    const res = await axiosClient.get(`/admin/umkm`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+export const getAllUsersUmkm = async () => {
+  try {
+    const res = await axiosClient.get(`/admin/users-umkm`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+}
+
 export const getDetailUmkm = async (id) => {
-  const res = await axiosClient.get(`/umkm/${id}`);
-  return res.data;
+  try {
+    const res = await axiosClient.get(`/umkm/${id}`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 
 export const createUmkm = async (formData) => {
-  const res = await axiosClient.post(`/umkm`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data"
-    }
-  });
-  return res.data;
+   try {
+    const res = await axiosClient.post(`/umkm`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 
 export const updateUmkm = async (id, formData) => {
-  const res = await axiosClient.post(`/umkm/${id}?_method=PUT`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data"
-    }
-  });
-  return res.data;
-};
-
-export const toggleUmkm = async (id) => {
-  const res = await axiosClient.post(`/umkm/${id}/toggle`);
-  return res.data;
+   try {
+    const res = await axiosClient.post(`/umkm/${id}?_method=PUT`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 
 export const deleteUmkm = async (id) => {
-  const res = await axiosClient.delete(`/umkm/${id}`);
-  return res.data;
+   try {
+    const res = await axiosClient.delete(`/umkm/${id}`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+export const getMyUmkm = async () => {
+  try {
+    const res = await axiosClient.get("/my-umkm");
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };

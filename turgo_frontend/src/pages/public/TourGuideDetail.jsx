@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { createBooking } from "../../api/apiBooking";
 import { getDetailTourGuide } from "../../api/apiTourGuide";
 import { useAuth } from "../../auth/useAuth";
@@ -12,9 +12,9 @@ const TourGuideDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-
+  const location = useLocation();
   const [guide, setGuide] = useState(null);
-  const [tanggal, setTanggal] = useState("");
+  const [tanggal, setTanggal] = useState(location.state?.tanggal || "");
   const [durasi, setDurasi] = useState("full day");
   const [sesi, setSesi] = useState("pagi");
   const [loading, setLoading] = useState(true);
@@ -78,6 +78,10 @@ const TourGuideDetail = () => {
   };
 
   const reviews = getTopReviews();
+
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 2);
+  const minDateString = minDate.toISOString().split("T")[0];
 
   const handleBooking = async () => {
 
@@ -166,43 +170,43 @@ const TourGuideDetail = () => {
         <div className="detail-info-list">
 
             <div className="detail-info-item">
-            <BiMoney />
-            <div>
-                <b>Harga Booking Pemandu</b>
-                <p>
-                Rp {hargaPerHari.toLocaleString("id-ID")} / hari
-                </p>
-            </div>
-            </div>
-
-            <div className="detail-info-item">
-            <FiUsers />
-            <div>
-                <b>Kapasitas</b>
-                <p>
-                {guide.kapasitas_min}-{guide.kapasitas_max} org
-                </p>
-            </div>
+              <BiMoney />
+              <div>
+                  <b>Harga Booking Pemandu</b>
+                  <p>
+                  Rp {hargaPerHari.toLocaleString("id-ID")} / hari
+                  </p>
+              </div>
             </div>
 
             <div className="detail-info-item">
-            <FiGlobe />
-            <div>
-                <b>Bahasa Yang Dikuasai</b>
-                <p>{guide.bahasa}</p>
-            </div>
+              <FiUsers />
+              <div>
+                  <b>Kapasitas</b>
+                  <p>
+                  {guide.kapasitas_min}-{guide.kapasitas_max} org
+                  </p>
+              </div>
             </div>
 
             <div className="detail-info-item">
-            <FiStar />
-            <div>
-                <b>Spesialisasi</b>
-                <p>{guide.spesialisasi}</p>
+              <FiGlobe />
+              <div>
+                  <b>Bahasa Yang Dikuasai</b>
+                  <p>{guide.bahasa}</p>
+              </div>
             </div>
+
+            <div className="detail-info-item">
+              <FiStar />
+              <div>
+                  <b>Spesialisasi</b>
+                  <p>{guide.spesialisasi}</p>
+              </div>
             </div>
 
         </div>
-        </div>
+      </div>
 
       <div className="detail-section">
 
@@ -218,6 +222,7 @@ const TourGuideDetail = () => {
             <input
               type="date"
               value={tanggal}
+              min={minDateString}
               onChange={(e) => setTanggal(e.target.value)}
               className="detail-date-input uniform-input"
             />

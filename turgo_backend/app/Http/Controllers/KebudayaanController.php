@@ -10,9 +10,25 @@ use App\Models\Kebudayaan;
 
 class KebudayaanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Kebudayaan::where('is_aktif', 1)
+        $query = Kebudayaan::query();
+
+        $user = $request->user();
+
+        if (!$user || !in_array($user->role->name, ['admin','owner'])) {
+            $query->where('is_aktif', 1);
+        }
+
+        if ($request->has('is_aktif')) {
+            $query->where('is_aktif', $request->is_aktif);
+        }
+
+        if ($request->has('search')) {
+            $query->where('nama', 'like', '%' . $request->search . '%');
+        }
+
+        $data = $query
             ->orderBy('id', 'desc')
             ->get();
 

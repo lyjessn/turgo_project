@@ -74,7 +74,7 @@ class AuthController extends Controller
 
         if (!$userLogin || ($userLogin->role->name !== 'admin' && $userLogin->role->name !== 'owner')) {
             return response()->json([
-                'message' => 'Forbidden, hanya admin'
+                'message' => 'Forbidden, hanya admin dan owner'
             ], 403);
         }
 
@@ -88,15 +88,19 @@ class AuthController extends Controller
             'foto_profil'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        return response()->json([
-        'success' => false,
-        'errors' => $validator->errors()
-        ], 422);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         $fotoPath = null;
 
         if ($request->hasFile('foto_profil')) {
-            $namaFile = $namaFile = time().'_'.$request->username.'.'.$ext;
+
+            $ext = $request->file('foto_profil')->getClientOriginalExtension();
+            $namaFile = time().'_'.$request->username.'.'.$ext;
 
             $fotoPath = $request->file('foto_profil')
                 ->storeAs('foto_profil', $namaFile, 'public');
@@ -117,7 +121,72 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'User berhasil dibuat oleh admin',
+            'message' => 'User berhasil dibuat',
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role_id' => $user->role_id,
+                'profile_completed' => $user->profile_completed
+            ]
+        ], 201);
+
+    }
+
+    public function registerByOwner(Request $request)
+    {
+        $userLogin = $request->user();
+
+        if (!$userLogin || $userLogin->role->name !== 'owner') {
+            return response()->json([
+                'message' => 'Forbidden, hanya owner'
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'username'      => 'required|string|max:255|unique:user,username',
+            'email'         => 'required|email|max:255|unique:user,email',
+            'password'      => 'required|string|min:8|confirmed',
+            'nama_lengkap'  => 'required|string|max:255',
+            'nomor_telepon' => 'nullable|string|max:20',
+            'role_id'       => 'required|in:1,2',
+            'foto_profil'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $fotoPath = null;
+
+        if ($request->hasFile('foto_profil')) {
+
+            $ext = $request->file('foto_profil')->getClientOriginalExtension();
+            $namaFile = time().'_'.$request->username.'.'.$ext;
+
+            $fotoPath = $request->file('foto_profil')
+                ->storeAs('foto_profil', $namaFile, 'public');
+        }
+
+        $user = User::create([
+            'username'      => $request->username,
+            'email'         => $request->email,
+            'password'      => Hash::make($request->password),
+            'nama_lengkap'  => $request->nama_lengkap,
+            'nomor_telepon' => $request->nomor_telepon,
+
+            'role_id'       => $request->role_id,
+            'foto_profil'   => $fotoPath,
+
+            'is_aktif'      => 1,
+            'profile_completed' => 0
+        ]);
+
+        return response()->json([
+            'message' => 'Admin berhasil dibuat oleh owner',
             'user' => [
                 'id' => $user->id,
                 'username' => $user->username,
@@ -171,7 +240,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type'   => 'Bearer',
             'user'         => $user,
-            'role'         => $user->role->name ?? null,
+            'role' => str_replace(' ', '_', strtolower($user->role->name ?? '')),
         ]);
     }
 
@@ -203,11 +272,16 @@ class AuthController extends Controller
 
     public function getUserData(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user()->load([
+            'role',
+            'tourGuide',
+            'pelakuWisata',
+            'homestays'
+        ]);
 
         return response()->json([
             'user' => $user,
-            'role' => $user->role->name ?? null
+            'role' => str_replace(' ', '_', strtolower($user->role->name ?? ''))
         ]);
     }
 }

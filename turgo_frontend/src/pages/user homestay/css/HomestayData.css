@@ -1,0 +1,116 @@
+.homestay-page{
+  width:100%;
+  padding:20px 60px;
+  box-sizing:border-box;
+}
+
+.homestay-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+.homestay-title h2{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.review-link{
+  margin-left:6px;
+  font-size:14px;
+  cursor:pointer;
+  color:#335c64;
+  text-decoration: underline;
+}
+
+.review-link:hover{
+  text-decoration:underline;
+}
+
+.homestay-main-image{
+  width:100%;
+  height:420px;
+  object-fit:cover;
+  border-radius:12px;
+}
+
+.gallery-dots{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin-top:10px;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#ccc;
+  cursor:pointer;
+}
+
+.dot.active{
+  background:#335C64;
+}
+
+/* INFO */
+
+.homestay-info{
+  margin-top:18px;
+  max-width:650px;
+}
+
+.homestay-title{
+  font-size:24px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.rating{
+  color:#e6a400;
+  font-size:16px;
+}
+
+/* ITEM */
+
+.info-item{
+  display:flex;
+  gap:12px;
+  margin-bottom:14px;
+  color:#444;
+}
+
+.info-item svg{
+  margin-top:3px;
+}
+
+.info-item b{
+  display:block;
+}
+
+.info-item p{
+  margin:2px 0 0;
+  font-size:14px;
+  color:#666;
+}
+
+/* BUTTON */
+
+.edit-button{
+  margin-top:20px;
+  margin-left:auto;
+  display:flex;
+  gap:6px;
+  align-items:center;
+
+  background:#1f8a99;
+  color:white;
+  border:none;
+  padding:10px 18px;
+  border-radius:8px;
+  cursor:pointer;
+}

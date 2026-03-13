@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { getRatingsByTarget } from "../../api/apiRating";
+import { getMyHomestay } from "../../api/apiHomestay";
 import "./css/Detail.css";
 import "./css/Ulasan.css";
 
 const Ulasan = () => {
-
-  const { id } = useParams();
+  const { id: paramId } = useParams();
   const location = useLocation();
+
+  const [id,setId] = useState(paramId || null);
 
   const tipe = location.pathname.includes("tour-guide")
     ? "tour_guide"
@@ -22,8 +24,25 @@ const Ulasan = () => {
   const [lastPage, setLastPage] = useState(1);
 
   useEffect(() => {
-    fetchReviews();
-  }, [selectedBintang, page]);
+    if(!id){
+      fetchMyHomestay();
+    }
+  },[]);
+
+  useEffect(() => {
+    if(id){
+      fetchReviews();
+    }
+  },[id,selectedBintang,page]);
+
+  const fetchMyHomestay = async () => {
+    try{
+      const res = await getMyHomestay();
+      setId(res.data.id);
+    }catch(err){
+      console.error(err);
+    }
+  };
 
   const fetchReviews = async () => {
     setLoading(true);
@@ -35,8 +54,9 @@ const Ulasan = () => {
         page
       );
 
-      setReviews(res.data.data);
-      setLastPage(res.data.last_page);
+      setReviews(res.data);
+      setLastPage(res.last_page);
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -107,7 +127,14 @@ const Ulasan = () => {
             <div key={r.id} className="review-card">
 
               <div className="review-avatar">
-                👤
+                {r.user?.foto_profil ? (
+                  <img
+                    src={`http://127.0.0.1:8000/storage/${r.user.foto_profil}`}
+                    alt={r.user.username}
+                  />
+                ) : (
+                  r.user?.username?.charAt(0).toUpperCase()
+                )}
               </div>
 
               <div className="review-content">

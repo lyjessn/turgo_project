@@ -24,11 +24,16 @@ export const confirmPayment = async (bookingId, formData) => {
   }
 };
 
-export const updateBookingStatus = async (id, status) => {
-  const res = await axiosClient.post(`/booking/${id}/status`, {
-    status_pemesanan: status,
-  });
-  return res.data;
+export const updateBookingStatus = async (id, data) => {
+  try {
+    const res = await axiosClient.post(
+      `/booking/${id}/status`,
+      data
+    );
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
 };
 
 export const getBookingDetail = async (id) => {
@@ -61,11 +66,37 @@ export const getAllBookings = async () => {
   return res.data;
 };
 
+export const getAdminBookings = async () => {
+  try {
+    const res = await axiosClient.get("/admin/bookings");
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+export const sendBookingEmail = async (id, title, message) => {
+  try {
+    const res = await axiosClient.post(`/booking/${id}/send-email`, {
+      title,
+      message
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+  
+};
+
 export const assignTourGuide = async (id, tourGuideId) => {
-  const res = await axiosClient.post(`/booking/${id}/assign-tour-guide`, {
-    tour_guide_id: tourGuideId,
-  });
-  return res.data;
+  try {
+    const res = await axiosClient.post(`/booking/${id}/assign-tour-guide`, {
+      tour_guide_id: tourGuideId,
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 
 export const deleteBooking = async (id) => {
@@ -74,17 +105,29 @@ export const deleteBooking = async (id) => {
 };
 
 export const getTourGuideBookings = async () => {
-  const res = await axiosClient.get('/booking/provider/tour-guide');
-  return res.data;
+  try {
+    const res = await axiosClient.get('/tour-guide/my-bookings');
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 
 export const getHomestayBookings = async () => {
-  const res = await axiosClient.get('/booking/provider/homestay');
-  return res.data;
+  try {
+    const res = await axiosClient.get('/homestay/my-bookings');
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 
 export const getPelakuWisataBookings = async () => {
-  const res = await axiosClient.get('/booking/provider/pelaku-wisata');
-  return res.data;
+  try {
+    const res = await axiosClient.get('/pelaku-wisata/my-bookings');
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 

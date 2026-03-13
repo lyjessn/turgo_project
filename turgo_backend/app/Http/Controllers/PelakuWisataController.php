@@ -20,13 +20,26 @@ class PelakuWisataController extends Controller
         }
 
         $data = PelakuWisata::with('user')
-            ->where('is_aktif', 1)
-            ->orderBy('id', 'desc')
-            ->get();
+                ->orderBy('created_at','desc')
+                ->get();
 
         return response()->json([
             'success' => true,
             'data' => $data
+        ]);
+    }
+
+    public function getAvailablePelakuWisata()
+    {
+        $users = User::where('role_id', 3)
+            ->where('profile_completed', 0)
+            ->select('id','nama_lengkap')
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $users
         ]);
     }
 

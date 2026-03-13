@@ -135,7 +135,7 @@ const DetailPesanan=()=>{
                             <div>
 
                                 <div className="detail-summary-text">
-                                    {booking.tour_guide_details.tour_guide.nama}
+                                    {booking.tour_guide_details.tour_guide.user?.nama_lengkap}
                                 </div>
 
                                 <div className="detail-description">

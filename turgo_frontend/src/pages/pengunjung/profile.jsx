@@ -1,21 +1,39 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth/useAuth";
 import { getMyActiveBookings, getMyBookingHistory, cancelBooking } from "../../api/apiBooking";
+import { updateProfile } from "../../api/apiUser";
 import { useNavigate } from "react-router-dom";
 
 import "./css/profile.css";
 
 const Profile = () => {
-
-    const { user } = useAuth();
+    const { user, setUser } = useAuth();
     const navigate = useNavigate();
-
     const [tab, setTab] = useState("aktif");
-
     const [activeBookings, setActiveBookings] = useState([]);
     const [historyBookings, setHistoryBookings] = useState([]);
-
     const [loading, setLoading] = useState(true);
+
+    const [modal, setModal] = useState({
+        show: false,
+        type: "success",
+        message: ""
+    });
+
+    const [confirmModal, setConfirmModal] = useState({
+        show: false,
+        bookingId: null,
+        message: ""
+    });
+
+    const [editMode, setEditMode] = useState(false);
+
+    const [editForm, setEditForm] = useState({
+        nama_lengkap: "",
+        email: "",
+        nomor_telepon: "",
+        foto_profil: null
+    });
 
     useEffect(() => {
         fetchAll();
@@ -23,13 +41,11 @@ const Profile = () => {
 
     const fetchAll = async () => {
         try {
-
             const active = await getMyActiveBookings();
             const history = await getMyBookingHistory();
 
             setActiveBookings(active);
             setHistoryBookings(history);
-
         } catch (err) {
             console.error(err);
         } finally {
@@ -44,44 +60,88 @@ const Profile = () => {
     };
 
     const getButtonType = (booking) => {
-
         const status = booking.status_pemesanan;
 
         if (status === "selesai" && !booking.sudah_rating_semua) {
             return "ulasan";
         }
-        if (status === "dikonfirmasi") {
 
+        if (status === "dikonfirmasi") {
             const today = normalizeDate(new Date());
             const mulai = normalizeDate(booking.tanggal_mulai);
-
             const hMinus3 = new Date(mulai);
             hMinus3.setDate(hMinus3.getDate() - 3);
 
             if (today < hMinus3) {
                 return "batalkan";
             }
-
-            return "selesai";
         }
-
         return null;
     };
 
-    const handleCancel = async (id) => {
-        if (!window.confirm("Batalkan pesanan ini?")) return;
-        try {
-            await cancelBooking(id);
-            alert("Booking berhasil dibatalkan");
-            fetchAll();
-        } catch (err) {
-            alert(err.message || "Gagal membatalkan");
-        }
+    const handleCancel = (id) => {
+        setConfirmModal({
+            show: true,
+            bookingId: id,
+            message: "Yakin ingin membatalkan pesanan ini?"
+        });
+    };
 
+    const confirmCancelBooking = async () => {
+        try {
+            await cancelBooking(confirmModal.bookingId);
+            setConfirmModal({ show:false, bookingId:null });
+
+            setModal({
+                show: true,
+                type: "success",
+                message: "Pesanan berhasil dibatalkan"
+            });
+            fetchAll();
+
+        } catch (err) {
+            setConfirmModal({ show:false, bookingId:null });
+
+            setModal({
+            show: true,
+            type: "error",
+            message: "Gagal membatalkan pesanan"
+            });
+        }
     };
 
     const handleDetail = (id) => {
         navigate(`/booking/${id}`);
+    };
+
+    const handleUpdateProfile = async () => {
+        try {
+            const formData = new FormData();
+
+            Object.keys(editForm).forEach(key => {
+            if (editForm[key] !== null)
+                formData.append(key, editForm[key]);
+            });
+
+            const res = await updateProfile(formData);
+
+            setUser(res.data);
+            setModal({
+                show: true,
+                type: "success",
+                message: "Profil berhasil diperbarui"
+            });
+            setEditMode(false);
+        } catch (err) {
+            console.error(err.response?.data);
+
+            setModal({
+                show: true,
+                type: "error",
+                message: "Gagal memperbarui profil"
+            });
+
+        }
     };
 
     const BookingCard = ({ booking }) => {
@@ -89,6 +149,7 @@ const Profile = () => {
         const buttonType = getButtonType(booking);
 
         return (
+        
             <div className="booking-card">
                 <img
                     src={
@@ -165,6 +226,7 @@ const Profile = () => {
     }
 
     return (
+        <>
         <div className="profile-container">
 
             <div className="profile-header">
@@ -227,18 +289,173 @@ const Profile = () => {
                 )}
 
                 {tab === "profil" && (
-
                     <div className="profile-info">
+                        <p>Nama Lengkap: {user?.nama_lengkap}</p>
                         <p>Username: {user?.username}</p>
                         <p>Email: {user?.email}</p>
-                        <p>No HP: {user?.no_hp}</p>
+                        <p>No HP: {user?.nomor_telepon}</p>
+
+                        <button
+                        className="btn-primary"
+                        onClick={() => setEditMode(true)}
+                        >
+                        Edit Profil
+                        </button>
+
                     </div>
 
-                )}
+                    )}
 
             </div>
 
         </div>
+
+        {editMode && (
+            <div className="modal-overlay">
+                <div className="modal">
+                    <div className="modal-header">
+                        <h3>Edit Profil</h3>
+                        <span
+                        className="modal-close"
+                        onClick={() => setEditMode(false)}
+                        >
+                        ✕
+                        </span>
+                    </div>
+
+                    <div className="modal-body">
+                        <div className="column">
+                            <label>Nama Lengkap</label>
+                            <input
+                                type="text"
+                                value={editForm.nama_lengkap}
+                                onChange={(e)=>
+                                setEditForm({...editForm,nama_lengkap:e.target.value})
+                                }
+                            />
+                        </div>
+
+                        <div className="column">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                value={editForm.email}
+                                onChange={(e)=>
+                                setEditForm({...editForm,email:e.target.value})
+                                }
+                            />
+                        </div>
+
+                        <div className="column">
+                            <label>Nomor Telepon</label>
+                            <input
+                                type="text"
+                                value={editForm.nomor_telepon}
+                                onChange={(e)=>
+                                setEditForm({...editForm,nomor_telepon:e.target.value})
+                                }
+                            />
+                        </div>
+
+                        <div className="column">
+                            <label>Foto Profil</label>
+                            <input
+                                type="file"
+                                onChange={(e)=>
+                                setEditForm({...editForm,foto_profil:e.target.files[0]})
+                                }
+                            />
+                        </div>
+
+                    </div>
+
+                    <div className="modal-actions">
+
+                        <button
+                            className="btn-primary"
+                            onClick={handleUpdateProfile}
+                        >
+                        Simpan
+                        </button>
+
+                        <button
+                            className="btn-secondary"
+                            onClick={() => setEditMode(false)}
+                        >
+                        Batal
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {modal.show && (
+            <div className="custom-modal-overlay">
+                <div className="custom-modal modal-center">
+                    <div className="modal-icon-wrapper">
+                        {modal.type === "success" && (
+                            <div className="modal-icon success">✓</div>
+                        )}
+                        {modal.type === "error" && (
+                            <div className="modal-icon error">✕</div>
+                        )}
+                    </div>
+
+                    <h3 className="modal-title">{modal.type === "success" ? "Berhasil" : "Terjadi Kesalahan"}</h3>
+
+                    <p className="modal-message">{modal.message}</p>
+
+                    <button
+                        className="modal-button"
+                        onClick={() => setModal({ ...modal, show: false })}
+                    >
+                        OK
+                    </button>
+                </div>
+            </div>
+        )}
+
+        {confirmModal.show && (
+            <div className="custom-modal-overlay">
+                <div className="custom-modal modal-center">
+                    <div className="modal-icon-wrapper">
+                        <div className="modal-icon expired">!</div>
+                    </div>
+
+                    <h3 className="modal-title">
+                        Konfirmasi
+                    </h3>
+
+                    <p className="modal-message">
+                        {confirmModal.message}
+                    </p>
+
+                    <div style={{display:"flex", gap:"12px", justifyContent:"center"}}>
+
+                        <button
+                        className="btn-secondary"
+                        onClick={() =>
+                            setConfirmModal({ show:false, bookingId:null })
+                        }
+                        >
+                        kembali
+                        </button>
+
+                        <button
+                        className="btn-danger"
+                        onClick={confirmCancelBooking}
+                        >
+                        Batalkan
+                        </button>
+
+                    </div>
+
+                </div>
+            </div>
+        )}
+
+        </>
     );
 };
 

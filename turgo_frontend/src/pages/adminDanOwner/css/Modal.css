@@ -1,0 +1,276 @@
+.modal-overlay,
+.custom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+/* modal booking */
+.modal,
+.custom-modal {
+  background: #ffffff;
+  padding: 32px;
+  width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.18);
+  animation: modalPop 0.25s ease;
+  text-align: left;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 14px;
+}
+
+.modal-body p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.modal-body input,
+.modal-body textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.modal-body input {
+  height: 40px;
+}
+
+.modal-body textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.modal-body label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.modal-close {
+  cursor: pointer;
+  font-size: 20px;
+  color: #666;
+}
+
+.modal-close:hover {
+  color: #000;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+}
+
+.modal-icon.success {
+  background: #2ecc71;
+}
+
+.modal-icon.error {
+  background: #e74c3c;
+}
+
+.modal-icon.expired {
+  background: #f39c12;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+.modal-message {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 22px;
+  line-height: 1.5;
+}
+
+.modal-button {
+  padding: 10px 26px;
+  border-radius: 12px;
+  border: none;
+  background: #007D9B;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.modal-button:hover {
+  background: #007D9B;
+  transform: translateY(-1px);
+}
+
+.modal-button.secondary {
+  background: #ccc;
+  color: #333;
+}
+
+.modal-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.modal-textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  resize: vertical;
+}
+
+.payment-proof-img {
+  width: 100%;
+  max-width: 260px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+/* modal data */
+.modal-data {
+  background: #ffffff;
+  padding: 32px;
+  width: 650px;
+  max-width: 90%;
+  border-radius: 16px;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.18);
+  animation: modalPop 0.25s ease;
+  text-align: left;
+}
+
+.modal-data-body {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.modal-data-image {
+  width: 220px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.modal-data-info {
+  flex: 1;
+}
+
+.modal-data-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.modal-data-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-data-row {
+  display: flex;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.modal-data-label {
+  font-weight: 600;
+  min-width: 120px;
+  color: #34495e;
+}
+
+.modal-data-status.aktif {
+  color: #2ecc71;
+  font-weight: 600;
+}
+
+.modal-data-status.nonaktif {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+/*modal success/reject yg perlu centre*/
+.modal-center {
+  text-align: center;
+}
+
+.modal-center .modal-body {
+  align-items: center;
+}
+
+.modal-center .modal-button {
+  display: block;
+  margin: 0 auto;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modal-action-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-action-row.mt {
+  margin-top: 15px;
+}
+
+@keyframes modalPop {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

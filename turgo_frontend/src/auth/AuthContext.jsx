@@ -56,11 +56,11 @@ export const AuthProvider = ({ children }) => {
     restoreSession();
   }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{ user, role, login, logout, loading }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+ return (
+  <AuthContext.Provider
+    value={{ user, setUser, role, setRole, login, logout, loading }}
+  >
+    {children}
+  </AuthContext.Provider>
+);
 };
