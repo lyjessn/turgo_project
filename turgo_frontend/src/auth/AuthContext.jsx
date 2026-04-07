@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }) => {
         const data = await SignIn({ email, password });
 
         localStorage.setItem("token", data.access_token);
+        localStorage.setItem("role", data.role);
         setUser(data.user);
         setRole(data.role);
 
@@ -23,20 +24,28 @@ export const AuthProvider = ({ children }) => {
     }
  };
 
- const restoreSession = async () => {
+  const restoreSession = async () => {
     try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+      const token = localStorage.getItem("token");
 
-        const data = await GetUserData();
+      if (!token) {
+        setUser(null);
+        setRole(null);
+        return;
+      }
 
-        setUser(data.user);
-        setRole(data.role);
+      const data = await GetUserData();
+
+      setUser(data.user);
+      setRole(data.role);
+
     } catch (error) {
-        console.error("RESTORE SESSION FAILED", error);
-        localStorage.removeItem("token");
+      console.error("RESTORE SESSION FAILED", error);
+      localStorage.removeItem("token");
+      setUser(null);
+      setRole(null);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -53,6 +62,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    const savedRole = localStorage.getItem("role");
+
+    if (savedRole) {
+      setRole(savedRole);
+    }
+
     restoreSession();
   }, []);
 

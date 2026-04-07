@@ -3,6 +3,8 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Unauthorized from "./pages/auth/Unauthorized";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 import Homepage from "./pages/public/Homepage";
 import Wisata from "./pages/public/Wisata";
@@ -82,6 +84,8 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
 
       <Route element={<PublicLayout />}>
@@ -109,7 +113,7 @@ function App() {
 
         <Route element={<ProtectedRoute roles={["pengunjung"]} />}>
 
-          <Route path="pembayaran" element={<Pembayaran />} />
+          <Route path="pembayaran/:id" element={<Pembayaran />} />
           <Route path="profile" element={<Profile />} />
           <Route path="booking/:id" element={<DetailPesanan />} />
           <Route path="beri-ulasan/:id" element={<BeriUlasan />} />

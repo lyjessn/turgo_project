@@ -3,6 +3,7 @@ import { FiSearch, FiUserPlus, FiEye, FiX, FiEdit, FiTrash2 } from "react-icons/
 import "../adminDanOwner/css/AdminShared.css";
 import "../adminDanOwner/css/Modal.css";
 import { getAllAdmin, updateAdmin } from "../../api/apiAdmin";
+import { deleteUser } from "../../api/apiUser";
 import { GetUserData, registerByOwner } from "../../api/apiAuth";
 
 const OwnerAdmin = () => {
@@ -28,19 +29,27 @@ const OwnerAdmin = () => {
   const [showModal,setShowModal] = useState(false);
   const [showEditModal,setShowEditModal] = useState(false);
   const [showDetailModal,setShowDetailModal] = useState(false);
+  const [showDeleteModal,setShowDeleteModal] = useState(false);
   const [selectedItem,setSelectedItem] = useState(null);
 
   const [form,setForm] = useState(defaultForm);
   const [role, setRole] = useState(null);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
       loadUser();
       fetchData();
   }, []);
 
+    useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, roleFilter]);
+
   const loadUser = async () => {
       try {
           const res = await GetUserData();
+          console.log("ROLE", res);
           setRole(res.role);
       } catch (err) {
           console.error("Gagal ambil user:", err);
@@ -61,9 +70,12 @@ const OwnerAdmin = () => {
   const filteredData = useMemo(()=>{
 
     let result = [...data];
+    console.log(data);
 
     if(roleFilter !== "semua")
-      result = result.filter(d=>d.role.name === roleFilter);
+      result = result.filter(
+        d => d.role && d.role.name.toLowerCase() === roleFilter
+      );
 
     if(statusFilter === "aktif")
       result = result.filter(d=>d.is_aktif === 1);
@@ -81,6 +93,13 @@ const OwnerAdmin = () => {
     return result;
 
   },[data,search,roleFilter,statusFilter]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  const paginatedData = filteredData.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
 
   const toggleStatus = async(item)=>{
     try{
@@ -155,6 +174,19 @@ const OwnerAdmin = () => {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      await deleteUser(selectedItem.id);
+
+      setShowDeleteModal(false);
+      setSelectedItem(null);
+
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if(loading) return <div>Loading...</div>;
 
   return(
@@ -209,6 +241,16 @@ const OwnerAdmin = () => {
             Nonaktif
           </button>
 
+          <select
+            className="catalog-filter"
+            value={roleFilter}
+            onChange={(e)=>setRoleFilter(e.target.value)}
+          >
+            <option value="semua">Semua Role</option>
+            <option value="owner">owner</option>
+            <option value="admin">admin</option>
+          </select>
+
         </div>
 
         <div className="admin-table-wrapper">
@@ -229,7 +271,7 @@ const OwnerAdmin = () => {
 
             <tbody>
 
-              {filteredData.map(item=>(
+              {paginatedData.map(item=>(
                 <tr key={item.id}>
 
                   <td>{item.id}</td>
@@ -286,7 +328,10 @@ const OwnerAdmin = () => {
                     {role === "owner" && (
                       <button
                         className="btn-icon danger"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={()=>{
+                          setSelectedItem(item);
+                          setShowDeleteModal(true);
+                        }}
                       >
                         <FiTrash2/>
                       </button>
@@ -299,6 +344,30 @@ const OwnerAdmin = () => {
 
           </table>
 
+          {totalPages > 1 && (
+            <div className="admin-pagination">
+
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+              >
+                Prev
+              </button>
+
+              <span>
+                Page {page} / {totalPages}
+              </span>
+
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </button>
+
+            </div>
+          )}
+
         </div>
 
       </div>
@@ -308,7 +377,10 @@ const OwnerAdmin = () => {
         <div className="modal-overlay">
           <div className="modal">
 
-            <h3>Tambah Admin</h3>
+            <div className="modal-header">
+              <h2>Tambah Admin</h2>
+              <FiX className="modal-close" onClick={() => setShowModal(false)}/>
+            </div>
 
             <div className="form-group">
                 <label>Role</label>
@@ -585,6 +657,45 @@ const OwnerAdmin = () => {
 
               </div>
 
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && selectedItem && (
+        <div className="custom-modal-overlay">
+          <div className="custom-modal modal-center">
+
+            <div className="modal-icon-wrapper">
+              <div className="modal-icon error">!</div>
+            </div>
+
+            <h3 className="modal-title">
+              Hapus Admin
+            </h3>
+
+            <p className="modal-message">
+              Apakah Anda yakin ingin menghapus{" "}
+              <b>{selectedItem.nama_lengkap}</b>?
+              <br />
+              Data yang dihapus tidak dapat dikembalikan.
+            </p>
+
+            <div className="modal-actions">
+              <button
+                className="btn-danger"
+                onClick={handleDelete}
+              >
+                Hapus
+              </button>
+
+              <button
+                className="btn-secondary"
+                onClick={()=>setShowDeleteModal(false)}
+              >
+                Batal
+              </button>
             </div>
 
           </div>

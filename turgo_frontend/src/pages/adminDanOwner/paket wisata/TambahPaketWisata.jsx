@@ -14,6 +14,8 @@ const TambahPaketWisata = () => {
     const [participants, setParticipants] = useState([]);
     const [newPhotos, setNewPhotos] = useState([]);
     const [thumbnailIndex, setThumbnailIndex] = useState(0);
+    const [error, setError] = useState("");
+    const [submitting, setSubmitting] = useState(false);
     const [modal, setModal] = useState({
         show: false,
         type: "",
@@ -46,19 +48,49 @@ const TambahPaketWisata = () => {
     };
 
     const handleNext = () => setStep(prev => prev + 1);
-    const handleBack = () => setStep(prev => prev - 1);
+    const handleBack = () => {
+        setStep(prev => prev - 1);
+        setError("");
+    }
 
     const handleNextStep1 = () => {
+
         if (!form.nama || !form.harga || !form.preview) {
-            alert("Semua field wajib diisi");
+            setError("Semua field wajib diisi");
             return;
         }
 
         if (newPhotos.length < 3) {
-            alert("Minimal 3 foto paket");
+            setError("Minimal 3 foto paket");
             return;
         }
 
+        handleNext();
+        setError("");
+    };
+
+    const handleNextStep2 = () => {
+        if (!form.lokasi || !form.durasi || !form.perlengkapan || !form.deskripsi) {
+            setError("Semua field wajib diisi");
+            return;
+        }
+
+        if (
+            !form.kapasitas_min ||
+            !form.kapasitas_max ||
+            Number(form.kapasitas_min) < 1 ||
+            Number(form.kapasitas_max) < 1
+        ) {
+            setError("Kapasitas harus diisi dengan benar");
+            return;
+        }
+
+        if (Number(form.kapasitas_max) < Number(form.kapasitas_min)) {
+            setError("Kapasitas maksimum harus lebih besar dari minimum");
+            return;
+        }
+
+        setError("");
         handleNext();
     };
 
@@ -89,7 +121,7 @@ const TambahPaketWisata = () => {
 
     const handlePersenChange = (index, value) => {
         const updated = [...participants];
-        updated[index].persentase = Number(value);
+        updated[index].persentase = value;
         setParticipants(updated);
     };
 
@@ -110,20 +142,12 @@ const TambahPaketWisata = () => {
     }
 
     if (participants.length === 0) {
-        setModal({
-        show: true,
-        type: "error",
-        message: "Minimal 1 pelaku wisata"
-        });
+        setError("Minimal 1 pelaku wisata");
         return;
     }
 
     if (totalPersen !== 100) {
-        setModal({
-        show: true,
-        type: "error",
-        message: "Total persentase harus 100%"
-        });
+        setError("Total persentase harus 100%");
         return;
     }
 
@@ -143,18 +167,19 @@ const TambahPaketWisata = () => {
         formData.append("participants", JSON.stringify(participants));
 
         await createPaketWisata(formData);
+        setError("");
 
         setModal({
-        show: true,
-        type: "success",
-        message: "Paket wisata berhasil ditambahkan"
+            show: true,
+            type: "success",
+            message: "Paket wisata berhasil ditambahkan"
         });
 
     } catch (err) {
         setModal({
-        show: true,
-        type: "error",
-        message: "Terjadi kesalahan saat menyimpan data"
+            show: true,
+            type: "error",
+            message: "Terjadi kesalahan saat menyimpan data"
         });
     }
     };
@@ -195,38 +220,66 @@ const TambahPaketWisata = () => {
 
         {step === 1 && (
             <div className="card-form">
-            <input
-                placeholder="Nama Paket"
-                value={form.nama}
-                onChange={(e) => setForm({ ...form, nama: e.target.value })}
-            />
+            {error && <div className="error-text">{error}</div>}
+            
+                <div className="form-group">
+                    <label>Nama Paket</label>
+                    <input
+                        placeholder="Nama Paket"
+                        value={form.nama}
+                        onChange={(e) => {
+                            setForm({ ...form, nama: e.target.value });
+                            setError("");
+                        }}
+                        required
+                    />
+                </ div>
+                
+                <div className="form-group">
+                    <label>Harga Paket (per orang)</label>
+                    <input
+                        type="number"
+                        placeholder="Harga"
+                        value={form.harga}
+                        onChange={(e) => {
+                            setForm({ ...form, harga: e.target.value });
+                            setError("");
+                        }}
+                        required
+                    />
+                </ div>
+                
+                <div className="form-group">
+                    <label>Pilih Kategori Paket</label>
+                    <select
+                        value={form.kategori_paket}
+                        onChange={(e) => {
+                            setForm({ ...form, kategori_paket: e.target.value });
+                            setError("");
+                        }}
+                        required
+                    >
+                        <option value="alam">Alam</option>
+                        <option value="kesenian">Kesenian</option>
+                        <option value="kebudayaan">Kebudayaan</option>
+                        <option value="lainnya">Lainnya</option>
+                    </select>
+                </ div>
+                
+                <div className="form-group">
+                    <label>Deskripsi Singkat</label>
+                    <textarea
+                        placeholder="Deskripsi Singkat"
+                        value={form.preview}
+                        onChange={(e) => {
+                            setForm({ ...form, preview: e.target.value });
+                            setError("");
+                        }}
+                        required
+                    />
+                </ div>
 
-            <input
-                type="number"
-                placeholder="Harga"
-                value={form.harga}
-                onChange={(e) => setForm({ ...form, harga: e.target.value })}
-            />
-
-            <select
-                value={form.kategori_paket}
-                onChange={(e) =>
-                    setForm({ ...form, kategori_paket: e.target.value })
-                }
-            >
-                <option value="alam">Alam</option>
-                <option value="kesenian">Kesenian</option>
-                <option value="kebudayaan">Kebudayaan</option>
-                <option value="lainnya">Lainnya</option>
-            </select>
-
-            <textarea
-                placeholder="Deskripsi Singkat"
-                value={form.preview}
-                onChange={(e) => setForm({ ...form, preview: e.target.value })}
-            />
-
-                <div>
+                <div className="form-group">
                     <label>Upload Foto Paket (Minimal 3)</label>
                     <input
                         type="file"
@@ -235,7 +288,9 @@ const TambahPaketWisata = () => {
                             const files = Array.from(e.target.files);
                             setNewPhotos(prev => [...prev, ...files]);
                             e.target.value = null;
+                            setError("");
                         }}
+                        required
                     />
                 </div>
 
@@ -295,78 +350,117 @@ const TambahPaketWisata = () => {
 
         {step === 2 && (
             <div className="card-form">
-                <textarea
-                    placeholder="Lokasi"
-                    value={form.lokasi}
-                    onChange={(e) => setForm({ ...form, lokasi: e.target.value })}
-                />
-
-                <input
-                    placeholder="Durasi"
-                    value={form.durasi}
-                    onChange={(e) => setForm({ ...form, durasi: e.target.value })}
-                />
-
-                <div className="row">
-                    <input
-                    type="number"
-                    placeholder="Kapasitas Min"
-                    value={form.kapasitas_min}
-                    onChange={(e) =>
-                        setForm({ ...form, kapasitas_min: e.target.value })
-                    }
+                {error && <div className="error-text">{error}</div>}
+                <div className="form-group">
+                    <label>Lokasi Kegiatan</label>
+                    <textarea
+                        placeholder="Lokasi"
+                        value={form.lokasi}
+                        onChange={(e) => {
+                            setForm({ ...form, lokasi: e.target.value });
+                            setError("");
+                        }}
+                        required
                     />
-
+                </ div>
+                
+                <div className="form-group">
+                    <label>Durasi Kegiatan</label>
                     <input
-                    type="number"
-                    placeholder="Kapasitas Max"
-                    value={form.kapasitas_max}
-                    onChange={(e) =>
-                        setForm({ ...form, kapasitas_max: e.target.value })
-                    }
+                        placeholder="Durasi"
+                        value={form.durasi}
+                        onChange={(e) => {
+                            setForm({ ...form, durasi: e.target.value });
+                            setError("");
+                        }}
+                        required
                     />
-                </div>
+                </ div>
+                
+                <div className="form-group">
+                    <label>Kapasitas Paket</label>
+                    <div className="row">
+                        <input
+                            type="number"
+                            placeholder="Kapasitas Min"
+                            value={form.kapasitas_min}
+                            onChange={(e) => {
+                                setForm({ ...form, kapasitas_min: e.target.value });
+                                setError("");
+                            }}
+                            required
+                        />
 
-                <textarea
-                    placeholder="Perlengkapan"
-                    value={form.perlengkapan}
-                    onChange={(e) =>
-                    setForm({ ...form, perlengkapan: e.target.value })
-                    }
-                />
-
-                <textarea
-                    placeholder="Deskripsi Panjang"
-                    value={form.deskripsi}
-                    onChange={(e) =>
-                    setForm({ ...form, deskripsi: e.target.value })
-                    }
-                />
+                        <input
+                            type="number"
+                            placeholder="Kapasitas Max"
+                            value={form.kapasitas_max}
+                            onChange={(e) => {
+                                setForm({ ...form, kapasitas_max: e.target.value });
+                                setError("");
+                            }}
+                            required
+                        />
+                        
+                    </div>
+                </ div>
+                
+                <div className="form-group">
+                    <label>Perlengkapan</label>
+                    <textarea
+                        placeholder="Perlengkapan"
+                        value={form.perlengkapan}
+                        onChange={(e) =>{
+                            setForm({ ...form, perlengkapan: e.target.value });
+                            setError("");
+                        }}
+                        required
+                    />
+                </ div>
+                
+                <div className="form-group">
+                    <label>Deskripsi Lengkap</label>
+                    <textarea
+                        placeholder="Deskripsi Panjang"
+                        value={form.deskripsi}
+                        onChange={(e) =>{
+                            setForm({ ...form, deskripsi: e.target.value });
+                            setError("");
+                        }}
+                        required
+                    />
+                </ div>
+                
 
                 <div className="button-group">
                     <button className="btn-secondary" onClick={handleBack}>Kembali</button>
-                    <button className="btn-primary" onClick={handleNext}>Lanjutkan</button>
+                    <button className="btn-primary" onClick={handleNextStep2}>Lanjutkan</button>
                 </div>
             </div>
         )}
 
         {step === 3 && (
             <div className="card-form">
-                <div className="row">
-                    <select
-                        value={selectedPelaku}
-                        onChange={(e) => setSelectedPelaku(e.target.value)}
-                    >
-                        <option value="">Pilih Pelaku Wisata</option>
-                        {pelakuList.map((p) => (
-                            <option key={p.user_id} value={p.user_id}>
-                            {p.user.nama_lengkap}
-                            </option>
-                        ))}
-                    </select>
+                {error && <div className="error-text">{error}</div>}
+                <div className="form-group">
+                    <label>Pelaku Wisata Yang Terlibat</label>
+                    <div className="row">
+                        <select
+                            value={selectedPelaku}
+                            onChange={(e) => setSelectedPelaku(e.target.value)}
+                        >
+                            <option value="">Pilih Pelaku Wisata</option>
+                            {pelakuList.map((p) => (
+                                <option key={p.user_id} value={p.user_id}>
+                                {p.user.nama_lengkap}
+                                </option>
+                            ))}
+                        </select>
 
-                    <button className="btn-add-pelaku" onClick={handleAddPelaku}>+ Tambah</button>
-                </div>
+                        <button className="btn-add-pelaku" onClick={handleAddPelaku}>+ Tambah</button>
+                    </div>
+                </ div>
+                
 
                 <table className="admin-table">
                     <thead>

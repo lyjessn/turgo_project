@@ -13,10 +13,17 @@ class RiwayatSaldoController extends Controller
     {
         $user = $request->user();
 
-        $data = RiwayatSaldo::with(['booking.user'])
-            ->where('user_id', $user->id)
-            ->orderBy('tanggal','desc')
-            ->get();
+        $data = RiwayatSaldo::with([
+            'booking.user',
+            'booking.homestayDetails.homestay',
+            'booking.homestayDetails.kamar',
+            'booking.paketWisataDetails.paketWisata',
+            'booking.tourGuideDetails.tourGuide.user',
+            'booking.customDetails.paketWisata'
+        ])
+        ->where('user_id', $user->id)
+        ->orderBy('tanggal','desc')
+        ->get();
 
         $total = RiwayatSaldo::where('user_id',$user->id)->sum('jumlah');
 
@@ -48,7 +55,7 @@ class RiwayatSaldoController extends Controller
             'booking.user',
             'booking.homestayDetails.homestay',
             'booking.paketWisataDetails.paketWisata',
-            'booking.tourGuideDetails.tourGuide'
+            'booking.tourGuideDetails'
         ])
         ->where('user_id', $user->id);
 
@@ -60,12 +67,60 @@ class RiwayatSaldoController extends Controller
         $data = $query->get();
 
         $filename = $bulan === 'all'
-        ? "rekap_penghasilan_keseluruhan_{$tahun}.csv"
-        : "rekap_penghasilan_{$bulan}_{$tahun}.csv";
+            ? "rekap_penghasilan_keseluruhan_{$tahun}.csv"
+            : "rekap_penghasilan_{$bulan}_{$tahun}.csv";
 
-        return response()->streamDownload(function () use ($data) {
+        $counter = [];
+
+        foreach ($data as $row) {
+
+            $booking = $row->booking;
+            $aktivitas = '-';
+
+            if ($booking->tipe_booking === 'homestay') {
+                $aktivitas = $booking->homestayDetails?->homestay?->nama;
+            }
+
+            if ($booking->tipe_booking === 'paket_wisata') {
+                $aktivitas = $booking->paketWisataDetails?->paketWisata?->nama;
+            }
+
+            if ($booking->tipe_booking === 'tour_guide') {
+                $aktivitas = $booking->tourGuideDetails?->durasi . ' Jam';
+            }
+
+            if (!isset($counter[$aktivitas])) {
+                $counter[$aktivitas] = 0;
+            }
+
+            $counter[$aktivitas]++;
+        }
+
+        $topAktivitas = "-";
+        $topCount = 0;
+
+        if (!empty($counter)) {
+            arsort($counter);
+            $topAktivitas = array_key_first($counter);
+            $topCount = $counter[$topAktivitas];
+        }
+
+        $totalPenghasilan = $data->sum('jumlah');
+        $jumlahBooking = $data->count();
+
+        return response()->streamDownload(function () use ($data, $topAktivitas, $topCount, $totalPenghasilan, $jumlahBooking) {
 
             $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, ['Laporan Penghasilan Mitra']);
+            fputcsv($handle, []);
+
+            fputcsv($handle, ['Total Penghasilan', $totalPenghasilan]);
+            fputcsv($handle, ['Jumlah Booking', $jumlahBooking]);
+            fputcsv($handle, ['Aktivitas Terpopuler', $topAktivitas]);
+            fputcsv($handle, ['Jumlah Aktivitas', $topCount]);
+
+            fputcsv($handle, []);
 
             fputcsv($handle, [
                 'Booking ID',

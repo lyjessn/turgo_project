@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./css/Catalog.css";
 import "../../components/homepage/paketwisatasection.css";
-import { FiUsers, FiCalendar, FiGlobe, FiStar } from "react-icons/fi";
+import { FiUsers, FiCalendar, FiGlobe, FiStar, FiSearch } from "react-icons/fi";
 import { BiMoney } from "react-icons/bi";
 import { getAllTourGuide, getAvailableTourGuide } from "../../api/apiTourGuide";
 
@@ -94,60 +94,71 @@ const TourGuide = () => {
           </div>
         </div>
 
-        <input
-          className="catalog-search"
-          placeholder="Cari tour guide..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="catalog-search-wrapper">
+          <FiSearch className="catalog-search-icon" />
+          <input
+            className="catalog-search"
+            placeholder="Cari tour guide..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
       </div>
 
       <div className="catalog-grid">
+        {dataToShow.length === 0 ? (
+          <p className="empty-state">
+            {search
+            ? `Tidak ditemukan hasil untuk "${search}"`
+            : tanggal
+            ? "Tidak ada guide tersedia di tanggal ini"
+            : "Belum ada tour guide tersedia"}
+          </p>
+        ) : (
+          dataToShow.map((guide) => (
+            <div
+              key={guide.id}
+              className="paket-card-small"
+              style={{
+                backgroundImage: `url(http://127.0.0.1:8000/storage/${guide.foto_profil})`,
+              }}
+            >
 
-        {dataToShow.map((guide) => (
+              <div className="paket-kecil-content">
+                <div className="paket-title-row">
+                  <h4>{guide.user?.nama_lengkap}</h4>
+                    <span className="paket-kecil-rating">
+                      ⭐ {Number(guide.ratings_avg_bintang ?? 0).toFixed(1)}
+                    </span>
+                </div>
 
-          <div
-            key={guide.id}
-            className="paket-card-small"
-            style={{
-              backgroundImage: `url(http://127.0.0.1:8000/storage/${guide.foto_profil})`,
-            }}
-          >
+                <div className="paket-kecil-meta">
+                  <BiMoney /> Rp{" "}
+                  {Number(guide.harga_per_hari).toLocaleString("id-ID")} / hari
+                </div>
+                <div className="paket-kecil-meta">
+                  <FiGlobe /> {guide.bahasa}
+                </div>
+                <div className="paket-kecil-meta">
+                  <FiStar /> {guide.spesialisasi}
+                </div>
+                <button className="paket-kecil-detail-btn"
+                  onClick={() =>
+                    navigate(`/tour-guide/${guide.id}`, {
+                      state: { tanggal }
+                    })
+                  }
+                >
+                  Lihat Detail
+                </button>
 
-            <div className="paket-kecil-content">
-              <div className="paket-title-row">
-                <h4>{guide.user?.nama_lengkap}</h4>
-                <span className="catalog-pill">
-                  <FiUsers /> {guide.kapasitas_min}-{guide.kapasitas_max} org
-                </span>
               </div>
-
-              <div className="paket-kecil-meta">
-                <BiMoney /> Rp{" "}
-                {Number(guide.harga_per_hari).toLocaleString("id-ID")} / hari
-              </div>
-              <div className="paket-kecil-meta">
-                <FiGlobe /> {guide.bahasa}
-              </div>
-              <div className="paket-kecil-meta">
-                <FiStar /> {guide.spesialisasi}
-              </div>
-              <button className="paket-kecil-detail-btn"
-                onClick={() =>
-                  navigate(`/tour-guide/${guide.id}`, {
-                    state: { tanggal }
-                  })
-                }
-              >
-                Lihat Detail
-              </button>
 
             </div>
 
-          </div>
-
-        ))}
+          ))
+        )}
 
       </div>
 

@@ -1,18 +1,19 @@
 import { useAuth } from "../../auth/useAuth";
 import { useNavigate } from "react-router-dom";
+import heroImage from "../../assets/iconTurgo.jpg";
 import "./HeroSection.css";
 
 const HeroSection = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
+  console.log("user", user);
 
   return (
     <div className="hero-section">
       <div
         className="hero-bg"
         style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1501785888041-af3ef285b470')",
+          backgroundImage: `url(${heroImage})`,
         }}
       />
 

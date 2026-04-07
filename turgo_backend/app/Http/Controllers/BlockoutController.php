@@ -16,7 +16,10 @@ class BlockoutController extends Controller
             abort(403);
         }
 
-        return BlockoutGlobal::orderBy('tanggal_mulai')->get();
+        return response()->json([
+            'success' => true,
+            'data' => BlockoutGlobal::orderBy('tanggal_mulai')->get()
+        ]);
     }
 
     public function indexSpesifik(Request $request)
@@ -80,7 +83,10 @@ class BlockoutController extends Controller
                 return [];
         }
 
-        return $query->orderBy('tanggal_mulai')->get();
+        return response()->json([
+            'success' => true,
+            'data' => $query->orderBy('tanggal_mulai')->get()
+        ]);
     }
 
     public function storeGlobal(Request $request)
@@ -188,7 +194,11 @@ class BlockoutController extends Controller
             'alasan'
         ]));
 
-        return ['success' => true, 'data' => $blockout];
+        return response()->json([
+            'success' => true,
+            'data' => $blockout
+        ]);
+
     }
 
     public function updateSpesifik(Request $request, $id)
@@ -212,7 +222,10 @@ class BlockoutController extends Controller
             'alasan'
         ]));
 
-        return ['success' => true, 'data' => $blockout];
+        return response()->json([
+            'success' => true,
+            'data' => $blockout
+        ]);
     }
 
     public function destroyGlobal(Request $request, $id)
@@ -223,7 +236,9 @@ class BlockoutController extends Controller
 
         BlockoutGlobal::findOrFail($id)->delete();
 
-        return ['success' => true];
+        return response()->json([
+            'success' => true
+        ]);
     }
 
     public function destroySpesifik(Request $request, $id)
@@ -237,7 +252,9 @@ class BlockoutController extends Controller
 
         $blockout->delete();
 
-        return ['success' => true];
+        return response()->json([
+            'success' => true,
+        ]);
     }
 
 

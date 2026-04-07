@@ -12,11 +12,19 @@ const AdminHomestay = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("semua");
   const [role, setRole] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadUser();
     fetchData();
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, filter]);
 
   const loadUser = async () => {
     try {
@@ -55,6 +63,13 @@ const AdminHomestay = () => {
     return result;
   }, [data, filter, search]);
 
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  const paginatedData = filteredData.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
+
   const toggleStatus = async (item) => {
     const formData = new FormData();
     formData.append("is_aktif", item.is_aktif === 1 ? 0 : 1);
@@ -70,21 +85,24 @@ const AdminHomestay = () => {
     );
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Hapus homestay ini?")) return;
+  const handleDelete = async () => {
+      try {
+          await deleteHomestay(selectedItem.id);
 
-    try {
-      await deleteHomestay(id);
-      setData(prev => prev.filter(item => item.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+          setShowDeleteModal(false);
+          setSelectedItem(null);
+
+          fetchData();
+          fetchUsers();
+      } catch (err) {
+          console.error(err);
+      }
   };
   
-
   if (loading) return <div>Loading...</div>;
 
   return (
+    <>
     <div className="admin-page">
 
       <div className="admin-header">
@@ -148,7 +166,7 @@ const AdminHomestay = () => {
           </thead>
 
           <tbody>
-            {filteredData.map(item => (
+            {paginatedData.map(item => (
               <tr key={item.id}>
                 <td>{item.id}</td>
                 <td>{item.nama}</td>
@@ -191,7 +209,10 @@ const AdminHomestay = () => {
                   {role === "owner" && (
                     <button
                       className="btn-icon danger"
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => {
+                          setSelectedItem(item);
+                          setShowDeleteModal(true);
+                      }}
                     >
                       <FiTrash2/>
                     </button>
@@ -202,8 +223,73 @@ const AdminHomestay = () => {
           </tbody>
 
         </table>
+
+        {totalPages > 1 && (
+          <div className="admin-pagination">
+
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Prev
+            </button>
+
+            <span>
+              Page {page} / {totalPages}
+            </span>
+
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </button>
+
+          </div>
+        )}
       </div>
     </div>
+
+      {showDeleteModal && selectedItem && (
+        <div className="custom-modal-overlay">
+            <div className="custom-modal modal-center">
+
+                <div className="modal-icon-wrapper">
+                    <div className="modal-icon error">!</div>
+                </div>
+
+                <h3 className="modal-title">
+                    Hapus Homestay
+                </h3>
+
+                <p className="modal-message">
+                    Apakah Anda yakin ingin menghapus{" "}
+                    <b>{selectedItem.nama}</b>?
+                    <br />
+                    Data yang dihapus tidak dapat dikembalikan.
+                </p>
+
+                <div className="modal-actions">
+                    <button
+                        className="btn-danger"
+                        onClick={handleDelete}
+                    >
+                        Hapus
+                    </button>
+
+                    <button
+                        className="btn-secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                    >
+                        Batal
+                    </button>
+                </div>
+
+            </div>
+        </div>
+      )}
+
+    </>
   );
 };
 

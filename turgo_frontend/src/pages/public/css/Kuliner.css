@@ -93,3 +93,64 @@
   background-position: center;
   border-radius: 8px;
 }
+
+.gallery-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+}
+
+.preview-image {
+  max-width: 90%;
+  max-height: 80%;
+  z-index: 2;
+  border-radius: 12px;
+}
+
+.preview-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 32px;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.preview-nav.left {
+  left: 20px;
+}
+
+.preview-nav.right {
+  right: 20px;
+}
+
+.preview-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 22px;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #777;
+  font-size: 15px;
+}

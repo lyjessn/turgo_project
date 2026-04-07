@@ -27,10 +27,10 @@ const HomestaySection = () => {
     return (
         <section className="homestay-section">
             <div className="homestay-header">
-                <h2>Homestay Pilihan</h2>
-                <p style={{fontSize: "22px", fontStyle:"italic"}}>
-                Nikmati sensasi menyatu dengan alam yang sesungguhnya, Turgo menyediakan
-                berbagai akomodasi asri yang menawan.
+                <h2 className="homestay-heading">Homestay Pilihan</h2>
+
+                <p className="homestay-subtitle">
+                    Nikmati sensasi menyatu dengan alam yang sesungguhnya, Turgo menyediakan berbagai akomodasi asri yang menawan.
                 </p>
             </div>
 

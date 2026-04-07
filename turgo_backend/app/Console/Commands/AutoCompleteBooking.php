@@ -32,7 +32,8 @@ class AutoCompleteBooking extends Command
             'homestayDetails.homestay',
             'tourGuideDetails.tourGuide',
             'paketWisataDetails.paketWisata.participants',
-            'customDetails.paketWisata.participants'
+            'customDetails.paketWisata.participants',
+            'customDetails.tourGuide',
         ])
         ->whereDate('tanggal_selesai','<', $today)
         ->whereNotIn('status_pemesanan',['batal','ditolak'])
@@ -143,9 +144,52 @@ class AutoCompleteBooking extends Command
 
             if ($booking->tipe_booking === 'custom') {
 
-                foreach ($booking->customDetails ?? [] as $detail) {
+                $details = $booking->customDetails ?? [];
+
+                if (count($details) === 0) {
+                    $this->warn("Custom detail kosong untuk booking ".$booking->id);
+                    continue;
+                }
+
+                $totalGuide = 0;
+
+                foreach ($details as $d) {
+                    if ($d->jenis_tour_guide === 'full day') {
+                        $totalGuide += 300000;
+                    } elseif ($d->jenis_tour_guide === 'half day') {
+                        $totalGuide += 150000;
+                    }
+                }
+
+                $sisaPaket = $booking->total_harga - $totalGuide;
+
+                $hargaPerDetail = $sisaPaket / count($details);
+
+                foreach ($details as $detail) {
 
                     $paket = $detail->paketWisata;
+
+                    if ($detail->tourGuide) {
+
+                        $hargaGuide = 0;
+
+                        if ($detail->jenis_tour_guide === 'full day') {
+                            $hargaGuide = 300000;
+                        } elseif ($detail->jenis_tour_guide === 'half day') {
+                            $hargaGuide = 150000;
+                        }
+
+                        if ($hargaGuide > 0) {
+
+                            $tgUserId = $detail->tourGuide->user_id;
+
+                            $this->insertSaldoIfNotExists(
+                                $booking->id,
+                                $tgUserId,
+                                $hargaGuide
+                            );
+                        }
+                    }
 
                     if (!$paket) {
                         $this->warn("Custom paket tidak ditemukan");
@@ -158,9 +202,7 @@ class AutoCompleteBooking extends Command
 
                         foreach ($participants as $p) {
 
-                            $jumlah = ($booking->total_harga * $p->pivot->persentase) / 100;
-
-                            $this->info("Insert saldo custom participant ".$p->id." jumlah ".$jumlah);
+                            $jumlah = ($hargaPerDetail * $p->pivot->persentase) / 100;
 
                             $this->insertSaldoIfNotExists(
                                 $booking->id,
@@ -171,17 +213,19 @@ class AutoCompleteBooking extends Command
 
                     } else {
 
-                        $this->warn("Custom participants kosong → fallback pembuat");
+                        if (!$paket->id_pembuat) {
+                            $this->warn("Pembuat paket kosong → booking ".$booking->id);
+                            continue;
+                        }
 
                         $this->insertSaldoIfNotExists(
                             $booking->id,
                             $paket->id_pembuat,
-                            $booking->total_harga
+                            $hargaPerDetail
                         );
                     }
                 }
             }
-
         }
 
         $this->info("=== AUTO COMPLETE BOOKING END ===");

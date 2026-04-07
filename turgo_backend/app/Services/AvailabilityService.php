@@ -17,7 +17,6 @@ class AvailabilityService
     ): bool
     {
         return !BookingHomestayDetail::where('kamar_id', $kamarId)
-
             ->whereHas('booking', function ($q) use ($mulai, $selesai) {
 
                 $q->whereIn('status_pemesanan', [
@@ -33,15 +32,9 @@ class AvailabilityService
 
                     ->where(function ($query) use ($mulai, $selesai) {
 
-                        $query
-                            ->whereBetween('tanggal_mulai', [$mulai, $selesai])
-                            ->orWhereBetween('tanggal_selesai', [$mulai, $selesai])
-                            ->orWhere(function ($q2) use ($mulai, $selesai) {
+                        $query->where('tanggal_mulai', '<', $selesai)
+                            ->where('tanggal_selesai', '>', $mulai);
 
-                                $q2->where('tanggal_mulai', '<=', $mulai)
-                                ->where('tanggal_selesai', '>=', $selesai);
-
-                            });
                     });
             })
             ->exists();

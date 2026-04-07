@@ -1,0 +1,50 @@
+.admin-reviews-page .review-card{
+  background:white;
+  border-radius:12px;
+  padding:14px 18px;
+  border:1px solid #e5e7eb;
+
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.admin-reviews-page .review-stars{
+  font-size:17px;
+}
+
+.admin-reviews-page .review-meta{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+}
+
+.admin-reviews-page .review-user{
+  font-weight:600;
+}
+
+.admin-reviews-page .review-date{
+  color:#777;
+}
+
+.admin-reviews-page .review-text{
+  font-size:14px;
+  line-height:1.5;
+}
+
+.admin-reviews-page .delete-btn{
+  margin-left:auto;
+  border:none;
+  color:#dc2626;
+  cursor:pointer;
+  font-size:16px;
+  padding:4px 8px;
+  border-radius:6px;
+  transition:all 0.2s ease;
+  background: none;
+}
+
+.admin-reviews-page .delete-btn:hover{
+  background:#fecaca;
+}

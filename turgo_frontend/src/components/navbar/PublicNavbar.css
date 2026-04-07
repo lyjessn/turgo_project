@@ -2,7 +2,7 @@
     position: sticky;
     top: 0;
     width: 100%;
-    height: 64px;
+    height: 84px;
     background: #ffffff;
     border-bottom: 1px solid #eee;
     display: flex;
@@ -19,8 +19,7 @@
 
 .public-navbar-logo img {
     height: 72px;
-    width: auto;
-    object-fit: contain;
+    transform: translateY(2px);
 }
 
 .public-navbar-menu {
@@ -46,8 +45,9 @@
 }
 
 .public-navbar-user {
-    position: relative;
-    padding-bottom: 8px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
 }
 
 .user-icon {

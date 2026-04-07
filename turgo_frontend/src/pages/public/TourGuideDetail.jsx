@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { createBooking } from "../../api/apiBooking";
-import { getDetailTourGuide } from "../../api/apiTourGuide";
+import { getDetailTourGuide, getAvailableTourGuide } from "../../api/apiTourGuide";
 import { useAuth } from "../../auth/useAuth";
 import { FiUsers, FiGlobe, FiStar } from "react-icons/fi";
 import { BiMoney } from "react-icons/bi";
@@ -18,6 +18,7 @@ const TourGuideDetail = () => {
   const [durasi, setDurasi] = useState("full day");
   const [sesi, setSesi] = useState("pagi");
   const [loading, setLoading] = useState(true);
+  const [isAvailable, setIsAvailable] = useState(true);
 
   useEffect(() => {
     fetchDetail();
@@ -34,6 +35,31 @@ const TourGuideDetail = () => {
     }
   };
 
+  useEffect(() => {
+    if (!tanggal || !guide) return;
+    checkAvailability(tanggal);
+  }, [tanggal, guide, durasi, sesi]);
+
+  const checkAvailability = async (tgl) => {
+    try {
+      const data = await getAvailableTourGuide({
+        tanggal: tgl,
+        durasi,
+        sesi
+      });
+
+      console.log("API RESPONSE:", data);
+      console.log("CURRENT ID:", guide?.id || kamar?.id);
+
+      const tersedia = data.some(p => p.id === guide.id);
+
+      setIsAvailable(tersedia);
+    } catch (err) {
+      console.error(err);
+      setIsAvailable(false);
+    }
+  };
+  
   if (loading) return <div>Loading...</div>;
   if (!guide) return <div>Tidak ditemukan</div>;
 
@@ -112,19 +138,7 @@ const TourGuideDetail = () => {
 
       const res = await createBooking(formData);
 
-      navigate("/pembayaran", {
-        state: {
-          booking: res.data,
-          paket: {
-            nama: guide.user?.nama_lengkap,
-            url_thumbnail: guide.foto_profil,
-            harga: total
-          },
-          tanggal,
-          jumlahOrang: null,
-          total
-        }
-      });
+      navigate(`/pembayaran/${booking.id}`);
 
     } catch (err) {
       alert(err.message || "Gagal membuat booking");
@@ -232,6 +246,12 @@ const TourGuideDetail = () => {
                 Pilih tanggal terlebih dahulu
               </p>
             )}
+
+            {!isAvailable && (
+              <p className="detail-warning">
+                Guide tidak tersedia pada tanggal ini
+              </p>
+            )}
           </div>
 
           <div className="detail-input-group">
@@ -288,7 +308,10 @@ const TourGuideDetail = () => {
             <div key={r.id} className="review-card">
 
               <div className="review-avatar">
-                👤
+                <img
+                  src={`http://127.0.0.1:8000/storage/${r.user?.foto_profil}`}
+                  alt="avatar"
+                />
               </div>
 
               <div className="review-content">
@@ -334,11 +357,12 @@ const TourGuideDetail = () => {
 
         <button
           className="detail-book-btn"
-          disabled={!tanggal}
+          disabled={!tanggal || !isAvailable}
           onClick={handleBooking}
         >
-          Pesan Sekarang
+            Pesan Sekarang
         </button>
+
       </div>
 
     </div>

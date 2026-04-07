@@ -72,31 +72,45 @@
     gap: 16px;
 }
 
-.booking-card {
-    display: flex;
-    gap: 16px;
-    background: white;
-    border-radius: 10px;
-    padding: 12px;
-    border: 1px solid #eee;
-    align-items: center;
+.booking-card{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    background:white;
+    border-radius:12px;
+    padding:16px;
+    border:1px solid #eee;
 }
 
-.booking-thumb {
-    width: 100px;
-    height: 70px;
-    object-fit: cover;
-    border-radius: 6px;
+.booking-info{
+    flex:1;
+}
+
+.booking-side{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:6px;
+}
+
+.booking-thumb{
+    width:120px;
+    height:80px;
+    object-fit:cover;
+    border-radius:8px;
+    flex-shrink:0;
 }
 
 .booking-info {
     flex: 1;
 }
 
-.booking-info h4 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
+.booking-info h4{
+    margin:0;
+    font-size:16px;
+    font-weight:600;
+    color:#335C64;
 }
 
 .booking-info p {
@@ -105,33 +119,42 @@
     color: #555;
 }
 
-.status {
-    font-weight: 600;
-    font-size: 13px;
+.booking-meta{
+    font-size:13px;
+    color:#6b7280;
+    margin-top:2px;
 }
 
-.status.menunggu\ pembayaran {
-    color: #e67e22;
+.booking-meta-right{
+    font-size:13px;
+    color:#6b7280;
 }
 
-.status.menunggu\ verifikasi {
-    color: #f39c12;
+.status-text{
+    font-size:13px;
+    font-weight:600;
+    margin-top:4px;
 }
 
-.status.dikonfirmasi {
-    color: #16a085;
+.status-text.dikonfirmasi{
+    color:#16a085;
 }
 
-.status.selesai {
-    color: #2ecc71;
+.status-text.menunggu-pembayaran{
+    color:#e67e22;
 }
 
-.status.batal {
-    color: #e74c3c;
+.status-text.menunggu-verifikasi{
+    color:#d4a017;
 }
 
-.status.ditolak {
-    color: #c0392b;
+.status-text.selesai{
+    color:#2ecc71;
+}
+
+.status-text.batal,
+.status-text.ditolak{
+    color:#e74c3c;
 }
 
 .booking-actions {
@@ -148,21 +171,35 @@
     border: none;
 }
 
-.btn-detail {
-    background: white;
-    border: 1px solid #335C64;
-    color: #335C64;
-    cursor: pointer;
-}
-
 .btn-cancel {
     background: #c0392b !important;
     color: white;
 }
 
-.btn-review {
-    background: #007d98;
-    color: white;
+.btn-review{
+    background:#007d98;
+    color:white;
+    padding:6px 14px;
+    border-radius:6px;
+    border:none;
+    font-size:12px;
+    cursor:pointer;
+}
+
+.btn-review:hover{
+    background:#00667c;
+}
+
+.btn-pay{
+    background:#f59e0b;
+    color:white;
+    border:none;
+    padding:6px 12px;
+    border-radius:6px;
+}
+
+.btn-pay:hover{
+    background:#d97706;
 }
 
 .profile-info {

@@ -20,11 +20,35 @@
 }
 
 .kamar-card {
-  margin-bottom: 28px;
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px;
+
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.kamar-card * {
+  grid-column: auto !important;
 }
 
 .kamar-card .form-group {
-  margin-bottom: 14px;
+  display: block !important;
+  width: 100%;
+}
+
+.kamar-card label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.kamar-card input,
+.kamar-card textarea {
+  display: block !important;
+  width: 100% !important;
 }
 
 .admin-kamar-actions{
@@ -199,4 +223,9 @@
   align-items:center;
   justify-content:center;
   cursor:pointer;
+}
+
+.kamar-container {
+  display: flex !important;
+  flex-direction: column !important;
 }

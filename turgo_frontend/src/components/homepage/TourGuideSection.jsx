@@ -78,7 +78,7 @@ const TourGuideSection = () => {
                         style={{ backgroundImage: `url(http://127.0.0.1:8000/storage/${best.foto_profil})` }}
                     >
                         <div className="tg-overlay" />
-                        <div className="tg-best-badge">🎖️ Guide of The Month</div>
+                        <div className="tg-best-badge">🎖️ Top Guide</div>
 
                         <div className="tg-content">
                             <div className="tg-title">

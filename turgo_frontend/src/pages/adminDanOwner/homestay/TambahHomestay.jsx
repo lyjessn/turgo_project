@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/AdminShared.css";
 import "../css/AdminHomestay.css";
@@ -12,6 +12,9 @@ const TambahHomestay = () => {
   const [ownerList, setOwnerList] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [thumbnailIndex, setThumbnailIndex] = useState(0);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [timeError, setTimeError] = useState("");
 
   const [modal, setModal] = useState({
     show: false,
@@ -83,26 +86,10 @@ const TambahHomestay = () => {
   };
 
   const handleSubmit = async () => {
-
-    if (!form.id_pemilik) {
-      setModal({
-        show: true,
-        type: "error",
-        message: "Pilih pemilik homestay"
-      });
-      return;
-    }
-
-    if (photos.length < 1) {
-      setModal({
-        show: true,
-        type: "error",
-        message: "Minimal 1 foto homestay"
-      });
-      return;
-    }
-
     try {
+      setSubmitting(true);
+      setError("");
+
       const formData = new FormData();
 
       Object.keys(form).forEach(key => {
@@ -118,17 +105,11 @@ const TambahHomestay = () => {
       kamars.forEach((kamar, index) => {
         Object.keys(kamar).forEach(field => {
           if (field !== "foto") {
-            formData.append(
-              `kamars[${index}][${field}]`,
-              kamar[field]
-            );
+            formData.append(`kamars[${index}][${field}]`, kamar[field]);
           }
         });
 
-        formData.append(
-          `kamars[${index}][foto]`,
-          kamar.foto
-        );
+        formData.append(`kamars[${index}][foto]`, kamar.foto);
       });
 
       await createHomestay(formData);
@@ -140,11 +121,14 @@ const TambahHomestay = () => {
       });
 
     } catch (err) {
-      setModal({
-        show: true,
-        type: "error",
-        message: "Terjadi kesalahan saat menyimpan"
-      });
+      if (err.response?.data?.errors) {
+        const firstError = Object.values(err.response.data.errors)[0][0];
+        setError(firstError);
+      } else {
+        setError("Terjadi kesalahan saat menyimpan");
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -155,50 +139,86 @@ const TambahHomestay = () => {
 
         {step === 1 && (
           <div className="card-form">
-
+            {error && <div className="error-text">{error}</div>}
             <div className="form-group">
-              <label>Nama Homestay</label>
-              <input
-                value={form.nama}
-                onChange={(e) =>
-                  setForm({ ...form, nama: e.target.value })
-                }
-              />
+                <label>Nama Homestay</label>
+                <input
+                  value={form.nama}
+                  onChange={(e) => {
+                    setForm({ ...form, nama: e.target.value });
+                    setError("");
+                  }}
+                  required
+                />
             </div>
 
             <div className="form-group">
-              <label>Pilih Pemilik</label>
-              <select
-                value={form.id_pemilik}
-                onChange={(e) =>
-                  setForm({ ...form, id_pemilik: e.target.value })
-                }
-              >
-                <option value="">Pilih Pemilik</option>
-                {ownerList.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.nama_lengkap}
-                  </option>
-                ))}
-              </select>
+                <label>Pilih Pemilik</label>
+                <select
+                  value={form.id_pemilik}
+                  onChange={(e) => {
+                    setForm({ ...form, id_pemilik: e.target.value });
+                    setError("");
+                  }}
+                  required
+                >
+                  <option value="">Pilih Pemilik</option>
+                  {ownerList.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.nama_lengkap}
+                    </option>
+                  ))}
+                </select>
+            </div>
+            
+            <div className="form-group">
+                <label>Lokasi Homestay</label>
+                <textarea
+                  placeholder="Lokasi"
+                  value={form.lokasi}
+                  onChange={(e) => {
+                    setForm({ ...form, lokasi: e.target.value });
+                    setError("");
+                  }}
+                  required
+                />
             </div>
 
-            <textarea
-              placeholder="Lokasi"
-              value={form.lokasi}
-              onChange={(e) =>
-                setForm({ ...form, lokasi: e.target.value })
-              }
-            />
-
             <div className="form-group">
-              <label>Jam Check-in</label>
-              <input
-                type="time"
-                step="60"
-                value={form.check_in}
-                onChange={(e)=>setForm({...form,check_in:e.target.value})}
-              />
+                <label>Jam Check-in</label>
+                <input
+                  type="time"
+                  step="60"
+                  value={form.check_in}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    const updatedForm = { ...form, check_in: value };
+                    setForm(updatedForm);
+
+                    if (updatedForm.check_out && value) {
+                      const [inHour, inMin] = value.split(":").map(Number);
+                      const [outHour, outMin] = updatedForm.check_out.split(":").map(Number);
+
+                      let checkInMinutes = inHour * 60 + inMin;
+                      let checkOutMinutes = outHour * 60 + outMin;
+
+                      if (checkInMinutes < checkOutMinutes) {
+                        if (checkOutMinutes - checkInMinutes > 12 * 60) {
+                          checkInMinutes += 24 * 60;
+                        }
+                      }
+
+                      if (checkInMinutes < checkOutMinutes + 60) {
+                        setTimeError("Check-in harus minimal 1 jam setelah waktu check-out");
+                      } else {
+                        setTimeError("");
+                        setError("");
+                      }
+                    }
+                  }}
+                  required
+                />
             </div>
 
             <div className="form-group">
@@ -207,37 +227,81 @@ const TambahHomestay = () => {
                 type="time"
                 step="60"
                 value={form.check_out}
-                onChange={(e)=>setForm({...form,check_out:e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  const updatedForm = { ...form, check_out: value };
+                  setForm(updatedForm);
+
+                  if (updatedForm.check_in && value) {
+                    const [inHour, inMin] = updatedForm.check_in.split(":").map(Number);
+                    const [outHour, outMin] = value.split(":").map(Number);
+
+                    let checkInMinutes = inHour * 60 + inMin;
+                    let checkOutMinutes = outHour * 60 + outMin;
+
+                    if (checkInMinutes < checkOutMinutes) {
+                      if (checkOutMinutes - checkInMinutes > 12 * 60) {
+                        checkInMinutes += 24 * 60;
+                      }
+                    }
+
+                    if (checkInMinutes < checkOutMinutes + 60) {
+                      setTimeError("Check-in harus minimal 1 jam setelah waktu check-out");
+                    } else {
+                      setTimeError("");
+                      setError("");
+                    }
+                  }
+                }}
+                required
               />
+
+              {timeError && <small className="error-text">{timeError}</small>}
             </div>
-
-            <input
-              placeholder="Aturan Rokok"
-              value={form.rokok}
-              onChange={(e) =>
-                setForm({ ...form, rokok: e.target.value })
-              }
-            />
-
-            <input
-              placeholder="Aturan Peliharaan"
-              value={form.peliharaan}
-              onChange={(e) =>
-                setForm({ ...form, peliharaan: e.target.value })
-              }
-            />
-
-            <input
-              type="file"
-              multiple
-              onChange={(e) => {
-                setPhotos([
-                  ...photos,
-                  ...Array.from(e.target.files)
-                ]);
-              }}
-            />
-
+            
+            <div className="form-group">
+                <label>Aturan Merokok</label>
+                <input
+                  placeholder="contoh: rokok elektrik diperbolehkan"
+                  value={form.rokok}
+                  onChange={(e) => {
+                    setForm({ ...form, rokok: e.target.value });
+                    setError("");
+                  }}
+                  required
+                />
+            </div>
+            
+            <div className="form-group">
+                <label>Aturan Membawa Peliharaan</label>
+                <input
+                  placeholder="contoh: dilarang membawa anjing"
+                  value={form.peliharaan}
+                  onChange={(e) => {
+                    setForm({ ...form, peliharaan: e.target.value });
+                    setError("");
+                  }}
+                  required
+                />
+            </div>
+            
+            <div className="form-group">
+                <label>Foto Homestay (minimal 3)</label>
+                  <input
+                  type="file"
+                  multiple
+                  onChange={(e) => {
+                    setPhotos(prev => [
+                      ...prev,
+                      ...Array.from(e.target.files)
+                    ]);
+                    setError("");
+                  }}
+                  required
+                />
+            </div>
+            
             <div className="preview-grid">
               {photos.map((file, i) => {
                 const isThumbnail = i === thumbnailIndex;
@@ -279,7 +343,27 @@ const TambahHomestay = () => {
 
               <button
                 className="btn-primary"
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  setError("");
+
+                  if (!form.nama || !form.id_pemilik || !form.lokasi) {
+                    setError("Semua field wajib diisi");
+                    return;
+                  }
+
+                  if (photos.length < 3) {
+                    setError("Minimal 3 foto homestay");
+                    return;
+                  }
+
+                  if (timeError) {
+                    setError("Perbaiki jam check-in/check-out terlebih dahulu");
+                    return;
+                  }
+
+                  setStep(2);
+                  setError("");
+                }}
               >
                 Lanjutkan
               </button>
@@ -289,10 +373,16 @@ const TambahHomestay = () => {
         )}
 
         {step === 2 && (
-          <div className="card-form">
-
+          <div className="card-form ">
+            {error && <div className="error-text">{error}</div>}
             {kamars.map((kamar, index) => (
-              <div key={index} className="kamar-card">
+              <div key={index} style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: "10px",
+                padding: "16px",
+                marginBottom: "20px",
+                background: "#f9fafb"
+              }}>
 
                 <div className="kamar-header">
                   <h3>Kamar {index + 1}</h3>
@@ -312,9 +402,11 @@ const TambahHomestay = () => {
                   <label>Nama Kamar</label>
                   <input
                     value={kamar.nama}
-                    onChange={(e) =>
-                      handleKamarChange(index, "nama", e.target.value)
-                    }
+                    onChange={(e) => {
+                      handleKamarChange(index, "nama", e.target.value);
+                      setError("");
+                    }}
+                    required
                   />
                 </div>
 
@@ -323,9 +415,11 @@ const TambahHomestay = () => {
                   <input
                     type="number"
                     value={kamar.harga_per_malam}
-                    onChange={(e) =>
-                      handleKamarChange(index, "harga_per_malam", e.target.value)
-                    }
+                    onChange={(e) => {
+                      handleKamarChange(index, "harga_per_malam", e.target.value);
+                      setError("");
+                    }}
+                    required
                   />
                 </div>
 
@@ -334,9 +428,10 @@ const TambahHomestay = () => {
                   <input
                     placeholder="Contoh: wifi sharing di ruang tamu"
                     value={kamar.wifi}
-                    onChange={(e) =>
-                      handleKamarChange(index, "wifi", e.target.value)
-                    }
+                    onChange={(e) => {
+                      handleKamarChange(index, "wifi", e.target.value);
+                      setError("");
+                    }}
                   />
                 </div>
 
@@ -346,9 +441,11 @@ const TambahHomestay = () => {
                     placeholder="Contoh: 2"
                     type="number"
                     value={kamar.jumlah_kasur}
-                    onChange={(e) =>
-                      handleKamarChange(index, "jumlah_kasur", e.target.value)
-                    }
+                    onChange={(e) => {
+                      handleKamarChange(index, "jumlah_kasur", e.target.value);
+                      setError("");
+                    }}
+                    required
                   />
                 </div>
 
@@ -357,9 +454,10 @@ const TambahHomestay = () => {
                   <textarea
                     placeholder="Contoh: 1 king bed dan 1 Queen Bed"
                     value={kamar.deskripsi_kasur}
-                    onChange={(e) =>
-                      handleKamarChange(index, "deskripsi_kasur", e.target.value)
-                    }
+                    onChange={(e) => {
+                      handleKamarChange(index, "deskripsi_kasur", e.target.value);
+                      setError("");
+                    }}
                   />
                 </div>
 
@@ -368,9 +466,11 @@ const TambahHomestay = () => {
                   <input
                     type="number"
                     value={kamar.jumlah_toilet}
-                    onChange={(e) =>
-                      handleKamarChange(index, "jumlah_toilet", e.target.value)
-                    }
+                    onChange={(e) => {
+                      handleKamarChange(index, "jumlah_toilet", e.target.value);
+                      setError("");
+                    }}
+                    required
                   />
                 </div>
 
@@ -378,9 +478,10 @@ const TambahHomestay = () => {
                   <label>Deskripsi Toilet</label>
                   <textarea
                     value={kamar.deskripsi_toilet}
-                    onChange={(e) =>
-                      handleKamarChange(index, "deskripsi_toilet", e.target.value)
-                    }
+                    onChange={(e) => {
+                      handleKamarChange(index, "deskripsi_toilet", e.target.value);
+                      setError("");
+                    }}
                   />
                 </div>
 
@@ -388,9 +489,11 @@ const TambahHomestay = () => {
                   <label>Foto Kamar</label>
                   <input
                     type="file"
-                    onChange={(e) =>
+                    onChange={(e) => {
                       handleKamarChange(index, "foto", e.target.files[0])
-                    }
+                      setError("");
+                    }}
+                    required
                   />
                 </div>
 
@@ -406,26 +509,52 @@ const TambahHomestay = () => {
             <div className="button-group">
               <button
                 className="btn-secondary"
-                onClick={() => setStep(1)}
+                onClick={() => {
+                  setStep(1);
+                  setError("");
+                }}
               >
                 Kembali
               </button>
 
               <button
                 className="btn-primary"
-                onClick={handleSubmit}
+                onClick={() => {
+                  setError("");
+
+                  if (!kamars.length) {
+                    setError("Minimal 1 kamar");
+                    return;
+                  }
+
+                  for (let kamar of kamars) {
+                    if (
+                      !kamar.nama ||
+                      !kamar.harga_per_malam ||
+                      !kamar.jumlah_kasur ||
+                      !kamar.jumlah_toilet ||
+                      !kamar.foto
+                    ) {
+                      setError("Semua data kamar wajib diisi");
+                      return;
+                    }
+                  }
+
+                  handleSubmit();
+                }}
+                disabled={submitting}
               >
-                Tambah Homestay
+                {submitting ? "Menyimpan..." : "Tambah Homestay"}
               </button>
             </div>
-
+                
           </div>
         )}
       </div>
 
       {modal.show && (
         <div className="custom-modal-overlay">
-          <div className="custom-modal">
+          <div className="custom-modal modal-center">
             <div className="modal-icon-wrapper">
               {modal.type === "success" && (
                 <div className="modal-icon success">✓</div>

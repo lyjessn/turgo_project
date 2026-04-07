@@ -13,7 +13,10 @@ const AdminKebudayaan = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 10;
 
     const [form, setForm] = useState({
     nama: "",
@@ -27,6 +30,10 @@ const AdminKebudayaan = () => {
        loadUser();
        fetchData();
     }, []);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, filter]);
    
     const loadUser = async () => {
        try {
@@ -91,6 +98,13 @@ const AdminKebudayaan = () => {
 
     }, [data, filter, search]);
 
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+    const paginatedData = filteredData.slice(
+        (page - 1) * itemsPerPage,
+        page * itemsPerPage
+    );
+
     const handleAdd = async () => {
         try {
             const formData = new FormData();
@@ -136,17 +150,18 @@ const AdminKebudayaan = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Hapus kebudayaan ini?")) return;
-    
+    const handleDelete = async () => {
         try {
-          await deleteKebudayaan(id);
-          setData(prev => prev.filter(item => item.id !== id));
+            await deleteKebudayaan(selectedItem.id);
+
+            setShowDeleteModal(false);
+            setSelectedItem(null);
+
+            fetchData();
         } catch (err) {
-          console.error(err);
+            console.error(err);
         }
     };
-
 
     if (loading)
         return (
@@ -211,7 +226,7 @@ const AdminKebudayaan = () => {
 
             <div className="admin-kebudayaan-list">
 
-                {filteredData.length === 0 && (
+                {paginatedData.length === 0 && (
                 <div className="admin-empty">
                     Tidak ada data kebudayaan
                 </div>
@@ -272,7 +287,10 @@ const AdminKebudayaan = () => {
                                 {role === "owner" && (
                                     <button
                                     className="btn-delete"
-                                    onClick={() => handleDelete(item.id)}
+                                    onClick={() => {
+                                        setSelectedItem(item);
+                                        setShowDeleteModal(true);
+                                    }}
                                     >
                                     Hapus
                                     </button>
@@ -283,6 +301,31 @@ const AdminKebudayaan = () => {
                 ))}
 
             </div>
+
+            {totalPages > 1 && (
+                <div className="admin-pagination">
+
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                >
+                    Prev
+                </button>
+
+                <span>
+                    Page {page} / {totalPages}
+                </span>
+
+                <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage(page + 1)}
+                >
+                    Next
+                </button>
+
+                </div>
+            )}
+
         </div>
 
         {showAddModal && (
@@ -366,6 +409,45 @@ const AdminKebudayaan = () => {
 
                         <button className="btn-primary" onClick={handleEdit}>Update</button>
                     </div>
+                </div>
+            </div>
+        )}
+
+        {showDeleteModal && selectedItem && (
+            <div className="custom-modal-overlay">
+                <div className="custom-modal modal-center">
+
+                    <div className="modal-icon-wrapper">
+                        <div className="modal-icon error">!</div>
+                    </div>
+
+                    <h3 className="modal-title">
+                        Hapus Kebudayaan
+                    </h3>
+
+                    <p className="modal-message">
+                        Apakah Anda yakin ingin menghapus{" "}
+                        <b>{selectedItem.nama}</b>?
+                        <br />
+                        Data yang dihapus tidak dapat dikembalikan.
+                    </p>
+
+                    <div className="modal-actions">
+                        <button
+                            className="btn-danger"
+                            onClick={handleDelete}
+                        >
+                            Hapus
+                        </button>
+
+                        <button
+                            className="btn-secondary"
+                            onClick={() => setShowDeleteModal(false)}
+                        >
+                            Batal
+                        </button>
+                    </div>
+
                 </div>
             </div>
         )}

@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../auth/useAuth";
 import logoTurgo from "../../assets/logo-turgo.png";
+import { FiUser } from "react-icons/fi";
 import "./publicNavbar.css";
 
 const PublicNavbar = ({ variant = "solid" }) => {
@@ -36,10 +37,10 @@ const PublicNavbar = ({ variant = "solid" }) => {
                 <div className="public-navbar-menu">
                     <span onClick={() => navigate("/")}>Beranda</span>
                     <span onClick={() => navigate("/wisata")}>Wisata</span>
-                    <span onClick={() => navigate("/tour-guide")}>Tour Guide</span>
+                    <span onClick={() => navigate("/tour-guide")}>Guide</span>
                     <span onClick={() => navigate("/homestay")}>Homestay</span>
                     <span onClick={() => navigate("/budaya")}>Budaya</span>
-                    <span onClick={() => navigate("/kuliner")}>Kuliner</span>
+                    <span onClick={() => navigate("/kuliner")}>UMKM</span>
                 </div>
 
                 {open && (
@@ -47,16 +48,16 @@ const PublicNavbar = ({ variant = "solid" }) => {
 
                         <span onClick={() => handleNavigate("/")}>Beranda</span>
                         <span onClick={() => handleNavigate("/wisata")}>Wisata</span>
-                        <span onClick={() => handleNavigate("/tour-guide")}>Tour Guide</span>
+                        <span onClick={() => handleNavigate("/tour-guide")}>Guide</span>
                         <span onClick={() => handleNavigate("/homestay")}>Homestay</span>
                         <span onClick={() => handleNavigate("/budaya")}>Budaya</span>
-                        <span onClick={() => handleNavigate("/kuliner")}>Kuliner</span>
+                        <span onClick={() => handleNavigate("/kuliner")}>UMKM</span>
 
                         <div className="mobile-divider" />
 
                         {!user ? (
                         <span onClick={() => handleNavigate("/login")}>
-                            Masuk / Daftar
+                            Login
                         </span>
                         ) : (
                         <>
@@ -80,11 +81,11 @@ const PublicNavbar = ({ variant = "solid" }) => {
                             className="login-btn"
                             onClick={() => navigate("/login")}
                         >
-                            Masuk / Daftar
+                            Login
                         </button>
                         ) : (
                         <div className="user-dropdown">
-                            <span className="user-icon" style={{color:"white"}}>👤</span>
+                            <span className="user-icon"><FiUser/></span>
                             <div className="dropdown-menu">
                                 <span onClick={() => navigate("/profile")}>Profil</span>
                                 <span className="logout"

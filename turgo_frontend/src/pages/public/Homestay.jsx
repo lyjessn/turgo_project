@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./css/Catalog.css";
 import "../../components/homepage/paketwisatasection.css";
-import { FiMapPin } from "react-icons/fi";
+import { FiMapPin, FiSearch } from "react-icons/fi";
 import { BiMoney } from "react-icons/bi";
 import { getAllHomestay, getAvailableHomestay } from "../../api/apiHomestay";
 
@@ -94,72 +94,82 @@ const Homestay = () => {
                         <span className="date-label">Check-out</span>
                         <input
                             type="date"
-                            min={minDateString}
+                            min={checkIn || minDateString}
                             value={checkOut}
                             onChange={(e) => setCheckOut(e.target.value)}
                         />
                     </div>
                 </div>
-                <input
-                    className="catalog-search"
-                    placeholder="Cari homestay di sini"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
+                <div className="catalog-search-wrapper">
+                    <FiSearch className="catalog-search-icon" />
+                    <input
+                        className="catalog-search"
+                        placeholder="Cari Homestay..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>
             </div>
 
             <div className="catalog-grid">
-                {dataToShow.map((homestay) => (
-                    <div
-                        key={homestay.id}
-                        className="paket-card-small"
-                        style={{
-                        backgroundImage:
-                            `url(http://127.0.0.1:8000/storage/${homestay.url_thumbnail})`,
-                        }}
-                    >
+                {dataToShow.length === 0 ? (
+                <p className="empty-state">
+                    {search
+                    ? `Tidak ditemukan hasil untuk "${search}"`
+                    : checkIn || checkOut
+                    ? "Tidak ada homestay tersedia di tanggal ini"
+                    : "Belum ada homestay tersedia"}
+                </p>
+                ) : (
+                    dataToShow.map((homestay) => (
+                        <div
+                            key={homestay.id}
+                            className="paket-card-small"
+                            style={{
+                            backgroundImage:
+                                `url(http://127.0.0.1:8000/storage/${homestay.url_thumbnail})`,
+                            }}
+                        >
+                            <div className="paket-kecil-content">
+                                <div className="paket-title-row">
+                                    <h4> {homestay.nama} </h4>
+                                    <span className="paket-kecil-rating">
+                                    ⭐ {Number(homestay.ratings_avg_bintang ?? 0).toFixed(1)}
+                                    </span>
+                                </div>
 
-                        <div className="paket-kecil-content">
-                            <div className="paket-title-row">
-                                <h4> {homestay.nama} </h4>
+                                <div className="paket-kecil-meta">
+                                    <FiMapPin />
+                                    {" "}
+                                    {homestay.lokasi}
+                                </div>
 
-                                <span className="paket-kecil-rating">
-                                ⭐ {Number(homestay.rating ?? 0).toFixed(1)}
-                                </span>
+                                <div className="paket-kecil-meta">
+                                    <BiMoney />
+                                    {" "}
+                                    Rp{" "}
+                                    {Number(
+                                        homestay.kamars_min_harga_per_malam
+                                    ).toLocaleString("id-ID")}
 
+                                    {homestay.kamars_min_harga_per_malam !==
+                                        homestay.kamars_max_harga_per_malam &&
+                                        ` - Rp ${Number(
+                                        homestay.kamars_max_harga_per_malam
+                                        ).toLocaleString("id-ID")}`
+                                    }
+                                </div>
+                                <button className="paket-kecil-detail-btn"
+                                    onClick={() =>
+                                        navigate(`/homestay/${homestay.id}`, {
+                                            state: { checkIn, checkOut }
+                                        })
+                                    }
+                                > Lihat Detail </button>
                             </div>
-
-                            <div className="paket-kecil-meta">
-                                <FiMapPin />
-                                {" "}
-                                {homestay.lokasi}
-                            </div>
-
-                            <div className="paket-kecil-meta">
-                                <BiMoney />
-                                {" "}
-                                Rp{" "}
-                                {Number(
-                                    homestay.kamars_min_harga_per_malam
-                                ).toLocaleString("id-ID")}
-
-                                {homestay.kamars_min_harga_per_malam !==
-                                    homestay.kamars_max_harga_per_malam &&
-                                    ` - Rp ${Number(
-                                    homestay.kamars_max_harga_per_malam
-                                    ).toLocaleString("id-ID")}`
-                                }
-                            </div>
-                            <button className="paket-kecil-detail-btn"
-                                onClick={() =>
-                                    navigate(`/homestay/${homestay.id}`, {
-                                        state: { checkIn, checkOut }
-                                    })
-                                }
-                            > Lihat Detail </button>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </div>
     );

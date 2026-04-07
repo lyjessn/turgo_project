@@ -5,7 +5,7 @@ import "./css/Custom.css";
 import "./css/Catalog.css";
 import "./css/Detail.css";
 import "../../components/homepage/paketwisatasection.css";
-import { FiCalendar, FiCheck, FiPlus, FiMapPin } from "react-icons/fi";
+import { FiCalendar, FiCheck, FiPlus, FiMapPin, FiSearch } from "react-icons/fi";
 import { BiMoney } from "react-icons/bi";
 import { createBooking } from "../../api/apiBooking";
 import { getAllPaketWisata, getAvailablePaketWisata } from "../../api/apiPaketWisata";
@@ -14,6 +14,7 @@ const Custom = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
 	const [pakets, setPakets] = useState([]);
+	const [kategori, setKategori] = useState("");
 	const [available, setAvailable] = useState([]);
 	const [selectedPakets, setSelectedPakets] = useState([]);
 	const [selectedGuide, setSelectedGuide] = useState(null);
@@ -59,24 +60,40 @@ const Custom = () => {
 		return available.some(p => p.id === id);
 	};
 
+	const kategoriList = useMemo(() => {
+		const source = pakets || [];
+		const unique = [...new Set(source.map(p => p.kategori_paket))];
+		return unique;
+	}, [pakets]);
+
 	const dataToShow = useMemo(() => {
 		let data = tanggal ? available : pakets;
+
 		if (search) {
 			data = data.filter(p =>
-				p.nama.toLowerCase().includes(search.toLowerCase())
+			p.nama.toLowerCase().includes(search.toLowerCase())
 			);
 		}
+
+		if (kategori) {
+			data = data.filter(p => p.kategori_paket === kategori);
+		}
+
 		return data;
-	}, [pakets, available, tanggal, search]);
+	}, [pakets, available, tanggal, search, kategori]);
 
 	const togglePaket = (paket) => {
-		if (!isAvailable(paket.id)) return;
 		const exists = selectedPakets.find(p => p.id === paket.id);
+
 		if (exists) {
 			setSelectedPakets(prev => prev.filter(p => p.id !== paket.id));
-		} else {
-			setSelectedPakets(prev => [...prev, paket]);
+			return;
 		}
+
+		if (selectedPakets.length >= 3) {
+			return;
+		}
+		setSelectedPakets(prev => [...prev, paket]);
 	};
 
 	const isSelected = (id) => selectedPakets.some(p => p.id === id);
@@ -138,17 +155,10 @@ const Custom = () => {
 
             const res = await createBooking(formData);
 
-            navigate("/pembayaran",{
-                state:{
-                    booking: res.data,
-                    selectedPakets,
-                    selectedGuide,
-                    tanggal,
-                    jumlahOrang
-                }
-            });
+            navigate(`/pembayaran/${res.data.id}`);
 
         }catch(err){
+			console.log(err);
             alert(err.response?.data?.message||"Gagal booking");
         }
     };
@@ -160,6 +170,10 @@ const Custom = () => {
 			</div>
 		);
 	}
+
+	const minDate = new Date();
+	minDate.setDate(minDate.getDate() + 2);
+	const minDateString = minDate.toISOString().split("T")[0];
 
 	return (
 		<div className="catalog-container">
@@ -174,8 +188,10 @@ const Custom = () => {
 				<div className="date-filter">
 					<input
 						type="date"
+						min={minDateString}
 						value={tanggal}
 						onChange={(e) => setTanggal(e.target.value)}
+						className={showPicker ? "show" : ""}
 					/>
 					<div
 						className="date-toggle"
@@ -188,12 +204,28 @@ const Custom = () => {
 					</div>
 				</div>
 
-				<input
-					className="catalog-search"
-					placeholder="Cari paket wisata..."
-					value={search}
-					onChange={(e) => setSearch(e.target.value)}
-				/>
+				<select
+					className="catalog-filter"
+					value={kategori}
+					onChange={(e) => setKategori(e.target.value)}
+				>
+					<option value="">Semua Kategori</option>
+					{kategoriList.map((k, i) => (
+						<option key={i} value={k}>
+						{k}
+						</option>
+					))}
+				</select>
+
+				<div className="catalog-search-wrapper">
+					<FiSearch className="catalog-search-icon" />
+					<input
+						className="catalog-search"
+						placeholder="Cari paket wisata..."
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+					/>
+				</div>
 
 			</div>
 
@@ -224,6 +256,15 @@ const Custom = () => {
 								)}
 
 								<div className="paket-kecil-content">
+
+									<div className="catalog-pill-row">
+										<span className="catalog-pill">
+											{paket.kategori_paket}
+										</span>
+										<span className="catalog-pill">
+											{paket.durasi}
+										</span>
+									</div>
 
 									<h4>{paket.nama}</h4>
 
@@ -274,31 +315,61 @@ const Custom = () => {
 								</p>
 							)}
 
+							{selectedPakets.length >= 3 && (
+							<p className="custom-warning">
+								Maksimal 3 paket dalam 1 hari
+							</p>
+							)}
+
 							{selectedPakets.map((p) => {
 								const availableStatus = isAvailable(p.id);
+
 								return (
 									<div
-										key={p.id}
-										className={`summary-item ${
-											!availableStatus ? "unavailable-text" : ""
-										}`}
+									key={p.id}
+									className={`summary-item ${
+										!availableStatus ? "unavailable-text" : ""
+									}`}
 									>
+									<div className="summary-left">
+
 										<div>
-											{p.nama}
-											{!availableStatus && (
-												<div className="unavailable-label">
-													Tidak tersedia di tanggal ini
-												</div>
-											)}
+										{p.nama}
+
+										{!availableStatus && (
+											<div className="unavailable-label">
+											Tidak tersedia di tanggal ini
+											</div>
+										)}
+
 										</div>
+
+									</div>
+
+									<div className="summary-right">
+
 										<div>
-                                            {isAvailable(p.id)
-                                                ? `Rp ${Number(p.harga).toLocaleString("id-ID")}`
-                                                : "Rp 0"}
-                                        </div>
+										{availableStatus
+											? `Rp ${Number(p.harga).toLocaleString("id-ID")}`
+											: "Rp 0"}
+										</div>
+
+										<button
+										className="summary-remove"
+										onClick={() =>
+											setSelectedPakets(prev =>
+											prev.filter(x => x.id !== p.id)
+											)
+										}
+										>
+										✕
+										</button>
+
+									</div>
+
 									</div>
 								);
-							})}
+								})}
 
 						</div>
 
@@ -368,6 +439,7 @@ const Custom = () => {
 									<label>Tanggal</label>
 									<input
 										type="date"
+										min={minDateString}
 										value={tanggal}
 										onChange={(e) => setTanggal(e.target.value)}
 										className="detail-date-input uniform-input"

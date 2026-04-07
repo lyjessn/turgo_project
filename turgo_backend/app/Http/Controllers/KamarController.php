@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Kamar;
 use App\Models\Homestay;
 
+use App\Services\BlockoutService;
+use App\Services\AvailabilityService;
+
 class KamarController extends Controller
 {
     public function index(Request $request)
@@ -45,7 +48,6 @@ class KamarController extends Controller
             'data' => $kamar
         ]);
     }
-
 
     public function store(Request $request)
     {
@@ -290,5 +292,38 @@ class KamarController extends Controller
             'success' => true,
             'data' => $kamars
         ]);
+    }
+
+    public function getAvailableKamar(Request $request)
+    {
+        $checkIn  = $request->check_in;
+        $checkOut = $request->check_out;
+
+        if (BlockoutService::isGlobalBlocked($checkIn, $checkOut)) {
+            return response()->json([]);
+        }
+
+        $blockedIds = BlockoutService::getBlockedIds(
+            'homestay',
+            $checkIn
+        );
+
+        $kamars = Kamar::query()
+            ->where('is_aktif', 1)
+            ->whereHas('homestay', function ($q) use ($blockedIds) {
+                $q->whereNotIn('id', $blockedIds)
+                ->where('is_aktif', 1);
+            })
+            ->get()
+            ->filter(function ($kamar) use ($checkIn, $checkOut) {
+                return AvailabilityService::isHomestayAvailable(
+                    $kamar->id,
+                    $checkIn,
+                    $checkOut
+                );
+            })
+            ->values();
+
+        return response()->json($kamars);
     }
 }

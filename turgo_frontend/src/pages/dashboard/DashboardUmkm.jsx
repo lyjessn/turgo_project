@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import ProfileCard from "../../components/dashboard/ProfileCard";
 import { getMyUmkm, updateUmkm } from "../../api/apiUmkm";
-
-import { FiMapPin, FiPhone, FiClock, FiEdit } from "react-icons/fi";
+import { FiMapPin, FiPhone, FiClock, FiEdit, FiPower, FiCheckCircle, FiXCircle  } from "react-icons/fi";
 
 import "./Dashboard.css"
 import "./DashboardUmkm.css"
@@ -46,6 +45,23 @@ const DashboardUmkm = () => {
       console.error(err);
     }finally{
       setLoading(false);
+    }
+  };
+
+  const toggleStatus = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("is_buka", umkm.is_buka ? 0 : 1);
+
+      await updateUmkm(umkm.id, formData);
+
+      setUmkm(prev => ({
+        ...prev,
+        is_buka: prev.is_buka ? 0 : 1
+      }));
+
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -118,9 +134,21 @@ const DashboardUmkm = () => {
           <div className="umkm-header">
             <h2>{umkm.nama_usaha}</h2>
 
-            <span className={`umkm-status ${umkm.is_buka ? "open" : "closed"}`}>
-              ● {umkm.is_buka ? "Buka" : "Tutup"}
-            </span>
+            <div
+              className={`umkm-status ${umkm.is_buka ? "open" : "closed"}`}
+              onClick={toggleStatus}
+              title="Klik untuk ubah status"
+            >
+              {umkm.is_buka ? (
+                <>
+                  <FiCheckCircle /> Buka
+                </>
+              ) : (
+                <>
+                  <FiXCircle /> Tutup
+                </>
+              )}
+            </div>
           </div>
 
           <div className="umkm-gallery">

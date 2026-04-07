@@ -1,17 +1,19 @@
-import { FaFileInvoiceDollar } from "react-icons/fa";
 import {
   FiHome,
   FiFolder,
   FiUsers,
   FiMap,
-  FiBox,
-  FiClipboard,
+  FiShoppingBag,
+  FiPackage,
+  FiBookOpen,
   FiCalendar,
-  FiFile,
+  FiFileText,
   FiUserPlus,
   FiLayers,
-  FiMessageSquare,
+  FiDollarSign,
   FiUser,
+  FiUserCheck,
+  FiKey,
 } from "react-icons/fi";
 
 const MenuConfig = {
@@ -33,12 +35,12 @@ const MenuConfig = {
         {
           label: "UMKM",
           path: "/dashboard/umkm",
-          icon: FiBox,
+          icon: FiShoppingBag,
         },
         {
           label: "Paket Wisata",
           path: "/dashboard/paket-wisata",
-          icon: FiClipboard,
+          icon: FiPackage,
         },
         {
           label: "Homestay",
@@ -48,7 +50,7 @@ const MenuConfig = {
         {
           label: "Tour Guide",
           path: "/dashboard/tour-guide",
-          icon: FiUsers,
+          icon: FiUser,
         },
         {
           label: "Pelaku Wisata",
@@ -64,12 +66,12 @@ const MenuConfig = {
     },
     {
       label: "Pemesanan",
-      icon: FiClipboard,
+      icon: FiBookOpen,
       children: [
         {
           label: "Paket Wisata",
           path: "/dashboard/booking/paket-wisata",
-          icon: FiClipboard,
+          icon: FiPackage,
         },
         {
           label: "Homestay",
@@ -96,7 +98,7 @@ const MenuConfig = {
     {
       label: "Laporan Admin",
       path: "/dashboard/laporan",
-      icon: FiFile,
+      icon: FiFileText,
     }
       ],
 
@@ -119,12 +121,12 @@ const MenuConfig = {
         {
           label: "UMKM",
           path: "/dashboard/umkm",
-          icon: FiBox,
+          icon: FiShoppingBag,
         },
         {
           label: "Paket Wisata",
           path: "/dashboard/paket-wisata",
-          icon: FiClipboard,
+          icon: FiPackage,
         },
         {
           label: "Homestay",
@@ -134,7 +136,7 @@ const MenuConfig = {
         {
           label: "Tour Guide",
           path: "/dashboard/tour-guide",
-          icon: FiUsers,
+          icon: FiUser,
         },
         {
           label: "Pelaku Wisata",
@@ -146,7 +148,7 @@ const MenuConfig = {
 
     {
       label: "Kelola Pengguna",
-      icon: FiUsers,
+      icon: FiUserCheck,
       children: [
         {
           label: "Pengunjung",
@@ -156,7 +158,7 @@ const MenuConfig = {
         {
           label: "Admin",
           path: "/dashboard/users/admin",
-          icon: FiUsers,
+          icon: FiKey,
         },
         {
           label: "Mitra Wisata",
@@ -168,12 +170,12 @@ const MenuConfig = {
 
     {
       label: "Pemesanan",
-      icon: FiClipboard,
+      icon: FiBookOpen,
       children: [
         {
           label: "Paket Wisata",
           path: "/dashboard/booking/paket-wisata",
-          icon: FiClipboard,
+          icon: FiPackage,
         },
         {
           label: "Homestay",
@@ -183,7 +185,7 @@ const MenuConfig = {
         {
           label: "Tour Guide",
           path: "/dashboard/booking/tour-guide",
-          icon: FiUsers,
+          icon: FiUser,
         },
         {
           label: "Custom",
@@ -202,7 +204,7 @@ const MenuConfig = {
     {
       label: "Laporan",
       path: "/dashboard/laporan",
-      icon: FiFile,
+      icon: FiFileText,
     },
   ],
 
@@ -222,7 +224,7 @@ const MenuConfig = {
           icon: FiHome,
         },
         {
-          label: "Kamar",
+          label: "Kamar Saya",
           path: "/dashboard/homestay-saya/kamar",
           icon: FiLayers,
         },
@@ -231,7 +233,7 @@ const MenuConfig = {
     {
       label: "Pemesanan",
       path: "/dashboard/booking/homestay-saya",
-      icon: FiClipboard,
+      icon: FiBookOpen,
     },
     {
       label: "Penjadwalan",
@@ -241,7 +243,7 @@ const MenuConfig = {
     {
       label: "Penghasilan Saya",
       path: "/dashboard/penghasilan/homestay-saya",
-      icon: FaFileInvoiceDollar,
+      icon: FiDollarSign,
     },
   ],
 
@@ -262,12 +264,12 @@ const MenuConfig = {
     {
       label: "Paket Saya",
       path: "/dashboard/paket-saya",
-      icon: FiClipboard,
+      icon: FiPackage,
     },
     {
       label: "Pemesanan",
       path: "/dashboard/booking/paket-saya",
-      icon: FiClipboard,
+      icon: FiBookOpen,
     },
     {
       label: "Penjadwalan",
@@ -277,7 +279,7 @@ const MenuConfig = {
     {
       label: "Penghasilan Saya",
       path: "/dashboard/penghasilan/paket-saya",
-      icon: FaFileInvoiceDollar,
+      icon: FiDollarSign,
     },
   ],
 
@@ -295,7 +297,7 @@ const MenuConfig = {
     {
       label: "Pemesanan",
       path: "/dashboard/booking/tour-guide-saya",
-      icon: FiClipboard,
+      icon: FiBookOpen,
     },
     {
       label: "Penjadwalan",
@@ -305,7 +307,7 @@ const MenuConfig = {
     {
       label: "Penghasilan Saya",
       path: "/dashboard/penghasilan/tour-guide-saya",
-      icon: FaFileInvoiceDollar,
+      icon: FiDollarSign,
     },
   ],
 

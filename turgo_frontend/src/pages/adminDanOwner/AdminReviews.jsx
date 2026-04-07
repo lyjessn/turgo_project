@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getRatingsByTarget } from "../../api/apiRating";
-
-import "./css/AdminShared.css";
+import { FiTrash2 ,FiX } from "react-icons/fi";
+import { getRatingsByTarget, deleteRating } from "../../api/apiRating";
+import { useAuth } from "../../auth/useAuth";
+import "./css/AdminReviews.css";
 
 const AdminReviews = () => {
-
+  const { user } = useAuth();
   const { tipe, id } = useParams();
   const navigate = useNavigate();
 
@@ -31,10 +32,10 @@ const AdminReviews = () => {
 
     try {
         const res = await getRatingsByTarget(
-        tipe,
-        id,
-        selectedBintang,
-        page
+          tipe,
+          id,
+          selectedBintang,
+          page
         );
 
         setReviews(res.data || []);
@@ -52,11 +53,24 @@ const AdminReviews = () => {
     return "⭐".repeat(count);
   };
 
+  const handleDelete = async (id) => {
+
+    if (!window.confirm("Hapus ulasan ini?")) return;
+
+    try {
+
+      await deleteRating(id);
+      fetchReviews();
+
+    } catch (err) {
+      console.error(err);
+    }
+
+  };
+
   return (
 
-    <div className="admin-page">
-
-      {/* HEADER */}
+    <div className="admin-reviews-page">
 
       <div className="admin-header">
 
@@ -74,9 +88,6 @@ const AdminReviews = () => {
         </div>
 
       </div>
-
-
-      {/* FILTER BINTANG */}
 
       <div className="admin-filter-group">
 
@@ -107,69 +118,42 @@ const AdminReviews = () => {
 
       </div>
 
+        <div className="review-list">
 
-      {/* TABLE */}
+          {reviews.map((r) => (
 
-      <div className="admin-table-wrapper">
+            <div className="review-card" key={r.id}>
 
-        <table className="admin-table">
+  <div className="review-stars">
+    {"⭐".repeat(r.bintang)}
+  </div>
 
-          <thead>
+  <div className="review-meta">
+    <span className="review-user">@{r.user?.username}</span>
 
-            <tr>
-              <th>User</th>
-              <th>Bintang</th>
-              <th>Ulasan</th>
-              <th>Tanggal</th>
-            </tr>
+    <span className="review-date">
+      • {new Date(r.created_at).toLocaleDateString("id-ID")}
+    </span>
 
-          </thead>
+    {(user?.role?.name === "admin" || user?.role?.name === "owner") && (
+      <button
+        className="delete-btn"
+        onClick={() => handleDelete(r.id)}
+      >
+        <FiTrash2 />
+      </button>
+    )}
+  </div>
 
-          <tbody>
+  <div className="review-text">
+    {r.review || "-"}
+  </div>
 
-            {loading && (
-              <tr>
-                <td colSpan="4">Loading...</td>
-              </tr>
-            )}
+</div>
 
-            {!loading && (!reviews || reviews.length === 0) && (
-              <tr>
-                <td colSpan="4">Belum ada ulasan</td>
-              </tr>
-            )}
-
-            {!loading && reviews?.map((r) => (
-
-              <tr key={r.id}>
-
-                <td>
-                  @{r.user?.username}
-                </td>
-
-                <td>
-                  ⭐ {r.bintang}
-                </td>
-
-                <td>
-                  {r.review || "-"}
-                </td>
-
-                <td>
-                  {new Date(r.created_at)
-                    .toLocaleDateString("id-ID")}
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
+          ))}
 
       </div>
-
 
       {/* PAGINATION */}
 

@@ -99,11 +99,6 @@ export const assignTourGuide = async (id, tourGuideId) => {
   }
 };
 
-export const deleteBooking = async (id) => {
-  const res = await axiosClient.delete(`/booking/${id}`);
-  return res.data;
-};
-
 export const getTourGuideBookings = async () => {
   try {
     const res = await axiosClient.get('/tour-guide/my-bookings');
