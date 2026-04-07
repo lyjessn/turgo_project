@@ -55,3 +55,12 @@ export const updatePengunjung = async (id, formData) => {
     throw err.response?.data || err;
   }
 };
+
+export const deleteUser = async (id) => {
+  try {
+    const res = await axiosClient.delete(`/user/${id}`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || { message: "Gagal delete user" };
+  }
+};

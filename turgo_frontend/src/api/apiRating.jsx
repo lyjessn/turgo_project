@@ -39,3 +39,12 @@ export const getRateableItems = async (id)=>{
         throw error.response?.data||error;
     }
 };
+
+export const deleteRating = async (id) => {
+    try {
+      const res = await axiosClient.delete(`/ratings/${id}`);
+        return res.data;  
+    } catch (err) {
+        throw err.response?.data || err;
+    }
+};

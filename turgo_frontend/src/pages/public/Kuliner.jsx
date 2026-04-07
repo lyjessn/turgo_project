@@ -11,9 +11,11 @@ import {
 import { getAllUmkm } from "../../api/apiUmkm";
 
 const Kuliner = () => {
-
   const [kuliners, setKuliners] = useState([]);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [previewIndex, setPreviewIndex] = useState(null);
+  const [previewFotos, setPreviewFotos] = useState([]);
 
   useEffect(() => {
     fetchKuliner();
@@ -21,19 +23,34 @@ const Kuliner = () => {
 
   const fetchKuliner = async () => {
     try {
-
       const res = await getAllUmkm();
-
+      console.log(res.data);
       setKuliners(res.data);
-
     } catch (err) {
       console.error(err);
+      setError("Gagal memuat data kuliner");
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) return <div className="text-center py-5">Loading...</div>;
+
+  if (error) {
+    return (
+      <div className="empty-state">
+         <p>🍜 Belum ada UMKM kuliner tersedia</p>
+      </div>
+    );
+  }
+
+  if (kuliners.length === 0) {
+    return (
+      <div className="empty-state">
+        Belum ada data kuliner tersedia
+      </div>
+    );
+  }
 
   return (
     <div className="kuliner-page">
@@ -82,16 +99,19 @@ const Kuliner = () => {
 
                 </div>
 
-                {/* FOTO TAMBAHAN */}
                 {kuliner.fotos?.length > 0 && (
                   <div className="kuliner-gallery">
 
-                    {kuliner.fotos.slice(0, 3).map((foto) => (
+                    {kuliner.fotos.slice(0, 3).map((foto, i) => (
                       <div
                         key={foto.id}
                         className="kuliner-thumb"
                         style={{
-                          backgroundImage: `url(http://127.0.0.1:8000/storage/${foto.path})`,
+                          backgroundImage: `url(http://127.0.0.1:8000/storage/${foto.url_foto})`,
+                        }}
+                        onClick={() => {
+                          setPreviewFotos(kuliner.fotos);
+                          setPreviewIndex(i);
                         }}
                       />
                     ))}
@@ -107,6 +127,47 @@ const Kuliner = () => {
         );
 
       })}
+
+      {previewIndex !== null && (
+          <div className="gallery-preview">
+
+            <div
+              className="preview-overlay"
+              onClick={() => setPreviewIndex(null)}
+            />
+
+            <img
+              src={`http://127.0.0.1:8000/storage/${previewFotos[previewIndex].url_foto}`}
+              className="preview-image"
+            />
+            
+            {previewIndex > 0 && (
+              <button
+                className="preview-nav left"
+                onClick={() => setPreviewIndex(prev => prev - 1)}
+              >
+                ‹
+              </button>
+            )}
+
+            {previewIndex < previewFotos.length - 1 && (
+              <button
+                className="preview-nav right"
+                onClick={() => setPreviewIndex(prev => prev + 1)}
+              >
+                ›
+              </button>
+            )}
+
+            <button
+              className="preview-close"
+              onClick={() => setPreviewIndex(null)}
+            >
+              ✕
+            </button>
+
+          </div>
+        )}
 
     </div>
   );

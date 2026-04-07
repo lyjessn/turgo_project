@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { FiClock, FiMapPin, FiUsers } from "react-icons/fi";
+import { FiClock, FiMapPin, FiUsers, FiTool } from "react-icons/fi";
 import { createBooking } from "../../api/apiBooking";
-import { getDetailPaketWisata } from "../../api/apiPaketWisata";
+import { getDetailPaketWisata, getAvailablePaketWisata } from "../../api/apiPaketWisata";
 import { useAuth } from "../../auth/useAuth";
 import "./css/Detail.css";
 
@@ -16,6 +16,7 @@ const DetailPaketWisata = () => {
     const [tanggal, setTanggal] = useState(location.state?.tanggal || "");
     const [jumlahOrang, setJumlahOrang] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [isAvailable, setIsAvailable] = useState(true);
 
     const images = paket
         ? [
@@ -40,6 +41,24 @@ const DetailPaketWisata = () => {
         return () => clearInterval(interval);
 
     }, [images]);
+
+    useEffect(() => {
+        if (!tanggal || !paket) return;
+        checkAvailability(tanggal);
+    }, [tanggal, paket]);
+
+    const checkAvailability = async (tgl) => {
+        try {
+            const data = await getAvailablePaketWisata(tgl);
+
+            const tersedia = data.some(p => p.id === paket.id);
+
+            setIsAvailable(tersedia);
+        } catch (err) {
+            console.error(err);
+            setIsAvailable(false);
+        }
+    };
 
     const fetchDetail = async () => {
         try {
@@ -80,15 +99,7 @@ const DetailPaketWisata = () => {
 
             const booking = res.data || res;
 
-            navigate("/pembayaran", {
-            state: {
-                booking,
-                paket,
-                tanggal,
-                jumlahOrang,
-                total: booking.total_harga
-            }
-            });
+            navigate(`/pembayaran/${booking.id}`);
 
         } catch (err) {
             alert(err.message || "Gagal membuat booking");
@@ -206,7 +217,7 @@ const DetailPaketWisata = () => {
                     </div>
 
                     <div className="detail-info-item">
-                        <FiUsers />
+                        <FiTool />
                         <div>
                         <b>Perlengkapan</b>
                         <p>{paket.perlengkapan}</p>
@@ -240,6 +251,12 @@ const DetailPaketWisata = () => {
                             Pilih tanggal terlebih dahulu
                             </p>
                         )}
+
+                        {!isAvailable && (
+                        <p className="detail-warning">
+                            Paket tidak tersedia pada tanggal ini
+                        </p>
+                        )}
                     </div>
 
                     <div className="detail-input-group">
@@ -265,9 +282,7 @@ const DetailPaketWisata = () => {
                                 className="stepper-btn"
                                 onClick={() =>
                                     setJumlahOrang(prev =>
-                                    prev < paket.kapasitas_max
-                                        ? prev + 1
-                                        : prev
+                                        prev + 1
                                     )
                                 }
                             >
@@ -311,7 +326,10 @@ const DetailPaketWisata = () => {
                     {reviews.map((r) => (
                         <div key={r.id} className="review-card">
                             <div className="review-avatar">
-                                👤
+                                <img
+                                    src={`http://127.0.0.1:8000/storage/${r.user?.foto_profil}`}
+                                    alt="avatar"
+                                />
                             </div>
 
                             <div className="review-content">
@@ -350,7 +368,7 @@ const DetailPaketWisata = () => {
 
                 <button
                     className="detail-book-btn"
-                    disabled={!tanggal || jumlahOrang < 1}
+                    disabled={!tanggal || jumlahOrang < 1 || jumlahOrang > paket.kapasitas_max || !isAvailable}
                     onClick={handleBooking}
                 >
                     Pesan Sekarang

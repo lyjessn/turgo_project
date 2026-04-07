@@ -120,7 +120,8 @@ class HomestayController extends Controller
         $homestay = Homestay::with([
             'pemilik',
             'kamars',
-            'fotos'
+            'fotos',
+            'ratings.user'
         ])
         ->withAvg('ratings', 'bintang')
         ->withCount('ratings')
@@ -210,7 +211,6 @@ class HomestayController extends Controller
             'check_out' => $request->check_out,
             'rokok' => $request->rokok,
             'peliharaan' => $request->peliharaan,
-            'rating' => 0,
             'is_aktif' => 1,
         ]);
 
@@ -483,6 +483,8 @@ class HomestayController extends Controller
         $homestays = Homestay::query()
             ->withMin('kamars', 'harga_per_malam')
             ->withMax('kamars', 'harga_per_malam')
+            ->withAvg('ratings', 'bintang')
+            ->withCount('ratings')
             ->where('is_aktif', 1)
             ->whereNotIn('id', $blockedIds)
             ->get()

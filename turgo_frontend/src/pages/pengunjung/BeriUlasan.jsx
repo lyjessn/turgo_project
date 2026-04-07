@@ -11,17 +11,27 @@ const BeriUlasan=()=>{
     const[ratings,setRatings] = useState({});
     const[loading,setLoading] = useState(true);
 
+    const [modal,setModal] = useState({
+        show:false,
+        type:"",
+        message:""
+    });
+
     useEffect(()=>{
         fetchItems();
     },[]);
 
     const fetchItems=async()=>{
-        try{
+        try {
             const res=await getRateableItems(id);
             setItems(res);
-        }catch{
-            alert("Gagal load data");
-        }finally{
+        } catch {
+            setModal({
+                show:true,
+                type:"error",
+                message:"Gagal load data"
+            });
+        } finally {
             setLoading(false);
         }
     };
@@ -73,11 +83,18 @@ const BeriUlasan=()=>{
                 });
             }
 
-            alert("Ulasan berhasil dikirim");
-            navigate("/profile");
+            setModal({
+                show:true,
+                type:"success",
+                message:"Ulasan berhasil dikirim"
+            });
 
         }catch(err){
-            alert(err.response?.data?.message || "Gagal kirim ulasan");
+            setModal({
+                show:true,
+                type:"error",
+                message:err.response?.data?.message || "Gagal kirim ulasan"
+            });
         }
 
     };
@@ -86,6 +103,7 @@ const BeriUlasan=()=>{
         return<div className="detail-container">Loading...</div>;
 
     return(
+        <>
         <div className="detail-container">
 
             <h1 className="detail-title">
@@ -192,6 +210,46 @@ const BeriUlasan=()=>{
             </div>
 
         </div>
+
+        {modal.show && (
+            <div className="custom-modal-overlay">
+                <div className="custom-modal modal-center">
+
+                    <div className="modal-icon-wrapper">
+                        {modal.type === "success" && (
+                            <div className="modal-icon success">✓</div>
+                        )}
+                        {modal.type === "error" && (
+                            <div className="modal-icon error">✕</div>
+                        )}
+                    </div>
+
+                    <h3 className="modal-title">
+                        {modal.type === "success" && "Ulasan Berhasil"}
+                        {modal.type === "error" && "Terjadi Kesalahan"}
+                    </h3>
+
+                    <p className="modal-message">
+                        {modal.message}
+                    </p>
+
+                    <button
+                        className="modal-button"
+                        onClick={()=>{
+                            setModal({...modal,show:false});
+
+                            if(modal.type==="success"){
+                                navigate("/profile");
+                            }
+                        }}
+                    >
+                        OK
+                    </button>
+
+                </div>
+            </div>
+        )}
+    </>
     );
 
 };

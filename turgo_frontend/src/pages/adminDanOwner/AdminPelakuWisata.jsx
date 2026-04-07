@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { FiSearch, FiEdit, FiEye, FiTrash2, FiX } from "react-icons/fi";
 
 import "./css/AdminShared.css";
@@ -24,9 +24,13 @@ const AdminPelakuWisata = () => {
     const [showAddModal,setShowAddModal] = useState(false);
     const [showEditModal,setShowEditModal] = useState(false);
     const [showDetailModal,setShowDetailModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedItem,setSelectedItem] = useState(null);
     const [role,setRole] = useState(null);
     const [userList, setUserList] = useState([]);
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 10;
+    const formRef = useRef(null);
 
     const defaultForm = {
         user_id: "",
@@ -38,11 +42,17 @@ const AdminPelakuWisata = () => {
     };
 
     const [form,setForm] = useState(defaultForm);
+    const [error, setError] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(()=>{
         loadUser();
         fetchData();
     },[]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, filter]);
 
     const loadUser = async ()=>{
         try{
@@ -57,6 +67,7 @@ const AdminPelakuWisata = () => {
         try{
             const res = await getAllPelakuWisata();
             setData(res.data);
+            console.log(res.data);
         } catch (err) {
             console.error(err);
         }finally{
@@ -93,6 +104,12 @@ const AdminPelakuWisata = () => {
 
     },[data,filter,search]);
 
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+    const paginatedData = filteredData.slice(
+        (page - 1) * itemsPerPage,
+        page * itemsPerPage
+    );
 
     const toggleStatus = async(item)=>{
         try{
@@ -108,26 +125,41 @@ const AdminPelakuWisata = () => {
         );
 
         }catch(err){
-        console.error(err);
+            console.error(err);
         }
     };
 
 
     const handleAdd = async()=>{
         try{
+            setSubmitting(true);
+            setError("");
+
             const formData = new FormData();
             Object.keys(form).forEach(key=>{
                 if(form[key] !== null && form[key] !== "")
-                formData.append(key,form[key]);
+                    formData.append(key,form[key]);
             });
 
             await createPelakuWisata(formData);
+
             setShowAddModal(false);
             setForm(defaultForm);
+            setError("");
             fetchData();
 
         } catch(err) {
-            console.error(err);
+            if (err.response?.data?.errors) {
+                const firstError = Object.values(err.response.data.errors)[0][0];
+                setError(firstError);
+            } else if (err.response?.data?.message) {
+                setError(err.response.data.message);
+            } else {
+                setError("Gagal menambahkan pelaku wisata");
+            }
+
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -153,14 +185,15 @@ const AdminPelakuWisata = () => {
     };
 
 
-    const handleDelete = async(id)=>{
-        if(!window.confirm("Hapus pelaku wisata ini?")) return;
+    const handleDelete = async () => {
+        try {
+            await deletePelakuWisata(selectedItem.id);
 
-        try{
-            await deletePelakuWisata(id);
-            setData(prev =>
-                prev.filter(item=>item.id!==id)
-            );
+            setShowDeleteModal(false);
+            setSelectedItem(null);
+
+            fetchData();
+            fetchUsers();
         } catch (err) {
             console.error(err);
         }
@@ -230,8 +263,6 @@ const AdminPelakuWisata = () => {
 
       </div>
 
-
-
       <div className="admin-table-wrapper">
 
         <table className="admin-table">
@@ -249,7 +280,7 @@ const AdminPelakuWisata = () => {
 
           <tbody>
 
-            {filteredData.map(item=>(
+            {paginatedData.map(item=>(
               <tr key={item.id}>
 
                 <td>{item.id}</td>
@@ -302,8 +333,11 @@ const AdminPelakuWisata = () => {
                   {role==="owner" && (
 
                     <button
-                      className="btn-icon danger"
-                      onClick={()=>handleDelete(item.id)}
+                        className="btn-icon danger"
+                        onClick={() => {
+                            setSelectedItem(item);
+                            setShowDeleteModal(true);
+                        }}
                     >
                       <FiTrash2/>
                     </button>
@@ -316,7 +350,33 @@ const AdminPelakuWisata = () => {
 
           </tbody>
         </table>
+
+        {totalPages > 1 && (
+            <div className="admin-pagination">
+
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+              >
+                Prev
+              </button>
+
+              <span>
+                Page {page} / {totalPages}
+              </span>
+
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </button>
+
+            </div>
+        )}
+
       </div>
+
     </div>
 
     {showDetailModal && selectedItem && (
@@ -377,15 +437,16 @@ const AdminPelakuWisata = () => {
                     <FiX className="modal-close" onClick={() => setShowAddModal(false)} />
                 </div>
 
-                <div className="modal-body column">
-
+                <div className="modal-body column" ref={formRef}>
                     <div className="form-group">
                         <label>Pilih User</label>
                         <select
                             value={form.user_id}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setForm({ ...form, user_id: e.target.value })
-                            }
+                                setError("");
+                            }}
+                            required
                         >
                             <option value="">Pilih User</option>
 
@@ -408,9 +469,11 @@ const AdminPelakuWisata = () => {
                             type="text"
                             placeholder="Nama Usaha"
                             value={form.nama_usaha}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setForm({ ...form, nama_usaha: e.target.value })
-                            }
+                                setError("");
+                            }}
+                            required
                         />
                     </div>
                     
@@ -419,9 +482,11 @@ const AdminPelakuWisata = () => {
                         <textarea
                             placeholder="Deskripsi"
                             value={form.deskripsi}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setForm({ ...form, deskripsi: e.target.value })
-                            }
+                                setError("");
+                            }}
+                            required
                         /> 
                     </div>
                     
@@ -431,9 +496,11 @@ const AdminPelakuWisata = () => {
                             type="text"
                             placeholder="Lokasi"
                             value={form.lokasi}
-                            onChange={(e) =>
+                             onChange={(e) => {
                                 setForm({ ...form, lokasi: e.target.value })
-                            }
+                                setError("");
+                            }}
+                            required
                         />
                     </div>
                     
@@ -443,9 +510,11 @@ const AdminPelakuWisata = () => {
                             type="text"
                             placeholder="Nomor Telepon"
                             value={form.nomor_telepon}
-                            onChange={(e) =>
+                             onChange={(e) => {
                                 setForm({ ...form, nomor_telepon: e.target.value })
-                            }
+                                setError("");
+                            }}
+                            required
                         />
                     </div>
                     
@@ -453,13 +522,32 @@ const AdminPelakuWisata = () => {
                         <label>Foto Usaha</label>
                         <input
                             type="file"
-                            onChange={(e) =>
-                                setForm({ ...form, foto_profil: e.target.files[0] })
-                            }
+                            onChange={(e) => {
+                                setForm({ ...form, foto_profil: e.target.value })
+                                setError("");
+                            }}
+                            required
                         />
                     </div>
                     
-                    <button className="btn-primary" onClick={handleAdd}> Simpan</button>
+                    <button
+                        className="btn-primary"
+                        onClick={() => {
+                            const inputs = formRef.current.querySelectorAll("input, select, textarea");
+
+                            for (let input of inputs) {
+                            if (!input.checkValidity()) {
+                                input.reportValidity();
+                                return;
+                            }
+                            }
+
+                            handleAdd();
+                        }}
+                        disabled={submitting}
+                    >
+                        {submitting ? "Menyimpan..." : "Simpan"}
+                    </button>
                 </div>
             </div>
         </div>
@@ -559,13 +647,17 @@ const AdminPelakuWisata = () => {
                         </div>
 
                         <div className="modal-actions">
-                            <button className="btn-primary" onClick={handleEdit}>
-                            Update
+                            <button
+                                className="btn-primary"
+                                onClick={handleEdit}
+                                disabled={submitting}
+                            >
+                                {submitting ? "Menyimpan..." : "Update"}
                             </button>
 
                             <button
-                            className="btn-secondary"
-                            onClick={()=>setShowEditModal(false)}
+                                className="btn-secondary"
+                                onClick={()=>setShowEditModal(false)}
                             >
                             Batal
                             </button>
@@ -576,6 +668,45 @@ const AdminPelakuWisata = () => {
                 </div>
             </div>
         </div>
+        )}
+
+        {showDeleteModal && selectedItem && (
+          <div className="custom-modal-overlay">
+              <div className="custom-modal modal-center">
+
+                  <div className="modal-icon-wrapper">
+                      <div className="modal-icon error">!</div>
+                  </div>
+
+                  <h3 className="modal-title">
+                      Hapus Pelaku Wisata
+                  </h3>
+
+                  <p className="modal-message">
+                      Apakah Anda yakin ingin menghapus{" "}
+                      <b>{selectedItem.nama_usaha}</b>?
+                      <br />
+                      Data yang dihapus tidak dapat dikembalikan.
+                  </p>
+
+                  <div className="modal-actions">
+                      <button
+                          className="btn-danger"
+                          onClick={handleDelete}
+                      >
+                          Hapus
+                      </button>
+
+                      <button
+                          className="btn-secondary"
+                          onClick={() => setShowDeleteModal(false)}
+                      >
+                          Batal
+                      </button>
+                  </div>
+
+              </div>
+          </div>
         )}
 
     </>

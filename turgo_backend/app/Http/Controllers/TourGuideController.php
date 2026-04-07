@@ -84,7 +84,7 @@ class TourGuideController extends Controller
 
     public function getAvailableTourGuide()
     {
-        $users = User::where('role_id', 4)
+        $users = User::where('role_id', 5)
             ->where('profile_completed', 0)
             ->select('id','nama_lengkap')
             ->orderBy('nama_lengkap')
@@ -339,9 +339,10 @@ class TourGuideController extends Controller
         $blockedIds = BlockoutService::getBlockedIds( 'tour_guide', $tanggal);
 
         $guides = TourGuide::query()
-
             ->with('user')
             ->where('is_aktif', 1)
+            ->withAvg('ratings', 'bintang')
+            ->withCount('ratings')
             ->whereNotIn('id', $blockedIds)
             ->get()
 

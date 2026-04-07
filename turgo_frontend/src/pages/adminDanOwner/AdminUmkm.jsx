@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { FiSearch, FiX, FiMapPin, FiClock, FiPhone, FiTrash2 } from "react-icons/fi";
 import { FaUtensils } from "react-icons/fa";
 import "./css/BudayaDanUmkm.css";
@@ -14,8 +14,11 @@ const AdminUmkm = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
-
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 10;
+    const formRef = useRef(null);
 
     const defaultForm = {
         user_id: "",
@@ -39,6 +42,10 @@ const AdminUmkm = () => {
        loadUser();
        fetchData();
     }, []);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, filter]);
    
     const loadUser = async () => {
        try {
@@ -57,8 +64,6 @@ const AdminUmkm = () => {
         const res = await getAllUsersUmkm();
         setUsers(res.data);
     };
-
-    useEffect(() => { fetchData(); }, []);
 
     const fetchData = async () => {
         try {
@@ -102,6 +107,13 @@ const AdminUmkm = () => {
         return result;
     }, [data, filter, search]);
 
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+    const paginatedData = filteredData.slice(
+        (page - 1) * itemsPerPage,
+        page * itemsPerPage
+    );
+
     const handleAdd = async () => {
         const formData = new FormData();
 
@@ -124,6 +136,7 @@ const AdminUmkm = () => {
         setShowAddModal(false);
         setForm(defaultForm);
         fetchData();
+        fetchUsers();
     };
 
     const handleEdit = async () => {
@@ -158,12 +171,15 @@ const AdminUmkm = () => {
         fetchData();
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Hapus umkm ini?")) return;
-    
+    const handleDelete = async () => {
         try {
-            await deleteUmkm(id);
-            setData(prev => prev.filter(item => item.id !== id));
+            await deleteUmkm(selectedItem.id);
+
+            setShowDeleteModal(false);
+            setSelectedItem(null);
+
+            fetchData();
+            fetchUsers();
         } catch (err) {
             console.error(err);
         }
@@ -212,12 +228,16 @@ const AdminUmkm = () => {
 
             <div className="admin-kebudayaan-list">
 
-                {filteredData.map(item=>(
+                {paginatedData.map(item=>(
                     <div key={item.id} className="admin-kebudayaan-card">
 
                         <div className="admin-kebudayaan-image">
                             <img
-                            src={`http://127.0.0.1:8000/storage/${item.url_thumbnail}`}
+                            src={
+                            item.url_thumbnail
+                                ? `http://127.0.0.1:8000/storage/${item.url_thumbnail}`
+                                : "/no-image.png"
+                            }
                             />
 
                             <label className="switch">
@@ -269,7 +289,10 @@ const AdminUmkm = () => {
                                 {role === "owner" && (
                                     <button
                                         className="btn-delete"
-                                        onClick={() => handleDelete(item.id)}
+                                        onClick={() => {
+                                            setSelectedItem(item);
+                                            setShowDeleteModal(true);
+                                        }}
                                     >
                                     Hapus
                                     </button>
@@ -277,8 +300,33 @@ const AdminUmkm = () => {
                             </div>
                         </div>
                     </div>
-                ))}
+                ))}  
             </div>
+
+            {totalPages > 1 && (
+                <div className="admin-pagination">
+
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                >
+                    Prev
+                </button>
+
+                <span>
+                    Page {page} / {totalPages}
+                </span>
+
+                <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage(page + 1)}
+                >
+                    Next
+                </button>
+
+                </div>
+            )}
+            
         </div>
 
         {(showAddModal || showEditModal) && (
@@ -302,20 +350,26 @@ const AdminUmkm = () => {
                         />
                     </div>
 
-                    <div className="modal-body column">
+                    <div className="modal-body column" ref={formRef}>
 
                         {showAddModal && (
                         <select
                             value={form.user_id}
                             onChange={(e) =>
-                            setForm({ ...form, user_id: e.target.value })
+                                setForm({ ...form, user_id: e.target.value })
                             }
+                            required={showAddModal}
                         >
                             <option value="">Pilih User UMKM</option>
+
+                            {users.length === 0 && (
+                                <option disabled>Tidak ada user tersedia</option>
+                            )}
+
                             {users.map((u) => (
-                            <option key={u.id} value={u.id}>
-                                {u.nama_lengkap}
-                            </option>
+                                <option key={u.id} value={u.id}>
+                                    {u.nama_lengkap}
+                                </option>
                             ))}
                         </select>
                         )}
@@ -326,6 +380,7 @@ const AdminUmkm = () => {
                             onChange={(e) =>
                                 setForm({ ...form, nama_usaha: e.target.value })
                             }
+                            required={showAddModal}
                         />
 
                         <input
@@ -334,6 +389,7 @@ const AdminUmkm = () => {
                             onChange={(e) =>
                                 setForm({ ...form, lokasi: e.target.value })
                             }
+                            required={showAddModal}
                         />
 
                         <input
@@ -342,6 +398,7 @@ const AdminUmkm = () => {
                             onChange={(e) =>
                                 setForm({ ...form, menu_tersedia: e.target.value })
                             }
+                            required={showAddModal}
                         />
 
                         <input
@@ -350,6 +407,7 @@ const AdminUmkm = () => {
                             onChange={(e) =>
                                 setForm({ ...form, jam_operasional: e.target.value })
                             }
+                            required={showAddModal}
                         />
 
                         <input
@@ -358,6 +416,7 @@ const AdminUmkm = () => {
                             onChange={(e) =>
                                 setForm({ ...form, nomor_telepon: e.target.value })
                             }
+                            required={showAddModal}
                         />
 
                         <input
@@ -373,6 +432,7 @@ const AdminUmkm = () => {
 
                                 e.target.value = null;
                             }}
+                            required={showAddModal}
                         />
 
                         <div className="preview-grid">
@@ -482,7 +542,18 @@ const AdminUmkm = () => {
 
                         <button
                             className="btn-primary"
-                            onClick={showAddModal ? handleAdd : handleEdit}
+                            onClick={() => {
+                                const inputs = formRef.current.querySelectorAll("input, select, textarea");
+
+                                for (let input of inputs) {
+                                    if (!input.checkValidity()) {
+                                        input.reportValidity();
+                                        return;
+                                    }
+                                }
+
+                                showAddModal ? handleAdd() : handleEdit();
+                            }}
                         >
                             {showAddModal ? "Simpan" : "Update"}
                         </button>
@@ -501,7 +572,7 @@ const AdminUmkm = () => {
                         <FiX className="modal-close" onClick={()=>setShowDetailModal(false)} />
                     </div>
 
-                    <div className="modal-body column">
+                    <div className="modal-body column" ref={formRef}>
                         <h2 className="detail-title">
                             {selectedItem.nama_usaha}
                         </h2>
@@ -509,7 +580,11 @@ const AdminUmkm = () => {
                         {selectedItem.url_thumbnail && (
                             <div className="detail-hero">
                             <img
-                                src={`http://127.0.0.1:8000/storage/${selectedItem.url_thumbnail}`}
+                                src={
+                                selectedItem.url_thumbnail
+                                    ? `http://127.0.0.1:8000/storage/${selectedItem.url_thumbnail}`
+                                    : "/no-image.png"
+                                }
                                 alt=""
                             />
                             </div>
@@ -536,6 +611,45 @@ const AdminUmkm = () => {
                             <div><FiPhone /> {selectedItem.nomor_telepon}</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        )}
+
+        {showDeleteModal && selectedItem && (
+            <div className="custom-modal-overlay">
+                <div className="custom-modal modal-center">
+
+                    <div className="modal-icon-wrapper">
+                        <div className="modal-icon error">!</div>
+                    </div>
+
+                    <h3 className="modal-title">
+                        Hapus UMKM
+                    </h3>
+
+                    <p className="modal-message">
+                        Apakah Anda yakin ingin menghapus{" "}
+                        <b>{selectedItem.nama_usaha}</b>?
+                        <br />
+                        Data yang dihapus tidak dapat dikembalikan.
+                    </p>
+
+                    <div className="modal-actions">
+                        <button
+                            className="btn-danger"
+                            onClick={handleDelete}
+                        >
+                            Hapus
+                        </button>
+
+                        <button
+                            className="btn-secondary"
+                            onClick={() => setShowDeleteModal(false)}
+                        >
+                            Batal
+                        </button>
+                    </div>
+
                 </div>
             </div>
         )}

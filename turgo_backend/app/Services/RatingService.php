@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\{
     Rating,
@@ -29,6 +30,9 @@ class RatingService
     public static function getRateableItems(Booking $booking):array
     {
         $items=[];
+        $userId = Auth::id();
+
+        if (!$userId) return [];
 
         $pakets=BookingPaketWisataDetail::where('booking_id',$booking->id)
             ->with('paketWisata')
@@ -44,6 +48,7 @@ class RatingService
                 'nama'=>$p->paketWisata->nama,
                 'thumbnail'=>$p->paketWisata->url_thumbnail,
                 'sudah_rating'=>self::exists(
+                    $userId,
                     $booking->id,
                     'paket_wisata',
                     $p->paket_wisata_id
@@ -52,7 +57,7 @@ class RatingService
         }
 
         $customs=BookingCustomDetail::where('booking_id',$booking->id)
-            ->with(['paketWisata','tourGuide'])
+            ->with(['paketWisata','tourGuide.user'])
             ->get();
 
         $addedTourGuide=false;
@@ -67,6 +72,7 @@ class RatingService
                     'nama'=>$c->paketWisata->nama,
                     'thumbnail'=>$c->paketWisata->url_thumbnail,
                     'sudah_rating'=>self::exists(
+                        $userId,
                         $booking->id,
                         'paket_wisata',
                         $c->paket_wisata_id
@@ -79,9 +85,10 @@ class RatingService
                 $items[]=[
                     'tipe_target'=>'tour_guide',
                     'id_target'=>$c->tour_guide_id,
-                    'nama'=>$c->tourGuide->nama,
+                    'nama'=>$c->tourGuide->user->nama_lengkap,
                     'thumbnail'=>$c->tourGuide->foto_profil,
                     'sudah_rating'=>self::exists(
+                        $userId,
                         $booking->id,
                         'tour_guide',
                         $c->tour_guide_id
@@ -93,7 +100,7 @@ class RatingService
         }
 
         $tgs=BookingTourGuideDetail::where('booking_id',$booking->id)
-            ->with('tourGuide')
+            ->with('tourGuide.user')
             ->get();
 
         foreach($tgs as $tg)
@@ -103,9 +110,10 @@ class RatingService
             $items[]=[
                 'tipe_target'=>'tour_guide',
                 'id_target'=>$tg->tour_guide_id,
-                'nama'=>$tg->tourGuide->nama,
+                'nama'=>$tg->tourGuide->user->nama_lengkap,
                 'thumbnail'=>$tg->tourGuide->foto_profil,
                 'sudah_rating'=>self::exists(
+                    $userId,
                     $booking->id,
                     'tour_guide',
                     $tg->tour_guide_id
@@ -125,6 +133,7 @@ class RatingService
                 'nama'=>$hs->homestay->nama,
                 'thumbnail'=>$hs->homestay->url_thumbnail,
                 'sudah_rating'=>self::exists(
+                    $userId,
                     $booking->id,
                     'homestay',
                     $hs->homestay_id
@@ -141,16 +150,16 @@ class RatingService
 
 
     private static function exists(
+        int $userId,
         int $bookingId,
         string $tipeTarget,
         int $idTarget
-    ):bool
-    {
+    ): bool {
         return Rating::where([
-            'user_id'=>auth()->id(),
-            'booking_id'=>$bookingId,
-            'tipe_target'=>$tipeTarget,
-            'id_target'=>$idTarget
+            'user_id' => $userId,
+            'booking_id' => $bookingId,
+            'tipe_target' => $tipeTarget,
+            'id_target' => $idTarget
         ])->exists();
     }
 

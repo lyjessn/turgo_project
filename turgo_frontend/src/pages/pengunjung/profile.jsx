@@ -43,7 +43,8 @@ const Profile = () => {
         try {
             const active = await getMyActiveBookings();
             const history = await getMyBookingHistory();
-
+            console.log(active);
+            console.log(history);
             setActiveBookings(active);
             setHistoryBookings(history);
         } catch (err) {
@@ -110,8 +111,16 @@ const Profile = () => {
         }
     };
 
-    const handleDetail = (id) => {
-        navigate(`/booking/${id}`);
+    const handleDetail = (booking) => {
+
+        if (booking.status_pemesanan === "menunggu pembayaran") {
+            navigate(`/pembayaran/${booking.id}`, {
+                state: { booking }
+            });
+            return;
+        }
+
+        navigate(`/booking/${booking.id}`);
     };
 
     const handleUpdateProfile = async () => {
@@ -144,13 +153,45 @@ const Profile = () => {
         }
     };
 
+    const formatDate = (date) => {
+        return new Date(date).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+    };
+
     const BookingCard = ({ booking }) => {
 
         const buttonType = getButtonType(booking);
+        const getBookingName = (booking) => {
+
+            if (booking.custom_details?.length) {
+                return booking.custom_details
+                    .map(d => d.paket_wisata?.nama)
+                    .filter(Boolean)
+                    .join(", ");
+            }
+
+            if (booking.paket_wisata_details?.paket_wisata?.nama) {
+                return booking.paket_wisata_details.paket_wisata.nama;
+            }
+
+            if (booking.homestay_details?.homestay?.nama) {
+                return booking.homestay_details.homestay.nama;
+            }
+
+            if (booking.tour_guide_details?.tour_guide?.user) {
+                return booking.tour_guide_details.tour_guide.user.nama_lengkap;
+            }
+
+            return booking.tipe_booking.replace("_"," ");
+        };
 
         return (
-        
+
             <div className="booking-card">
+
                 <img
                     src={
                         booking.thumbnail
@@ -162,27 +203,41 @@ const Profile = () => {
 
                 <div className="booking-info">
 
-                    <h4>{booking.tipe_booking.replace("_", " ")}</h4>
+                    <h4>{getBookingName(booking)}</h4>
 
-                    <p>ID Order: #{booking.id}</p>
+                    <div className="booking-meta">
+                        Tanggal Kegiatan: {formatDate(booking.tanggal_mulai)}
+                    </div>
 
-                    <p>
-                        Tanggal:
-                        {" "}
-                        {booking.tanggal_mulai}
-                    </p>
-
-                    <p className={`status ${booking.status_pemesanan}`}>
+                    <div className={`status-text ${booking.status_pemesanan.replace(/\s+/g,"-")}`}>
                         {booking.status_pemesanan}
-                    </p>
+                    </div>
+
+                </div>
+
+                <div className="booking-side">
+
+                    <div className="booking-meta-right">
+                        ID Order #{booking.id}
+                    </div>
+
+                    <div className="booking-meta-right">
+                        {formatDate(booking.tanggal_booking)}
+                    </div>
 
                     <div className="booking-actions">
 
                         <button
-                            className="btn-detail"
-                            onClick={() => handleDetail(booking.id)}
-                        >
-                            Lihat Detail
+                            className={
+                                booking.status_pemesanan === "menunggu pembayaran"
+                                ? "btn-pay"
+                                : "btn-secondary"
+                            }
+                            onClick={() => handleDetail(booking)}
+                            >
+                            {booking.status_pemesanan === "menunggu pembayaran"
+                                ? "Selesaikan Pembayaran"
+                                : "Lihat Detail"}
                         </button>
 
                         {buttonType === "batalkan" && (
@@ -190,13 +245,7 @@ const Profile = () => {
                                 className="btn-cancel"
                                 onClick={() => handleCancel(booking.id)}
                             >
-                                Batalkan Pesanan
-                            </button>
-                        )}
-
-                        {buttonType === "selesai" && (
-                            <button className="btn-finish">
-                                Selesai
+                                Batalkan
                             </button>
                         )}
 
@@ -210,8 +259,11 @@ const Profile = () => {
                         )}
 
                     </div>
+
                 </div>
+
             </div>
+
         );
     };
 
@@ -252,7 +304,7 @@ const Profile = () => {
                     className={tab === "aktif" ? "active" : ""}
                     onClick={() => setTab("aktif")}
                 >
-                    Pesanan Aktif
+                    Pemesanan Aktif
                 </button>
 
                 <button
@@ -273,7 +325,7 @@ const Profile = () => {
             <div className="profile-content">
                 {tab === "aktif" && (
                     activeBookings.length === 0
-                        ? <p>Tidak ada pesanan aktif</p>
+                        ? <p>Tidak ada pemesanan aktif</p>
                         : activeBookings.map(b =>
                             <BookingCard key={b.id} booking={b}/>
                         )
@@ -281,7 +333,7 @@ const Profile = () => {
 
                 {tab === "riwayat" && (
                     historyBookings.length === 0
-                        ? <p>Tidak ada riwayat</p>
+                        ? <p>Tidak ada riwayat pemesanan</p>
 
                         : historyBookings.map(b =>
                             <BookingCard key={b.id} booking={b}/>

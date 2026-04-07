@@ -12,11 +12,12 @@
   font-weight: 500;
 }
 
-.catalog-filter-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 30px 0;
+.catalog-filter-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:24px;
+  margin-top: 16px;
 }
 
 .date-filter {
@@ -61,11 +62,44 @@
   border: 1px solid #ccc;
 }
 
+.catalog-filter{
+  height:44px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  background:white;
+  font-size:14px;
+  color:#374151;
+  outline:none;
+  cursor:pointer;
+}
+
+.catalog-filter:focus{
+  border-color:#0f766e;
+  box-shadow:0 0 0 2px rgba(15,118,110,0.15);
+}
+
+.catalog-search-wrapper{
+  position:relative;
+  margin-left:auto;
+}
+
+.catalog-search-icon{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#9ca3af;
+  font-size:16px;
+  pointer-events:none;
+}
+
 .catalog-search {
   width: 280px;
-  padding: 10px 14px;
+  padding:12px 40px;
   border-radius: 999px;
   border: 1px solid #ddd;
+  margin-left: auto;
 }
 
 .catalog-search:focus {
@@ -141,6 +175,15 @@
 
 .date-separator {
   color: #ccc;
+}
+
+.empty-state {
+  width: 100%;
+  text-align: center;
+  padding: 40px 0;
+  color: #888;
+  font-size: 14px;
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 768px) {

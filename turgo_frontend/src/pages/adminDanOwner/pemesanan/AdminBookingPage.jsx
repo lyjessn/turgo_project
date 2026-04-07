@@ -7,28 +7,42 @@ import "../css/AdminShared.css";
 import "../css/AdminPaketWisata.css";
 import "../css/Modal.css";
 
-import { getAdminBookings, updateBookingStatus, sendBookingEmail } from "../../../api/apiBooking";
+import { getAdminBookings, updateBookingStatus, sendBookingEmail, assignTourGuide } from "../../../api/apiBooking";
+import { getAvailableTourGuide } from "../../../api/apiTourGuide";
+import { GetUserData } from "../../../api/apiAuth";
 
 const AdminBookingPage = ({ tipe, title }) => {
     const [data, setData] = useState([]);
+    const [role, setRole] = useState(null);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("semua");
     const [openMenuId, setOpenMenuId] = useState(null);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 10;
 
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [showNotifyModal, setShowNotifyModal] = useState(false);
+    const [showAssignGuideModal, setShowAssignGuideModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
     const [rejectReason, setRejectReason] = useState("");
+    const [tourGuides, setTourGuides] = useState([]);
+    const [selectedGuide, setSelectedGuide] = useState("");
 
     const [notifyTitle, setNotifyTitle] = useState("");
     const [notifyMessage, setNotifyMessage] = useState("");
 
     useEffect(() => {
         fetchData();
+        loadUser();
     }, []);
+
+    useEffect(()=>{
+        setPage(1);
+    }, [search, filter]);
 
     const fetchData = async () => {
         try {
@@ -51,6 +65,38 @@ const AdminBookingPage = ({ tipe, title }) => {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadUser = async () => {
+        try {
+            const res = await GetUserData();
+            setRole(res.role);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const loadTourGuides = async (tanggal) => {
+        try {
+            const res = await getAvailableTourGuide(tanggal);
+            setTourGuides(res);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+    
+    const getProductName = (item) => {
+        if(item.tipe_booking === "paket_wisata"){
+            return item.paket_wisata_details?.paket_wisata?.nama;
+        }
+
+        if(item.tipe_booking === "homestay"){
+            return item.homestay_details?.homestay?.nama;
+        }
+
+        if(item.tipe_booking === "tour_guide"){
+            return item.tour_guide_details?.tour_guide?.user?.nama_lengkap;
         }
     };
 
@@ -82,31 +128,34 @@ const AdminBookingPage = ({ tipe, title }) => {
             );
         }
 
-        if (search) {
+        if (filter === "batal") {
             result = result.filter(
-                d => String(d.id).includes(search)
+                d => d.status_pemesanan === "batal"
+            );
+        }
+
+        if (search) {
+            const keyword = search.toLowerCase().trim();
+
+            result = result.filter(d =>
+                String(d.id).toLowerCase().includes(keyword) ||
+                d.user?.nama_lengkap?.toLowerCase().includes(keyword) ||
+                getProductName(d)?.toLowerCase().includes(keyword)
             );
         }
 
         return result;
     }, [data, filter, search]);
 
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+    const paginatedData = filteredData.slice(
+        (page - 1) * itemsPerPage,
+        page * itemsPerPage
+    );
+
     const formatHarga = (harga) => {
         return Number(harga).toLocaleString("id-ID");
-    };
-
-    const getProductName = (item) => {
-        if(item.tipe_booking === "paket_wisata"){
-            return item.paket_wisata_details?.paket_wisata?.nama;
-        }
-
-        if(item.tipe_booking === "homestay"){
-            return item.homestay_details?.homestay?.nama;
-        }
-
-        if(item.tipe_booking === "tour_guide"){
-            return item.tour_guide_details?.tour_guide?.user?.nama_lengkap;
-        }
     };
 
     const handleConfirm = async () => {
@@ -149,6 +198,23 @@ const AdminBookingPage = ({ tipe, title }) => {
         }
     };
 
+    const handleCancel = async () => {
+        try {
+            await updateBookingStatus(selectedItem.id, {
+                status_pemesanan: "batal"
+            });
+
+            toast.success("Booking berhasil dibatalkan");
+
+            setShowCancelModal(false);
+            fetchData();
+
+        } catch (err) {
+            console.error(err);
+            toast.error("Gagal membatalkan booking");
+        }
+    };
+
     const handleSendNotify = async () => {
         try {
             await sendBookingEmail(
@@ -164,6 +230,28 @@ const AdminBookingPage = ({ tipe, title }) => {
         }
     };
 
+    const handleAssignGuide = async () => {
+
+        if (!selectedGuide) {
+            toast.error("Pilih tour guide terlebih dahulu");
+            return;
+        }
+
+        try {
+            await assignTourGuide(selectedItem.id, selectedGuide);
+
+            toast.success("Tour guide berhasil ditetapkan");
+
+            setShowAssignGuideModal(false);
+            setSelectedGuide("");
+            fetchData();
+
+        } catch (err) {
+            console.error(err);
+            toast.error("Gagal assign tour guide");
+        }
+    };
+
     if (loading) return <div>Loading...</div>;
 
     return (
@@ -176,7 +264,7 @@ const AdminBookingPage = ({ tipe, title }) => {
                         <FiSearch />
                         <input
                             type="text"
-                            placeholder="Cari ID booking"
+                            placeholder="Cari data pesanan"
                             value={search}
                             onChange={(e)=>setSearch(e.target.value)}
                         />
@@ -218,6 +306,13 @@ const AdminBookingPage = ({ tipe, title }) => {
                         onClick={()=>setFilter("ditolak")}
                     >
                         Ditolak
+                    </button>
+
+                    <button
+                        className={filter==="batal"?"active":""}
+                        onClick={()=>setFilter("batal")}
+                    >
+                        Dibatalkan
                     </button>
                 </div>
 
@@ -271,7 +366,7 @@ const AdminBookingPage = ({ tipe, title }) => {
                         </thead>
 
                         <tbody>
-                            {filteredData.map(item=>(
+                            {paginatedData.map(item => (
                                 <tr key={item.id}>
                                     <td>{item.id}</td>
                                     <td>{item.user?.nama_lengkap}</td>
@@ -309,7 +404,7 @@ const AdminBookingPage = ({ tipe, title }) => {
                                             <td>
                                             {item.custom_details?.[0]?.tour_guide
                                                 ? item.custom_details?.[0]?.tour_guide?.user?.nama_lengkap
-                                                : "Belum diassign"}
+                                                : "Belum ditetapkan"}
                                             </td>
                                         </>
                                     )}
@@ -374,11 +469,12 @@ const AdminBookingPage = ({ tipe, title }) => {
                                                             <button
                                                             onClick={()=>{
                                                                 setSelectedItem(item);
+                                                                loadTourGuides(item.tanggal_mulai);
                                                                 setShowAssignGuideModal(true);
                                                                 setOpenMenuId(null);
                                                             }}
                                                             >
-                                                            Assign Tour Guide
+                                                            Tetapkan Tour Guide
                                                             </button>
                                                         )}
                                                         </>
@@ -394,6 +490,18 @@ const AdminBookingPage = ({ tipe, title }) => {
                                                         Detail
                                                     </button>
 
+                                                    {role === "owner" && item.status_pemesanan === "dikonfirmasi" &&(
+                                                        <button
+                                                            className="text-danger"
+                                                            onClick={()=>{
+                                                                setSelectedItem(item);
+                                                                setShowCancelModal(true);
+                                                                setOpenMenuId(null);
+                                                            }}
+                                                        >
+                                                            Batalkan
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -402,6 +510,27 @@ const AdminBookingPage = ({ tipe, title }) => {
                             ))}
                         </tbody>
                     </table>
+
+                    <div className="admin-pagination">
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(page - 1)}
+                        >
+                            Prev
+                        </button>
+
+                        <span>
+                            Page {page} / {totalPages}
+                        </span>
+
+                        <button
+                            disabled={page === totalPages}
+                            onClick={() => setPage(page + 1)}
+                        >
+                            Next
+                        </button>
+
+                    </div>
                 </div>
             </div>
 
@@ -604,6 +733,88 @@ const AdminBookingPage = ({ tipe, title }) => {
                         </button>
 
                     </div>
+
+                    </div>
+                </div>
+            )}
+
+            {showCancelModal && (
+                <div className="custom-modal-overlay">
+                    <div className="custom-modal modal-center">
+
+                        <div className="modal-icon-wrapper">
+                            <div className="modal-icon error">!</div>
+                        </div>
+
+                        <h3 className="modal-title">
+                            Batalkan Booking
+                        </h3>
+
+                        <p className="modal-message">
+                            Apakah Anda yakin ingin membatalkan booking ini?
+                            <br />
+                        </p>
+
+                        <div className="modal-actions">
+                            <button
+                                className="btn-danger"
+                                onClick={handleCancel}
+                            >
+                                Batalkan
+                            </button>
+
+                            <button
+                                className="btn-secondary"
+                                onClick={()=>setShowCancelModal(false)}
+                            >
+                                Kembali
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+            {showAssignGuideModal && selectedItem && (
+                <div className="modal-overlay" onClick={()=>setShowAssignGuideModal(false)}>
+                    <div className="modal" onClick={(e)=>e.stopPropagation()}>
+                        
+                        <div className="modal-header">
+                            <h2>Tetapkan Tour Guide</h2>
+                            <FiX 
+                                className="modal-close" 
+                                onClick={()=>setShowAssignGuideModal(false)}
+                            />
+                        </div>
+
+                        <div className="modal-body column">
+
+                            <p>
+                                Booking ID: <b>{selectedItem.id}</b>
+                            </p>
+
+                            <select
+                                className="input"
+                                value={selectedGuide}
+                                onChange={(e)=>setSelectedGuide(e.target.value)}
+                            >
+                                <option value="">-- Pilih Tour Guide --</option>
+
+                                {tourGuides.map(guide => (
+                                    <option key={guide.id} value={guide.id}>
+                                        {guide.user?.nama_lengkap}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <button
+                                className="btn-primary"
+                                onClick={handleAssignGuide}
+                            >
+                                Simpan
+                            </button>
+
+                        </div>
 
                     </div>
                 </div>

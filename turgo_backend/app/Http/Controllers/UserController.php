@@ -15,7 +15,7 @@ class UserController extends Controller
     {
         $users = User::with('role')
             ->whereIn('role_id', [3,4,5,6])
-            ->select('id','nama_lengkap','username','email','role_id','is_aktif','profile_completed')
+            ->select('id','nama_lengkap','username','email','role_id','is_aktif','profile_completed', 'foto_profil', 'nomor_telepon')
             ->orderBy('id','desc')
             ->get();
 
@@ -105,6 +105,87 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'data' => $user->load('role')
+        ]);
+    }
+
+    public function updatePengunjung(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->role_id != 7) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User bukan pengunjung'
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'is_aktif' => 'required|boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user->is_aktif = $request->is_aktif;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => $user->load('role')
+        ]);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $userLogin = $request->user();
+
+        if ($userLogin->role->name !== 'owner') abort(403);
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan'
+            ], 404);
+        }
+
+        if ($userLogin->id === $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak bisa menghapus akun sendiri'
+            ], 400);
+        }
+
+        if ($user->tourGuide) {
+            $user->tourGuide()->delete();
+        }
+
+        if ($user->homestay) {
+            $user->homestay()->delete();
+        }
+
+        if ($user->umkm) {
+            $user->umkm()->delete();
+        }
+
+        if ($user->pelakuWisata) {
+            $user->pelakuWisata()->delete();
+        }
+
+        if ($user->foto_profil) {
+            Storage::disk('public')->delete($user->foto_profil);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User berhasil dihapus'
         ]);
     }
 }

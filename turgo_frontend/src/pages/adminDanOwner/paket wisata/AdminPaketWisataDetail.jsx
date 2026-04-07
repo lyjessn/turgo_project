@@ -16,7 +16,9 @@ const AdminPaketWisataDetail = () => {
     const [data,setData] = useState(null);
     const [loading,setLoading] = useState(true);
     const [currentImage,setCurrentImage] = useState(0);
-  
+    const role = user?.role?.name;
+    const userId = user?.id;
+    
     useEffect(()=>{
       fetchData();
     },[id]);
@@ -59,12 +61,17 @@ const AdminPaketWisataDetail = () => {
             </button>
 
             
-            <button
-              className="btn-primary"
-              onClick={() => navigate(`/dashboard/paket-wisata/edit/${id}`)}
-            >
-              Edit
-            </button>
+            {(
+              role === "admin" ||
+              role === "owner" ||
+              (role === "pelaku_wisata" && data.id_pembuat === userId)
+            ) && (
+              <button className="btn-primary"
+                onClick={() => navigate(`/dashboard/paket-wisata/edit/${data.id}`)}
+              >
+                Edit
+              </button>
+            )}
           </div>
   
         </div>

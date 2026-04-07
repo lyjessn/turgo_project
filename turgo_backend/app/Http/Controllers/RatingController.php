@@ -10,7 +10,7 @@ use App\Models\Rating;
 class RatingController extends Controller
 {
 
-   public function available($id)
+    public function available(Request $request, $id)
     {
         $booking = Booking::with([
             'customDetails.paketWisata',
@@ -20,7 +20,7 @@ class RatingController extends Controller
             'tourGuideDetails.tourGuide'
         ])
         ->where('id', $id)
-        ->where('user_id', auth()->id())
+        ->where('user_id', $request->user()->id)
         ->where('status_pemesanan', 'selesai')
         ->first();
 
@@ -49,12 +49,12 @@ class RatingController extends Controller
         ]);
 
         $booking = Booking::where('id', $request->booking_id)
-            ->where('user_id', auth()->id())
+            ->where('user_id', $request->user()->id)
             ->where('status_pemesanan', 'selesai')
             ->firstOrFail();
 
         $rating = RatingService::store(
-            auth()->id(),
+            $request->user()->id,
             $booking->id,
             $request->tipe_target,
             $request->id_target,
@@ -67,7 +67,6 @@ class RatingController extends Controller
             'data' => $rating
         ], 201);
     }
-
 
     public function summary($tipe, $id)
     {
@@ -118,5 +117,19 @@ class RatingController extends Controller
             'success' => true,
             'data' => $ratings
         ]);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        if (!in_array($request->user()->role->name, ['admin','owner'])) {
+            abort(403);
+        }
+
+        $rating = Rating::findOrFail($id);
+        $rating->delete();
+
+        return [
+            'success' => true
+        ];
     }
 }

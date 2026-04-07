@@ -17,6 +17,7 @@
   position: relative;
   width: 260px;
   min-height: 100%;
+  height: auto;
 }
 
 .admin-kebudayaan-image img {
@@ -35,7 +36,6 @@
 .admin-desc {
   flex: 1;
 }
-
 .admin-card-actions{
   display: flex;
   justify-content: flex-end;

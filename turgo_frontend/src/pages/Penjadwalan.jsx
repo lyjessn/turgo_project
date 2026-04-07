@@ -84,8 +84,11 @@ export default function Penjadwalan() {
 
     const loadData = async () => {
 
-        const global = await getGlobalBlockouts().catch(() => []);
-        const spesifik = await getSpesifikBlockouts().catch(() => []);
+        const globalRes = await getGlobalBlockouts().catch(() => ({ data: [] }));
+        const spesifikRes = await getSpesifikBlockouts().catch(() => ({ data: [] }));
+
+        const global = globalRes.data || [];
+        const spesifik = spesifikRes.data || [];
 
         const gEvents = global.map(b => ({
         id: b.id,
@@ -509,14 +512,14 @@ export default function Penjadwalan() {
                             </button>
 
                             {editMode && (
-
-                                <button
-                                className="btn-danger"
-                                onClick={handleDelete}
-                                >
-                                Hapus
-                                </button>
-
+                                (selectedEvent?.type !== "global" || (role === "admin" || role === "owner")) && (
+                                    <button
+                                        className="btn-danger"
+                                        onClick={handleDelete}
+                                    >
+                                        Hapus
+                                    </button>
+                                )
                             )}
 
                             <button

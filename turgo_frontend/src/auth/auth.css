@@ -9,7 +9,7 @@
   width: 90%;
   max-width: 1200px;
   min-height: 620px;
-  height: auto;
+  height: 620px;
   display: flex;   
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -21,11 +21,12 @@
   padding: 48px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow-y: auto;
 }
 
 .auth-title {
-  color: var(--primary);
+  color: var(--secondary);
   margin-bottom: 8px;
 }
 
@@ -37,6 +38,8 @@
 .auth-error {
   color: var(--danger);
   margin-bottom: 16px;
+  font-size: 0.9rem;
+  min-height: 18px;
 }
 
 .auth-group {
@@ -76,7 +79,7 @@
 
 .forgot-password {
   font-size: 12px;
-  color: var(--primary);
+  color: var(--secondary);
   margin-bottom: 24px;
   cursor: pointer;
 }
@@ -84,7 +87,7 @@
 .auth-button {
   width: 100%;
   padding: 12px;
-  background-color: var(--primary);
+  background-color: var(--secondary);
   color: var(--white);
   border: none;
   border-radius: var(--radius-md);
@@ -113,6 +116,18 @@
   background-size: cover;
   background-position: center;
   position: relative;
+  min-height: 620px;
+  height: auto;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+}
+
+.auth-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .auth-image-caption {

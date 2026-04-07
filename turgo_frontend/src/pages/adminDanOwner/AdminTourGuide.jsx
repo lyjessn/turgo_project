@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { FiSearch, FiEdit, FiEye, FiTrash2, FiX } from "react-icons/fi";
 import "./css/AdminShared.css";
 import "./css/AdminPaketWisata.css";
@@ -15,8 +15,12 @@ const AdminTourGuide = () => {
     const [showAddModal,setShowAddModal] = useState(false);
     const [showEditModal,setShowEditModal] = useState(false);
     const [showDetailModal,setShowDetailModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedItem,setSelectedItem] = useState(null);
     const [userList, setUserList] = useState([]);
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 10;
+    const formRef = useRef(null);
 
     const defaultForm = {
         user_id: "",
@@ -31,11 +35,18 @@ const AdminTourGuide = () => {
 
     const [form,setForm] = useState(defaultForm);
     const [role, setRole] = useState(null);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         loadUser();
         fetchData();
     }, []);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, filter]);
 
     const loadUser = async () => {
         try {
@@ -85,6 +96,13 @@ const AdminTourGuide = () => {
         return result;
     },[data,filter,search]);
 
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+    const paginatedData = filteredData.slice(
+        (page - 1) * itemsPerPage,
+        page * itemsPerPage
+    );
+
     const formatHarga = (harga)=>{
         return Number(harga).toLocaleString("id-ID");
     };
@@ -112,49 +130,79 @@ const AdminTourGuide = () => {
 
     const handleAdd = async()=>{
         try{
+            setSubmitting(true);
+            setError("");
+            setSuccess("");
+
             const formData = new FormData();
-           Object.keys(form).forEach(key=>{
+            Object.keys(form).forEach(key=>{
                 if(form[key] !== null && form[key] !== "")
-                formData.append(key,form[key]);
+                    formData.append(key,form[key]);
             });
 
             await createTourGuide(formData);
 
+            setSuccess("Berhasil menambahkan tour guide");
+
             setShowAddModal(false);
             setForm(defaultForm);
             fetchData();
+
         } catch (err) {
-            console.error(err);
+            setError("Gagal menambahkan tour guide");
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleEdit = async()=>{
         try{
+            setSubmitting(true);
+            setError("");
+            setSuccess("");
+
             const formData = new FormData();
             Object.keys(form).forEach(key=>{
                 if(form[key])
-                formData.append(key,form[key]);
+                    formData.append(key,form[key]);
             });
 
             await updateTourGuide(selectedItem.id,formData);
+
+            setSuccess("Berhasil update tour guide");
 
             setShowEditModal(false);
             setForm(defaultForm);
             setSelectedItem(null);
             fetchData();
+
         } catch (err) {
-            console.error(err);
+            setError("Gagal update tour guide");
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Hapus paket wisata ini?")) return;
-
+    const handleDelete = async () => {
         try {
-            await deleteTourGuide(id);
-            setData(prev => prev.filter(item => item.id !== id));
+            setSubmitting(true);
+            setError("");
+            setSuccess("");
+
+            await deleteTourGuide(selectedItem.id);
+
+            setSuccess("Berhasil menghapus tour guide");
+
+            setShowDeleteModal(false);
+            setSelectedItem(null);
+
+            fetchData();
+            loadUser();
+
         } catch (err) {
-            console.error(err);
+            setError("Gagal menghapus tour guide");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -171,6 +219,8 @@ const AdminTourGuide = () => {
                             className="btn-primary"
                             onClick={()=>{
                                 setForm(defaultForm);
+                                setError("");
+                                setSuccess("");
                                 fetchUsers();
                                 setShowAddModal(true)
                             }}
@@ -182,10 +232,10 @@ const AdminTourGuide = () => {
                             <FiSearch/>
 
                             <input
-                            type="text"
-                            placeholder="Cari tour guide"
-                            value={search}
-                            onChange={(e)=>setSearch(e.target.value)}
+                                type="text"
+                                placeholder="Cari tour guide"
+                                value={search}
+                                onChange={(e)=>setSearch(e.target.value)}
                             />
                         </div>
                     </div>
@@ -232,7 +282,7 @@ const AdminTourGuide = () => {
                         </thead>
 
                         <tbody>
-                            {filteredData.map(item=>(
+                            {paginatedData.map(item=>(
                                 <tr key={item.id}>
 
                                     <td>{item.id}</td>
@@ -282,6 +332,8 @@ const AdminTourGuide = () => {
                                             foto_profil:null
                                         });
 
+                                        setError("");
+                                        setSuccess("");
                                         setShowEditModal(true);
 
                                         }}
@@ -291,10 +343,13 @@ const AdminTourGuide = () => {
 
                                     {role === "owner" && (
                                         <button
-                                        className="btn-icon danger"
-                                        onClick={() => handleDelete(item.id)}
+                                            className="btn-icon danger"
+                                            onClick={() => {
+                                                setSelectedItem(item);
+                                                setShowDeleteModal(true);
+                                            }}
                                         >
-                                        <FiTrash2/>
+                                            <FiTrash2/>
                                         </button>
                                     )}
 
@@ -303,7 +358,33 @@ const AdminTourGuide = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    {totalPages > 1 && (
+                        <div className="admin-pagination">
+
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(page - 1)}
+                        >
+                            Prev
+                        </button>
+
+                        <span>
+                            Page {page} / {totalPages}
+                        </span>
+
+                        <button
+                            disabled={page === totalPages}
+                            onClick={() => setPage(page + 1)}
+                        >
+                            Next
+                        </button>
+
+                        </div>
+                    )}
+
                 </div>
+
             </div>
 
             {showDetailModal && selectedItem && (
@@ -410,7 +491,9 @@ const AdminTourGuide = () => {
                             <FiX className="modal-close" onClick={() => setShowAddModal(false)}/>
                         </div>
 
-                        <div className="modal-body column">
+                        <div className="modal-body column" ref={formRef}>
+                            {error && <div className="error-text">{error}</div>}
+                            {success && <div className="success-text">{success}</div>}
                             <div className="form-group">
                                 <label>Pilih User</label>
                                 <select
@@ -418,12 +501,13 @@ const AdminTourGuide = () => {
                                     onChange={(e) =>
                                         setForm({ ...form, user_id: e.target.value })
                                     }
+                                    required
                                 >
 
                                 <option value="">Pilih User</option>
 
                                 {userList.length === 0 && (
-                                <option disabled>Tidak ada user tersedia</option>
+                                    <option disabled>Tidak ada user tersedia</option>
                                 )}
 
                                 {userList.map(user => (
@@ -458,6 +542,7 @@ const AdminTourGuide = () => {
                                         harga_per_hari: e.target.value
                                         })
                                     }
+                                    required
                                 />
                             </div>
                             
@@ -470,6 +555,7 @@ const AdminTourGuide = () => {
                                     onChange={(e) =>
                                         setForm({ ...form, bahasa: e.target.value })
                                     }
+                                    required
                                 />
                             </div>
                             
@@ -485,6 +571,7 @@ const AdminTourGuide = () => {
                                         spesialisasi: e.target.value
                                         })
                                     }
+                                    required
                                 />
                             </div>
                             
@@ -500,6 +587,7 @@ const AdminTourGuide = () => {
                                         kapasitas_min: e.target.value
                                         })
                                     }
+                                    required
                                 />
                             </div>
                             
@@ -515,7 +603,15 @@ const AdminTourGuide = () => {
                                         kapasitas_max: e.target.value
                                         })
                                     }
+                                    required
                                 />
+                                {form.kapasitas_min &&
+                                    form.kapasitas_max &&
+                                    Number(form.kapasitas_max) < Number(form.kapasitas_min) && (
+                                    <small className="error-text">
+                                        Kapasitas maksimum harus lebih besar dari minimum
+                                    </small>
+                                )}
                             </div>
                         
                             <div className="form-group">
@@ -528,14 +624,32 @@ const AdminTourGuide = () => {
                                         foto_profil: e.target.files[0]
                                         })
                                     }
+                                    required
                                 />
                             </div>
                             
                             <button
                                 className="btn-primary"
-                                onClick={handleAdd}
+                                disabled={
+                                    submitting ||
+                                    Number(form.kapasitas_max) < 1 ||
+                                    Number(form.kapasitas_min) < 1 ||
+                                    Number(form.harga_per_hari) < 1
+                                }
+                                onClick={() => {
+                                    const inputs = formRef.current.querySelectorAll("input, select, textarea");
+
+                                    for (let input of inputs) {
+                                        if (!input.checkValidity()) {
+                                            input.reportValidity();
+                                            return;
+                                        }
+                                    }
+
+                                    handleAdd();
+                                }}
                             >
-                            Simpan
+                            {submitting ? "Menyimpan..." : "Simpan"}
                             </button>
 
                         </div>
@@ -552,6 +666,8 @@ const AdminTourGuide = () => {
                         </div>
 
                         <div className="modal-body column">
+                            {error && <div className="error-text">{error}</div>}
+                            {success && <div className="success-text">{success}</div>}
                             <div className="form-group">
                                 <label>Pemilik</label>
                                 <input
@@ -625,6 +741,13 @@ const AdminTourGuide = () => {
                                     })
                                 }
                             />
+                            {form.kapasitas_min &&
+                            form.kapasitas_max &&
+                            Number(form.kapasitas_max) < Number(form.kapasitas_min) && (
+                                <small className="error-text">
+                                    Kapasitas maksimum harus lebih besar dari minimum
+                                </small>
+                            )}
 
                             <input
                                 type="file"
@@ -639,10 +762,51 @@ const AdminTourGuide = () => {
                             <button
                                 className="btn-primary"
                                 onClick={handleEdit}
+                                disabled={submitting}
                             >
-                            Update
+                                {submitting ? "Menyimpan..." : "Update"}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {showDeleteModal && selectedItem && (
+                <div className="custom-modal-overlay">
+                    <div className="custom-modal modal-center">
+
+                        <div className="modal-icon-wrapper">
+                            <div className="modal-icon error">!</div>
+                        </div>
+
+                        <h3 className="modal-title">
+                            Hapus Tour Guide
+                        </h3>
+
+                        <p className="modal-message">
+                            Apakah Anda yakin ingin menghapus{" "}
+                            <b>{selectedItem.user?.nama_lengkap}</b>?
+                            <br />
+                            Data yang dihapus tidak dapat dikembalikan.
+                        </p>
+
+                        <div className="modal-actions">
+                            <button
+                                className="btn-danger"
+                                onClick={handleDelete}
+                                disabled={submitting}
+                            >
+                                {submitting ? "Menghapus..." : "Hapus"}
+                            </button>
+
+                            <button
+                                className="btn-secondary"
+                                onClick={() => setShowDeleteModal(false)}
+                            >
+                                Batal
+                            </button>
+                        </div>
+
                     </div>
                 </div>
             )}

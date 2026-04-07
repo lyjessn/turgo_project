@@ -22,7 +22,6 @@ use App\Models\BookingPaketWisataDetail;
 use App\Models\BookingTourGuideDetail;
 use App\Models\BookingHomestayDetail;
 use App\Models\BookingCustomDetail;
-use App\Models\BookingCustomPaket;
 use App\Models\RiwayatSaldo;
 
 class BookingController extends Controller
@@ -99,7 +98,7 @@ class BookingController extends Controller
                 if ($request->jenis_tour_guide === 'full day') {
                     $total += 300000;
                 } elseif ($request->jenis_tour_guide === 'half day') {
-                    $total += 180000;
+                    $total += 150000;
                 }
 
                 $tipe = 'custom';
@@ -376,12 +375,22 @@ class BookingController extends Controller
     {
         $user = $request->user();
 
-        return Booking::whereHas('tourGuideDetails.tourGuide', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
+        return Booking::where(function ($query) use ($user) {
+
+            $query->whereHas('tourGuideDetails.tourGuide', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+
+            ->orWhereHas('customDetails.tourGuide', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+
         })
         ->with([
             'user',
-            'tourGuideDetails.tourGuide'
+            'tourGuideDetails.tourGuide.user',
+            'customDetails.tourGuide.user',
+            'customDetails.paketWisata'
         ])
         ->latest()
         ->get();
@@ -442,7 +451,7 @@ class BookingController extends Controller
             'paketWisataDetails.paketWisata',
             'homestayDetails.homestay',
             'homestayDetails.kamar',
-            'tourGuideDetails.tourGuide'
+            'tourGuideDetails.tourGuide.user'
         ])
         ->where('user_id',$request->user()->id)
         ->findOrFail($id);
@@ -481,6 +490,10 @@ class BookingController extends Controller
         $user = $request->user();
 
         $booking = Booking::where('id', $id)
+            ->with([
+                'homestayDetails.homestay',
+                'homestayDetails.kamar'
+            ])
             ->whereHas('homestayDetails.homestay', function ($q) use ($user) {
                 $q->where('id_pemilik', $user->id);
             })
@@ -524,7 +537,7 @@ class BookingController extends Controller
                 'paketWisataDetails.paketWisata',
                 'customDetails.paketWisata',
                 'homestayDetails.homestay',
-                'tourGuideDetails.tourGuide'
+                'tourGuideDetails.tourGuide.user'
             ])
             ->latest()
             ->get();
@@ -542,7 +555,8 @@ class BookingController extends Controller
                 'paketWisataDetails.paketWisata',
                 'customDetails.paketWisata',
                 'homestayDetails.homestay',
-                'tourGuideDetails.tourGuide'
+                'homestayDetails.kamar',
+                'tourGuideDetails.tourGuide.user'
             ])
             ->latest()
             ->get();
@@ -566,20 +580,37 @@ class BookingController extends Controller
         }
 
         $request->validate([
-            'status_pemesanan' => 'required|in:dikonfirmasi,ditolak',
+            'status_pemesanan' => 'required|in:dikonfirmasi,ditolak,batal',
             'alasan_penolakan' => 'nullable|string'
         ]);
 
         $booking = Booking::with('user')->findOrFail($id);
 
+        $statusLama = $booking->status_pemesanan;
+        $statusBaru = $request->status_pemesanan;
+
+        if ($statusLama === 'selesai') {
+            return response()->json([
+                'message' => 'Booking sudah selesai, tidak bisa diubah'
+            ], 400);
+        }
+
+        if ($statusBaru === 'batal' && $statusLama !== 'dikonfirmasi') {
+            return response()->json([
+                'message' => 'Booking hanya bisa dibatalkan dari status dikonfirmasi'
+            ], 400);
+        }
+
         $booking->update([
-            'status_pemesanan' => $request->status_pemesanan,
-            'alasan_penolakan' => $request->alasan_penolakan
+            'status_pemesanan' => $statusBaru,
+            'alasan_penolakan' => $statusBaru === 'ditolak'
+                ? $request->alasan_penolakan
+                : null
         ]);
 
         if ($booking->user && $booking->user->email) {
 
-            if ($request->status_pemesanan === "dikonfirmasi") {
+            if ($statusBaru === "dikonfirmasi") {
 
                 $subject = "Booking Dikonfirmasi";
                 $pesanLokasi = "
@@ -631,7 +662,7 @@ class BookingController extends Controller
 
             }
 
-            if ($request->status_pemesanan === "ditolak") {
+            if ($statusBaru === "ditolak") {
 
                 $subject = "Booking Ditolak";
 
@@ -661,6 +692,24 @@ class BookingController extends Controller
                 ";
             }
 
+            if ($statusBaru === "batal") {
+
+                $subject = "Booking Dibatalkan";
+
+                $html = "
+                <div style='font-family:Arial;padding:20px'>
+                    <h3>Booking Dibatalkan</h3>
+
+                    <p><b>Booking ID:</b> {$booking->id}</p>
+                    <p><b>Nama Pemesan:</b> {$booking->user->nama_lengkap}</p>
+                    <p><b>Tanggal Booking:</b> {$booking->tanggal_booking}</p>
+                    <p>
+                    Mohon maaf, booking Anda telah dibatalkan oleh admin.
+                    Proses refund akan dilakukan dalam waktu 3x24 jam, silahkan menghubungi admin bila anda belum menerima refund dalam 3x24 jam.
+                    </p>
+                </div>";
+            }
+
             Mail::html($html, function ($mail) use ($booking, $subject) {
                 $mail->to($booking->user->email)
                     ->subject($subject);
@@ -673,19 +722,36 @@ class BookingController extends Controller
         ]);
     }
 
-    public function assignTourGuide(Request $request, $id)
+    public function assignTourGuide(Request $request, $bookingId)
     {
-        if ($request->user()->role->name !== 'admin') abort(403);
+        $tourGuideId = $request->tour_guide_id;
 
-        $request->validate([
-            'tour_guide_id' => 'required|exists:tour_guides,id'
+        $details = DB::table('booking_custom_details')
+            ->where('booking_id', $bookingId)
+            ->get();
+
+        foreach ($details as $detail) {
+
+            $harga = 0;
+
+            if ($detail->jenis_tour_guide === 'full day') {
+                $harga = 300000;
+            } elseif ($detail->jenis_tour_guide === 'half day') {
+                $harga = 150000;
+            }
+
+            DB::table('booking_custom_details')
+                ->where('id', $detail->id)
+                ->update([
+                    'tour_guide_id' => $tourGuideId,
+                    'harga_tour_guide' => $harga
+                ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tour guide berhasil ditetapkan'
         ]);
-
-        DB::table('booking_custom_paket_details')
-            ->where('booking_id', $id)
-            ->update(['tour_guide_id' => $request->tour_guide_id]);
-
-        return ['success' => true];
     }
 
     public function sendEmail(Request $request, $id)
@@ -754,11 +820,117 @@ class BookingController extends Controller
         }
     }
 
-    public function destroy(Request $request, $id)
+    public function sendReminderH1()
     {
-        if ($request->user()->role->name !== 'owner') abort(403);
-        Booking::findOrFail($id)->delete();
-        return ['success' => true];
-    }
+        $besok = Carbon::tomorrow()->toDateString();
 
+        $bookings = Booking::with([
+            'user',
+            'paketWisataDetails.paketWisata.participants',
+            'paketWisataDetails.paketWisata.pembuat',
+            'customDetails.paketWisata.participants',
+            'customDetails.paketWisata.pembuat',
+            'customDetails.tourGuide.user',
+            'tourGuideDetails.tourGuide.user',
+            'homestayDetails.homestay.pemilik'
+        ])
+        ->where('status_pemesanan','dikonfirmasi')
+        ->whereDate('tanggal_mulai',$besok)
+        ->get();
+
+        foreach ($bookings as $booking) {
+
+            $emails = [];
+
+            // PEMESAN
+
+            if ($booking->user && $booking->user->email) {
+                $emails[] = $booking->user->email;
+            }
+
+            // TOUR GUIDE
+            foreach ($booking->tourGuideDetails ?? [] as $tg) {
+                if ($tg && $tg->tourGuide && $tg->tourGuide->user && $tg->tourGuide->user->email) {
+                    $emails[] = $tg->tourGuide->user->email;
+                }
+            }
+
+            foreach ($booking->customDetails ?? [] as $custom) {
+                if ($custom && $custom->tourGuide && $custom->tourGuide->user && $custom->tourGuide->user->email) {
+                    $emails[] = $custom->tourGuide->user->email;
+                }
+            }
+
+            // HOMESTAY OWNER
+         
+            foreach ($booking->homestayDetails ?? [] as $hs) {
+                if ($hs && $hs->homestay && $hs->homestay->pemilik && $hs->homestay->pemilik->email) {
+                    $emails[] = $hs->homestay->pemilik->email;
+                }
+            }
+
+            //  PAKET WISATA
+            $pakets = [];
+
+            foreach ($booking->paketWisataDetails ?? [] as $detail) {
+                if ($detail && $detail->paketWisata) {
+                    $pakets[] = $detail->paketWisata;
+                }
+            }
+
+            foreach ($booking->customDetails ?? [] as $detail) {
+                if ($detail && $detail->paketWisata) {
+                    $pakets[] = $detail->paketWisata;
+                }
+            }
+
+            foreach ($pakets as $paket) {
+
+                if (!$paket) continue;
+
+                // participants
+                if ($paket->participants && $paket->participants->count() > 0) {
+
+                    foreach ($paket->participants as $p) {
+                        if ($p && $p->email) {
+                            $emails[] = $p->email;
+                        }
+                    }
+
+                } else {
+
+                    if ($paket->pembuat && $paket->pembuat->email) {
+                        $emails[] = $paket->pembuat->email;
+                    }
+                }
+            }
+
+            $emails = array_unique($emails);
+
+            foreach ($emails as $email) {
+
+                if (!$email) continue;
+
+                try {
+                    Mail::html("
+                        <div style='font-family:Arial;padding:20px'>
+                            <h2>Desa Wisata Turgo</h2>
+                            <p>Booking ID: {$booking->id}</p>
+                            <p>Kegiatan Anda dijadwalkan besok ({$booking->tanggal_mulai})</p>
+                            <p>Mohon hadir sesuai jadwal.</p>
+                        </div>
+                    ", function($mail) use ($email) {
+                        $mail->to($email)->subject("Reminder Kegiatan Besok");
+                    });
+
+                } catch (\Exception $e) {
+                }
+            }
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Reminder H-1 berhasil dikirim'
+        ];
+    }
 }

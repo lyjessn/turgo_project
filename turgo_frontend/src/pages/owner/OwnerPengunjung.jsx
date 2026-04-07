@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { FiSearch, FiUserPlus, FiEye, FiX, FiEdit, FiTrash2 } from "react-icons/fi";
 import "../adminDanOwner/css/AdminShared.css";
 import "../adminDanOwner/css/Modal.css";
-import { getAllPengunjung, updatePengunjung } from "../../api/apiUser";
+import { getAllPengunjung, updatePengunjung, deleteUser } from "../../api/apiUser";
 import { GetUserData, registerByOwner } from "../../api/apiAuth";
 
 const OwnerPengunjung = () => {
@@ -14,29 +14,31 @@ const OwnerPengunjung = () => {
     password_confirmation: "",
     nama_lengkap: "",
     nomor_telepon: "",
-    role_id: "",
     foto_profil: null
   };
 
   const [data,setData] = useState([]);
   const [loading,setLoading] = useState(true);
-
   const [search,setSearch] = useState("");
-  const [roleFilter,setRoleFilter] = useState("semua");
   const [statusFilter,setStatusFilter] = useState("semua");
-
   const [showModal,setShowModal] = useState(false);
   const [showEditModal,setShowEditModal] = useState(false);
   const [showDetailModal,setShowDetailModal] = useState(false);
+  const [showDeleteModal,setShowDeleteModal] = useState(false);
   const [selectedItem,setSelectedItem] = useState(null);
-
   const [form,setForm] = useState(defaultForm);
   const [role, setRole] = useState(null);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
       loadUser();
       fetchData();
   }, []);
+
+    useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter]);
 
   const loadUser = async () => {
       try {
@@ -62,9 +64,6 @@ const OwnerPengunjung = () => {
 
     let result = [...data];
 
-    if(roleFilter !== "semua")
-      result = result.filter(d=>d.role.name === roleFilter);
-
     if(statusFilter === "aktif")
       result = result.filter(d=>d.is_aktif === 1);
 
@@ -80,7 +79,14 @@ const OwnerPengunjung = () => {
 
     return result;
 
-  },[data,search,roleFilter,statusFilter]);
+  },[data,search,statusFilter]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  const paginatedData = filteredData.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
 
   const toggleStatus = async(item)=>{
     try{
@@ -155,6 +161,19 @@ const OwnerPengunjung = () => {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      await deleteUser(selectedItem.id);
+
+      setShowDeleteModal(false);
+      setSelectedItem(null);
+
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if(loading) return <div>Loading...</div>;
 
   return(
@@ -163,13 +182,16 @@ const OwnerPengunjung = () => {
       <div className="admin-page">
         <div className="admin-header">
 
-          <h1>Admin Turgo</h1>
+          <h1>Pengunjung Turgo</h1>
 
           <div className="admin-header-actions">
 
             <button
               className="btn-primary"
-              onClick={()=>setShowModal(true)}
+              onClick={()=>{
+                setForm(defaultForm);
+                setShowModal(true);
+              }}
             >
               <FiUserPlus/> Tambah
             </button>
@@ -178,7 +200,7 @@ const OwnerPengunjung = () => {
               <FiSearch/>
               <input
                 type="text"
-                placeholder="Cari admin..."
+                placeholder="Cari pengunjung..."
                 value={search}
                 onChange={(e)=>setSearch(e.target.value)}
               />
@@ -229,7 +251,7 @@ const OwnerPengunjung = () => {
 
             <tbody>
 
-              {filteredData.map(item=>(
+              {paginatedData.map(item=>(
                 <tr key={item.id}>
 
                   <td>{item.id}</td>
@@ -272,7 +294,6 @@ const OwnerPengunjung = () => {
                           username: item.username || "",
                           email: item.email || "",
                           nomor_telepon: item.nomor_telepon || "",
-                          role_id: item.role_id || "",
                           foto_profil: null
                         });
 
@@ -286,7 +307,10 @@ const OwnerPengunjung = () => {
                     {role === "owner" && (
                       <button
                         className="btn-icon danger"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={()=>{
+                          setSelectedItem(item);
+                          setShowDeleteModal(true);
+                        }}
                       >
                         <FiTrash2/>
                       </button>
@@ -299,28 +323,52 @@ const OwnerPengunjung = () => {
 
           </table>
 
+          {totalPages > 1 && (
+            <div className="admin-pagination">
+
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+              >
+                Prev
+              </button>
+
+              <span>
+                Page {page} / {totalPages}
+              </span>
+
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </button>
+
+            </div>
+          )}
+
         </div>
 
       </div>
 
       {showModal &&(
-
         <div className="modal-overlay">
           <div className="modal">
 
-            <h3>Tambah Pengunjung</h3>
+            <div className="modal-header">
+              <h2>Tambah Pengunjung</h2>
+              <FiX className="modal-close" onClick={() => setShowModal(false)}/>
+            </div>
 
             <div className="form-group">
                 <label>Role</label>
 
-                <select
-                  value={form.role_id}
-                  onChange={(e)=>setForm({...form,role_id:e.target.value})}
+                <input
+                  type="text"
+                  value="pengunjung"
+                  disabled
                 >
-                  <option value="">Pilih Role</option>
-                  <option value="1">Owner</option>
-                  <option value="2">Admin</option>
-                </select>
+                </input>
 
             </div>
 
@@ -415,10 +463,7 @@ const OwnerPengunjung = () => {
 
             <div className="modal-header">
               <h2>Detail Pengunjung</h2>
-              <FiX
-                className="modal-close"
-                onClick={() => setShowDetailModal(false)}
-              />
+              <FiX className="modal-close" onClick={() => setShowDetailModal(false)}/>
             </div>
 
             <div className="modal-data-body">
@@ -486,10 +531,7 @@ const OwnerPengunjung = () => {
 
             <div className="modal-header">
               <h2>Edit Admin</h2>
-              <FiX
-                className="modal-close"
-                onClick={()=>setShowEditModal(false)}
-              />
+              <FiX className="modal-close" onClick={()=>setShowEditModal(false)}/>
             </div>
 
             <div className="modal-data-body">
@@ -583,6 +625,45 @@ const OwnerPengunjung = () => {
 
               </div>
 
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && selectedItem && (
+        <div className="custom-modal-overlay">
+          <div className="custom-modal modal-center">
+
+            <div className="modal-icon-wrapper">
+              <div className="modal-icon error">!</div>
+            </div>
+
+            <h3 className="modal-title">
+              Hapus Pengunjung
+            </h3>
+
+            <p className="modal-message">
+              Apakah Anda yakin ingin menghapus{" "}
+              <b>{selectedItem.nama_lengkap}</b>?
+              <br />
+              Data yang dihapus tidak dapat dikembalikan.
+            </p>
+
+            <div className="modal-actions">
+              <button
+                className="btn-danger"
+                onClick={handleDelete}
+              >
+                Hapus
+              </button>
+
+              <button
+                className="btn-secondary"
+                onClick={()=>setShowDeleteModal(false)}
+              >
+                Batal
+              </button>
             </div>
 
           </div>

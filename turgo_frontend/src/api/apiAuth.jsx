@@ -9,8 +9,8 @@ export const Register = async (formData) => {
     });
 
     return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
+  } catch (err) {
+    throw err;
   }
 };
 
@@ -23,8 +23,8 @@ export const registerByAdmin = async (formData) => {
     });
 
     return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
+  } catch (err) {
+    throw err.response?.data || err;
   }
 };
 
@@ -37,8 +37,8 @@ export const registerByOwner = async (formData) => {
     });
 
     return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
+  } catch (err) {
+    throw err.response?.data || err;
   }
 };
 
@@ -47,8 +47,8 @@ export const SignIn = async (data) => {
         const res = await axiosClient.post("/login", data);
 
         return res.data;
-    } catch (error) {
-       throw error.response?.data || error;
+    } catch (err) {
+       throw err.response?.data || err;
     }
 };
 
@@ -56,8 +56,8 @@ export const GetUserData = async () => {
   try {
     const res = await axiosClient.get("/getUserData");
     return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
+  } catch (err) {
+    throw err.response?.data || err;
   }
 };
 
@@ -71,8 +71,8 @@ export const LogOut = async () => {
             },
         ); 
         return res.data;
-    } catch (error) {
-        throw error.response?.data || error;
+    } catch (err) {
+        throw err.response?.data || err;
     }
 }
 
@@ -84,7 +84,27 @@ export const getRole = async () => {
             } 
         }); 
         return res.data;
-    } catch (error) {
-        throw error.response?.data || error;
+    } catch (err) {
+        throw err.response?.data || err;
     }
 }
+
+export const forgotPassword = async (email) => {
+  try {
+    const res = await axiosClient.post("/forgot-password", {
+        email,
+      });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+export const resetPassword = async (data) => {
+  try {
+    const res = await axiosClient.post("/reset-password", data);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};

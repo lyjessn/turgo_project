@@ -132,6 +132,31 @@
 	font-size:12px;
 }
 
+.custom-warning{
+  color:#dc2626;
+  font-size:13px;
+  margin-bottom:10px;
+}
+
+.summary-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.summary-remove{
+  background:none;
+  border:none;
+  color:#ef4444;
+  font-size:16px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.summary-remove:hover{
+  opacity:0.7;
+}
+
 @media (max-width: 768px) {
 
   .custom-grid {

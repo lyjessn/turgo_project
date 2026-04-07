@@ -1,9 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useAuth } from "../../auth/useAuth";
 import { FiWifi, FiClock, FiCalendar } from "react-icons/fi";
 import { FaBed, FaBath, FaSmoking, FaPaw } from "react-icons/fa";
 import { createBooking } from "../../api/apiBooking";
+import { getAvailableKamar } from "../../api/apiKamar";
 import "./css/Detail.css";
 
 const KamarDetail = () => {
@@ -14,8 +15,32 @@ const KamarDetail = () => {
   const homestay = location.state?.homestay;
   const checkIn = location.state?.checkIn;
   const checkOut = location.state?.checkOut;
+  const [isAvailable, setIsAvailable] = useState(true);
 
   if (!kamar || !homestay) return <div className="detail-container">Tidak ditemukan</div>;
+
+  useEffect(() => {
+    if (!checkIn || !checkOut) return;
+    checkAvailability();
+  }, [checkIn, checkOut]);
+
+  const checkAvailability = async () => {
+    try {
+      const data = await getAvailableKamar({
+        check_in: checkIn,
+        check_out: checkOut
+      });
+
+      console.log("AVAILABLE KAMAR:", data);
+
+      const tersedia = data.some(k => k.id === kamar.id);
+
+      setIsAvailable(tersedia);
+    } catch (err) {
+      console.error(err);
+      setIsAvailable(false);
+    }
+  };
 
   const jumlahMalam = useMemo(() => {
     if (!checkIn || !checkOut) return 1;
@@ -56,19 +81,7 @@ const KamarDetail = () => {
       const res = await createBooking(formData);
       const booking = res.data;
 
-      navigate("/pembayaran", {
-        state: {
-          booking,
-          paket: {
-            nama: `${homestay.nama} - ${kamar.nama}`,
-            url_thumbnail: kamar.foto,
-            harga: kamar.harga_per_malam
-          },
-          tanggal: checkIn,
-          jumlahOrang: null,
-          total
-        }
-      });
+      navigate(`/pembayaran/${booking.id}`);
 
     } catch (err) {
       alert(err.message || "Gagal membuat booking");
@@ -123,40 +136,6 @@ const KamarDetail = () => {
 
         </div>
       </div>
-
-      {(checkIn && checkOut) && (
-        <div className="detail-section">
-          <h2 className="detail-section-title">Detail Pemesanan</h2>
-
-          <div className="detail-info-list">
-
-            <div className="detail-info-item">
-              <FiCalendar />
-              <div>
-                <b>Check-in</b>
-                <p>{new Date(checkIn).toLocaleDateString("id-ID")}</p>
-              </div>
-            </div>
-
-            <div className="detail-info-item">
-              <FiCalendar />
-              <div>
-                <b>Check-out</b>
-                <p>{new Date(checkOut).toLocaleDateString("id-ID")}</p>
-              </div>
-            </div>
-
-            <div className="detail-info-item">
-              <FiClock />
-              <div>
-                <b>Durasi Menginap</b>
-                <p>{jumlahMalam} malam</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       <div className="detail-section">
         <h2 className="detail-section-title">Peraturan Homestay</h2>
@@ -222,6 +201,12 @@ const KamarDetail = () => {
                 Pilih tanggal check-in
               </p>
             )}
+
+            {!isAvailable && (
+              <p className="detail-warning">
+                Kamar tidak tersedia pada tanggal ini
+              </p>
+            )}
           </div>
 
 
@@ -230,7 +215,7 @@ const KamarDetail = () => {
 
             <input
               type="date"
-              min={minDateString}
+              min={checkIn || minDateString}
               value={checkOut || ""}
               onChange={(e) =>
                 navigate(".", {
@@ -264,11 +249,12 @@ const KamarDetail = () => {
 
         <button
           className="detail-book-btn"
-          disabled={!checkIn || !checkOut}
+          disabled={!checkIn || !checkOut || !isAvailable}
           onClick={handleBooking}
         >
           Pesan Sekarang
         </button>
+
       </div>
 
     </div>

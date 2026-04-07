@@ -1,5 +1,14 @@
 import axiosClient from './axiosClient';
 
+export const getAllKamar= async () => {
+  try {
+    const res = await axiosClient.get(`/kamar`);
+    return res.data; 
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
 export const createKamar = async (formData) => {
   try {
     const res = await axiosClient.post(`/kamar`, formData, {
@@ -51,4 +60,15 @@ export const getMyKamars = async () => {
   } catch (err) {
     throw err.response?.data || err;
   } 
+};
+
+export const getAvailableKamar = async (params) => {
+  try {
+    const res = await axiosClient.get("/available-kamar", {
+      params
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };

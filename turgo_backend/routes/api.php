@@ -126,6 +126,7 @@ Route::middleware(['auth:sanctum', 'cekrole:owner,admin'])->group(function () {
     Route::get('/admin/bookings/{id}', [BookingController::class, 'showAdmin']);
     Route::post('/booking/{id}/status', [BookingController::class, 'updateStatus']);
     Route::post('/booking/{id}/send-email', [BookingController::class, 'sendEmail']);
+    Route::post('booking/{id}/assign-tour-guide', [BookingController::class, 'assignTourGuide']);
 
     //blockout
     Route::post('/blockout/global', [BlockoutController::class, 'storeGlobal']);
@@ -134,6 +135,8 @@ Route::middleware(['auth:sanctum', 'cekrole:owner,admin'])->group(function () {
 
     Route::get('/laporan/blockout/bulanan',[LaporanController::class,'laporanBlockoutBulanan']);
     Route::get('/laporan/blockout/tahunan',[LaporanController::class,'laporanBlockoutTahunan']);
+
+    Route::delete('/ratings/{id}', [RatingController::class, 'destroy']);
 });
 
 // OWNER ONLY
@@ -144,7 +147,7 @@ Route::middleware(['auth:sanctum', 'cekrole:owner'])->group(function () {
     Route::delete('/umkm/{id}', [UmkmController::class, 'destroy']);
     Route::delete('/tour-guide/{id}', [TourGuideController::class, 'destroy']);
     Route::delete('/pelaku-wisata/{id}', [PelakuWisataController::class, 'destroy']);
-    Route::delete('/booking/{id}', [BookingController::class, 'destroy']);
+    Route::delete('/user/{id}', [UserController::class, 'destroy']);
 
     Route::post('/registerByOwner', [AuthController::class, 'registerByOwner']);
 
@@ -152,6 +155,7 @@ Route::middleware(['auth:sanctum', 'cekrole:owner'])->group(function () {
     Route::post('/admin/{id}', [AdminController::class, 'update']);
 
     Route::get('/pengunjung', [UserController::class,'getPengunjung']);
+    Route::post('/pengunjung/{id}', [UserController::class, 'updatePengunjung']);
 
     // laporan
     Route::get('/laporan/paket-wisata/bulanan',[LaporanController::class,'laporanPaketWisataBulanan']);
@@ -230,6 +234,7 @@ Route::get('/paket-wisata/{id}', [PaketWisataController::class, 'show']);
 //HOMESTAY & KAMAR
 Route::get('/homestay/homepage', [HomestayController::class, 'homepage']);
 Route::get('/homestay/available', [HomestayController::class, 'available']);
+Route::get('/available-kamar', [KamarController::class, 'getAvailableKamar']);
 Route::get('/homestay', [HomestayController::class, 'index']);
 Route::get('/homestay/{id}', [HomestayController::class, 'show']);
 Route::get('/kamar', [KamarController::class, 'index']);
@@ -240,3 +245,7 @@ Route::get('/tour-guide/homepage', [TourGuideController::class, 'homepage']);
 Route::get('/tour-guide/available', [TourGuideController::class, 'available']);
 Route::get('/tour-guide', [TourGuideController::class, 'index']);
 Route::get('/tour-guide/{id}', [TourGuideController::class, 'show']);
+
+//pass
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);

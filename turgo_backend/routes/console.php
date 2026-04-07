@@ -13,3 +13,5 @@ Schedule::command('bookings:cancel-expired')
 
 Schedule::command('booking:auto-complete')
     ->everyMinute();
+
+Schedule::command('reminder:h1')->dailyAt('09:00');

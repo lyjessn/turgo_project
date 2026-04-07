@@ -4,7 +4,6 @@ import { FiSearch, FiEye, FiX } from "react-icons/fi";
 import "../adminDanOwner/css/AdminShared.css";
 
 const BookingMitra = ({ title, fetchFunction }) => {
-
   const navigate = useNavigate();
 
   const [data,setData] = useState([]);
@@ -13,25 +12,55 @@ const BookingMitra = ({ title, fetchFunction }) => {
   const [filter,setFilter] = useState("semua");
   const [showDetail,setShowDetail] = useState(false);
   const [selectedBooking,setSelectedBooking] = useState(null);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(()=>{
     fetchData();
   },[]);
 
- const fetchData = async () => {
-  try {
-    const res = await fetchFunction();
+  const fetchData = async () => {
+    try {
+      const res = await fetchFunction();
 
-    console.log("API RESPONSE:", res);
+      console.log("API RESPONSE:", res);
 
-    setData(res);
+      setData(res);
 
-  } catch(err) {
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getProductName = (item) => {
+    if (item.tipe_booking === "paket_wisata") {
+      return item.paket_wisata_details?.paket_wisata?.nama || "-";
+    }
+
+    if (item.tipe_booking === "homestay") {
+      return item.homestay_details?.kamar?.nama || "-";
+    }
+
+    if (item.tipe_booking === "tour_guide") {
+      return item.tour_guide_details?.tour_guide?.user?.nama_lengkap || "-";
+    }
+
+    if (item.tipe_booking === "custom") {
+      const paketList = item.custom_details
+        ?.map(d => d.paket_wisata?.nama)
+        .filter(Boolean);
+
+      if (!paketList || paketList.length === 0) return "-";
+
+      if (paketList.length === 1) return paketList[0];
+
+      return `${paketList[0]} +${paketList.length - 1} lainnya`;
+    }
+
+    return "-";
+  };
 
   const filteredData = useMemo(()=>{
 
@@ -48,17 +77,37 @@ const BookingMitra = ({ title, fetchFunction }) => {
       result = result.filter(d => d.status_pemesanan === "selesai");
     }
 
-    if(search){
-      result = result.filter(d =>
-        d.user?.nama_lengkap
-          ?.toLowerCase()
-          .includes(search.toLowerCase())
-      );
+    if (search) {
+      const keyword = search.toLowerCase();
+
+      result = result.filter(d => {
+
+        const namaUser = d.user?.nama_lengkap?.toLowerCase() || "";
+
+        const namaProduk = getProductName(d)?.toLowerCase() || "";
+
+        const customProduk = d.custom_details
+          ?.map(cd => cd.paket_wisata?.nama?.toLowerCase())
+          .join(" ") || "";
+
+        return (
+          namaUser.includes(keyword) ||
+          namaProduk.includes(keyword) ||
+          customProduk.includes(keyword)
+        );
+      });
     }
 
     return result;
 
   },[data,filter,search]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  const paginatedData = filteredData.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
 
   if(loading) return <div>Loading...</div>;
 
@@ -119,7 +168,8 @@ const BookingMitra = ({ title, fetchFunction }) => {
             <tr>
               <th>ID</th>
               <th>Nama Pemesan</th>
-              <th>Tanggal</th>
+              <th>Produk</th>
+              <th>Tanggal Kunjungan</th>
               <th>Total</th>
               <th>Status</th>
               <th>Aksi</th>
@@ -128,24 +178,16 @@ const BookingMitra = ({ title, fetchFunction }) => {
 
           <tbody>
 
-            {filteredData.map(item => (
+            {paginatedData.map(item => (
 
               <tr key={item.id}>
 
                 <td>{item.id}</td>
-
                 <td>{item.user?.nama_lengkap}</td>
-
-                <td>
-                  {item.tanggal_mulai} - {item.tanggal_selesai}
-                </td>
-
-                <td>
-                  Rp {Number(item.total_harga).toLocaleString("id-ID")}
-                </td>
-
+                <td>{getProductName(item)}</td>
+                <td>{item.tanggal_mulai} - {item.tanggal_selesai}</td>
+                <td>Rp {Number(item.total_harga).toLocaleString("id-ID")}</td>
                 <td>{item.status_pemesanan}</td>
-
                 <td>
                   <button
                     className="btn-icon"
@@ -165,6 +207,30 @@ const BookingMitra = ({ title, fetchFunction }) => {
           </tbody>
 
         </table>
+
+        {totalPages > 1 && (
+          <div className="admin-pagination">
+
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Prev
+            </button>
+
+            <span>
+              Page {page} / {totalPages}
+            </span>
+
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </button>
+
+          </div>
+        )}
 
       </div>
 
@@ -204,15 +270,67 @@ const BookingMitra = ({ title, fetchFunction }) => {
               <b>Total:</b> Rp {Number(selectedBooking.total_harga).toLocaleString("id-ID")}
             </p>
 
-            {/* HOMESTAY */}
-            {selectedBooking.tipe_booking === "homestay" && (
+            {selectedBooking.tipe_booking === "paket_wisata" && (
               <>
                 <p>
-                  <b>Homestay:</b> {selectedBooking.homestayDetails?.[0]?.homestay?.nama}
+                  <b>Paket Wisata:</b>{" "}
+                  {selectedBooking.paket_wisata_details?.paket_wisata?.nama || "-"}
                 </p>
 
                 <p>
-                  <b>Kamar:</b> {selectedBooking.homestayDetails?.[0]?.kamar?.nama}
+                  <b>Jumlah Orang:</b>{" "}
+                  {selectedBooking.paket_wisata_details?.jumlah_orang || "-"}
+                </p>
+              </>
+            )}
+
+            {selectedBooking.tipe_booking === "homestay" && (
+              <>
+                <p>
+                  <b>Kamar:</b> {selectedBooking.homestay_details?.kamar?.nama}
+                </p>
+              </>
+            )}
+
+            {selectedBooking.tipe_booking === "tour_guide" && (
+              <>
+                <p>
+                  <b>Tour Guide:</b>{" "}
+                  {selectedBooking.tour_guide_details?.tour_guide?.user?.nama_lengkap || "-"}
+                </p>
+
+                <p>
+                  <b>Durasi:</b>{" "}
+                  {selectedBooking.tour_guide_details?.durasi || "-"}
+                </p>
+
+                <p>
+                  <b>Sesi:</b>{" "}
+                  {selectedBooking.tour_guide_details?.sesi || "-"}
+                </p>
+              </>
+            )}
+
+            {selectedBooking.tipe_booking === "custom" && (
+              <>
+                <p><b>Paket Dipilih:</b></p>
+
+                <ul>
+                  {selectedBooking.custom_details?.map((detail, index) => (
+                    <li key={index}>
+                      {detail.paket_wisata?.nama}
+                    </li>
+                  ))}
+                </ul>
+
+                <p>
+                  <b>Jumlah Orang:</b>{" "}
+                  {selectedBooking.custom_details?.[0]?.jumlah_orang || "-"}
+                </p>
+
+                <p>
+                  <b>Jenis Tour Guide:</b>{" "}
+                  {selectedBooking.custom_details?.[0]?.jenis_tour_guide || "-"}
                 </p>
               </>
             )}

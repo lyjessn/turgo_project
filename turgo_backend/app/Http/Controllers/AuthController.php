@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 use App\Models\Role;
@@ -137,20 +140,14 @@ class AuthController extends Controller
     {
         $userLogin = $request->user();
 
-        if (!$userLogin || $userLogin->role->name !== 'owner') {
-            return response()->json([
-                'message' => 'Forbidden, hanya owner'
-            ], 403);
-        }
-
         $validator = Validator::make($request->all(), [
             'username'      => 'required|string|max:255|unique:user,username',
             'email'         => 'required|email|max:255|unique:user,email',
             'password'      => 'required|string|min:8|confirmed',
             'nama_lengkap'  => 'required|string|max:255',
             'nomor_telepon' => 'nullable|string|max:20',
-            'role_id'       => 'required|in:1,2',
             'foto_profil'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'role_id'       => 'nullable|in:1,2,7',
         ]);
 
         if ($validator->fails()) {
@@ -160,10 +157,15 @@ class AuthController extends Controller
             ], 422);
         }
 
+        if ($userLogin && $userLogin->role_id == 1) {
+            $role_id = $request->role_id ?? 2; 
+        } else {
+            $role_id = 7; 
+        }
+
         $fotoPath = null;
 
         if ($request->hasFile('foto_profil')) {
-
             $ext = $request->file('foto_profil')->getClientOriginalExtension();
             $namaFile = time().'_'.$request->username.'.'.$ext;
 
@@ -177,25 +179,21 @@ class AuthController extends Controller
             'password'      => Hash::make($request->password),
             'nama_lengkap'  => $request->nama_lengkap,
             'nomor_telepon' => $request->nomor_telepon,
-
-            'role_id'       => $request->role_id,
+            'role_id'       => $role_id,
             'foto_profil'   => $fotoPath,
-
             'is_aktif'      => 1,
             'profile_completed' => 0
         ]);
 
         return response()->json([
-            'message' => 'Admin berhasil dibuat oleh owner',
+            'message' => 'User berhasil dibuat',
             'user' => [
                 'id' => $user->id,
                 'username' => $user->username,
                 'email' => $user->email,
                 'role_id' => $user->role_id,
-                'profile_completed' => $user->profile_completed
             ]
         ], 201);
-
     }
 
     public function login(Request $request)
@@ -282,6 +280,98 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'role' => str_replace(' ', '_', strtolower($user->role->name ?? ''))
+        ]);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Email tidak ditemukan'
+            ], 404);
+        }
+
+        $token = Str::random(60);
+
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            [
+                'token' => $token,
+                'created_at' => Carbon::now()
+            ]
+        );
+
+        $resetLink = env('FRONTEND_URL') .
+            "/reset-password?token=$token&email=" .
+            urlencode($request->email);
+
+        Mail::html("
+        <p>Klik link berikut untuk reset password:</p>
+        <a href='$resetLink'>Reset Password</a>
+        ", function ($message) use ($request) {
+
+            $message->to($request->email)
+                    ->subject("Reset Password");
+
+        });
+
+        return response()->json([
+            'message' => 'Link reset password telah dikirim ke email.'
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'token' => 'required',
+            'password' => 'required|min:8|confirmed'
+        ]);
+
+        $reset = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->where('token', $request->token)
+            ->first();
+
+        if (!$reset) {
+            return response()->json([
+                'message' => 'Link reset password tidak valid atau sudah kadaluarsa.'
+            ], 422);
+        }
+
+        // cek user
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User tidak ditemukan.'
+            ], 404);
+        }
+
+        // cek password sama
+        if (Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Password baru tidak boleh sama dengan password lama.'
+            ], 422);
+        }
+
+        // update password
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // hapus token reset
+        DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->delete();
+
+        return response()->json([
+            'message' => 'Password berhasil diubah.'
         ]);
     }
 }

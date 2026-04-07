@@ -154,7 +154,7 @@ class PaketWisataController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
 
         if ($user->role->name === 'pelaku_wisata') {
 
@@ -206,7 +206,6 @@ class PaketWisataController extends Controller
             "kapasitas_max"  => $request->kapasitas_max,
 
             "url_thumbnail"  => $thumbnailPath,
-            "rating"         => 0,
             "is_aktif"       => 1
         ]);
 
@@ -308,7 +307,7 @@ class PaketWisataController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
 
         $paket->update($request->except([
             "id_pembuat",
@@ -419,9 +418,9 @@ class PaketWisataController extends Controller
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         if($user->role->name !== 'owner'){
             return response()->json([
