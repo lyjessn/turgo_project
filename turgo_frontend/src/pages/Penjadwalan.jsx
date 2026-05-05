@@ -18,7 +18,6 @@ import {
 import { getAllPaketWisata, getMyCreatedPakets } from "../api/apiPaketWisata";
 import { getAllTourGuide } from "../api/apiTourGuide";
 import { getAllHomestay } from "../api/apiHomestay";
-import { getAllUmkm } from "../api/apiUmkm";
 
 import { GetUserData } from "../api/apiAuth";
 
@@ -46,6 +45,7 @@ export default function Penjadwalan() {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [date, setDate] = useState(new Date());
     const [view, setView] = useState("month");
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const [form, setForm] = useState({
         tipe: "global",
@@ -87,8 +87,11 @@ export default function Penjadwalan() {
         const globalRes = await getGlobalBlockouts().catch(() => ({ data: [] }));
         const spesifikRes = await getSpesifikBlockouts().catch(() => ({ data: [] }));
 
+        console.log("GLOBAL:", globalRes);
+        console.log("SPESIFIK:", spesifikRes);
+
         const global = globalRes.data || [];
-        const spesifik = spesifikRes.data || [];
+        const spesifik = spesifikRes.data || spesifikRes || [];
 
         const gEvents = global.map(b => ({
         id: b.id,
@@ -169,11 +172,6 @@ export default function Penjadwalan() {
                 setTargets(res.data);
             }
 
-            if (kategori === "umkm") {
-                const res = await getAllUmkm();
-                setTargets(res.data);
-            }
-
         } catch (err) {
             console.error(err);
         }
@@ -187,7 +185,6 @@ export default function Penjadwalan() {
         if (event.kategori === "tour_guide") className = "event-tg";
         if (event.kategori === "paket_wisata") className = "event-pw";
         if (event.kategori === "homestay") className = "event-hs";
-        if (event.kategori === "umkm") className = "event-umkm";
 
         return {
         className
@@ -274,19 +271,23 @@ export default function Penjadwalan() {
     };
 
     const handleDelete = async () => {
+        try {
+            if (selectedEvent.type === "global")
+                await deleteGlobalBlockout(selectedEvent.id);
+            else
+                await deleteSpesifikBlockout(selectedEvent.id);
 
-        if (!window.confirm("Hapus blockout ini?")) return;
+            setShowDeleteModal(false);
+            setShowModal(false);
+            loadData();
 
-        if (selectedEvent.type === "global")
-            await deleteGlobalBlockout(selectedEvent.id);
-        else
-            await deleteSpesifikBlockout(selectedEvent.id);
-
-        setShowModal(false);
-        loadData();
+        } catch (err) {
+            alert("Gagal menghapus blockout");
+        }
     };
 
     return (
+        <>
         <div className="schedule-page">
 
             <h2 className="schedule-title">Penjadwalan</h2>
@@ -309,10 +310,6 @@ export default function Penjadwalan() {
 
                         <div className="legend-item">
                             <span className="legend-color hs"></span> Homestay
-                        </div>
-
-                        <div className="legend-item">
-                            <span className="legend-color umkm"></span> UMKM
                         </div>
                     </>
                 )}
@@ -406,7 +403,6 @@ export default function Penjadwalan() {
                                         <option value="tour_guide">Tour Guide</option>
                                         <option value="paket_wisata">Paket Wisata</option>
                                         <option value="homestay">Homestay</option>
-                                        <option value="umkm">UMKM</option>
                                     </select>
 
                                 </div>
@@ -515,7 +511,7 @@ export default function Penjadwalan() {
                                 (selectedEvent?.type !== "global" || (role === "admin" || role === "owner")) && (
                                     <button
                                         className="btn-danger"
-                                        onClick={handleDelete}
+                                        onClick={() => setShowDeleteModal(true)}
                                     >
                                         Hapus
                                     </button>
@@ -535,5 +531,48 @@ export default function Penjadwalan() {
             )}
 
         </div>
+
+        {showDeleteModal && (
+            <div className="custom-modal-overlay">
+
+                <div className="custom-modal modal-center">
+
+                    <div className="modal-icon-wrapper">
+                        <div className="modal-icon error">!</div>
+                    </div>
+
+                    <h3 className="modal-title">
+                        Hapus Blockout
+                    </h3>
+
+                    <p className="modal-message">
+                        Apakah Anda yakin ingin menghapus blockout ini?
+                        <br />
+                        Data yang dihapus tidak dapat dikembalikan.
+                    </p>
+
+                    <div className="modal-actions">
+
+                        <button
+                            className="btn-danger"
+                            onClick={handleDelete}
+                        >
+                            Hapus
+                        </button>
+
+                        <button
+                            className="btn-secondary"
+                            onClick={() => setShowDeleteModal(false)}
+                        >
+                            Batal
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+        )}
+    </>
     );
 }

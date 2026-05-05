@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { useAuth } from "../../auth/useAuth";
 import { getMyActiveBookings, getMyBookingHistory, cancelBooking } from "../../api/apiBooking";
 import { updateProfile } from "../../api/apiUser";
@@ -195,7 +196,7 @@ const Profile = () => {
                 <img
                     src={
                         booking.thumbnail
-                        ? `http://127.0.0.1:8000/storage/${booking.thumbnail}`
+                        ? `${BASE_URL}/storage/${booking.thumbnail}`
                         : "/default.jpg"
                     }
                     className="booking-thumb"
@@ -285,7 +286,7 @@ const Profile = () => {
                 <div className="profile-avatar">
                     {user?.foto_profil ? (
                         <img
-                            src={`http://127.0.0.1:8000/storage/${user.foto_profil}`}
+                            src={`${BASE_URL}/storage/${user.foto_profil}`}
                             alt="Foto Profil"
                         />
                     ) : (
@@ -485,8 +486,7 @@ const Profile = () => {
 
                     <div style={{display:"flex", gap:"12px", justifyContent:"center"}}>
 
-                        <button
-                        className="btn-secondary"
+                        <button className="btn-secondary"
                         onClick={() =>
                             setConfirmModal({ show:false, bookingId:null })
                         }
@@ -494,8 +494,7 @@ const Profile = () => {
                         kembali
                         </button>
 
-                        <button
-                        className="btn-danger"
+                        <button className="btn-danger"
                         onClick={confirmCancelBooking}
                         >
                         Batalkan

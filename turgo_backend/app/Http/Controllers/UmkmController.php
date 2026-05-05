@@ -96,9 +96,9 @@ class UmkmController extends Controller
             'nomor_telepon'   => 'required|string|max:255',
             'jam_operasional' => 'required|string',
             'menu_tersedia'   => 'required|string',
-            'thumbnail'       => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'thumbnail'       => 'required|image|mimes:jpg,jpeg,png|max:4096',
             'fotos'           => 'required|array|min:1',
-            'fotos.*'         => 'image|mimes:jpg,jpeg,png|max:2048',
+            'fotos.*'         => 'image|mimes:jpg,jpeg,png|max:4096',
         ]);
 
         if ($validator->fails()) {

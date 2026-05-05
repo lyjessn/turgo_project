@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { BASE_URL } from "../../../utils/baseUrl";
 import { FiSearch, FiMoreVertical, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
@@ -15,6 +16,8 @@ const AdminBookingPage = ({ tipe, title }) => {
     const [data, setData] = useState([]);
     const [role, setRole] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [sending, setSending] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("semua");
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -34,6 +37,12 @@ const AdminBookingPage = ({ tipe, title }) => {
 
     const [notifyTitle, setNotifyTitle] = useState("");
     const [notifyMessage, setNotifyMessage] = useState("");
+
+    const [modal, setModal] = useState({
+        show: false,
+        type: "",
+        message: ""
+    });
 
     useEffect(() => {
         fetchData();
@@ -160,6 +169,7 @@ const AdminBookingPage = ({ tipe, title }) => {
 
     const handleConfirm = async () => {
         try {
+            setSubmitting(true);
             await updateBookingStatus(selectedItem.id, {
                 status_pemesanan: "dikonfirmasi"
             });
@@ -168,80 +178,107 @@ const AdminBookingPage = ({ tipe, title }) => {
             fetchData();
         } catch (err) {
             console.error(err);
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleReject = async () => {
-
         if (!rejectReason) {
             toast.error("Alasan penolakan wajib diisi");
             return;
         }
 
         try {
-            await updateBookingStatus(
-                selectedItem.id,
-                {
-                    status_pemesanan: "ditolak",
-                    alasan_penolakan: rejectReason
-                }
-            );
+            setSubmitting(true);
+
+            await updateBookingStatus(selectedItem.id, {
+            status_pemesanan: "ditolak",
+            alasan_penolakan: rejectReason
+            });
 
             toast.success("Booking berhasil ditolak");
-
             setShowRejectModal(false);
             setRejectReason("");
             fetchData();
+
         } catch (err) {
             console.error(err);
             toast.error("Gagal menolak booking");
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleCancel = async () => {
         try {
+            setSubmitting(true);
+
             await updateBookingStatus(selectedItem.id, {
-                status_pemesanan: "batal"
+            status_pemesanan: "batal"
             });
 
             toast.success("Booking berhasil dibatalkan");
-
             setShowCancelModal(false);
             fetchData();
 
         } catch (err) {
             console.error(err);
             toast.error("Gagal membatalkan booking");
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleSendNotify = async () => {
         try {
+            setSending(true);
+
             await sendBookingEmail(
-                selectedItem.id,
-                notifyTitle,
-                notifyMessage
+            selectedItem.id,
+            notifyTitle,
+            notifyMessage
             );
+
             setShowNotifyModal(false);
             setNotifyTitle("");
             setNotifyMessage("");
+
+            setModal({
+            show: true,
+            type: "success",
+            message: "Email berhasil dikirim ke pemesan."
+            });
+
         } catch (err) {
             console.error(err);
+
+            const message =
+            err.response?.data?.error || "Gagal mengirim email.";
+
+            setModal({
+            show: true,
+            type: "error",
+            message
+            });
+
+        } finally {
+            setSending(false);
         }
     };
 
     const handleAssignGuide = async () => {
-
         if (!selectedGuide) {
             toast.error("Pilih tour guide terlebih dahulu");
             return;
         }
 
         try {
+            setSubmitting(true);
+
             await assignTourGuide(selectedItem.id, selectedGuide);
 
             toast.success("Tour guide berhasil ditetapkan");
-
             setShowAssignGuideModal(false);
             setSelectedGuide("");
             fetchData();
@@ -249,6 +286,8 @@ const AdminBookingPage = ({ tipe, title }) => {
         } catch (err) {
             console.error(err);
             toast.error("Gagal assign tour guide");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -605,7 +644,7 @@ const AdminBookingPage = ({ tipe, title }) => {
                                 <p><b>Bukti Pembayaran:</b></p>
                                 <img
                                     className="payment-proof-img"
-                                    src={`http://127.0.0.1:8000/storage/${selectedItem.bukti_pembayaran}`}
+                                    src={`${BASE_URL}/storage/${selectedItem.bukti_pembayaran}`}
                                     alt="bukti"
                                 />
                             </>
@@ -649,8 +688,9 @@ const AdminBookingPage = ({ tipe, title }) => {
                             <button
                                 className="btn-primary"
                                 onClick={handleSendNotify}
+                                disabled={sending}
                             >
-                            Kirim Email
+                                {sending ? "Mengirim..." : "Kirim Email"}
                             </button>
 
                         </div>
@@ -678,8 +718,9 @@ const AdminBookingPage = ({ tipe, title }) => {
                             <button
                                 className="btn-primary"
                                 onClick={handleConfirm}
+                                disabled={submitting}
                             >
-                            Konfirmasi
+                                {submitting ? "Memproses..." : "Konfirmasi"}
                             </button>
 
                             <button
@@ -721,8 +762,9 @@ const AdminBookingPage = ({ tipe, title }) => {
                         <button
                             className="btn-danger"
                             onClick={handleReject}
+                            disabled={submitting}
                         >
-                        Tolak Booking
+                            {submitting ? "Memproses..." : "Tolak Booking"}
                         </button>
 
                         <button
@@ -759,8 +801,9 @@ const AdminBookingPage = ({ tipe, title }) => {
                             <button
                                 className="btn-danger"
                                 onClick={handleCancel}
+                                disabled={submitting}
                             >
-                                Batalkan
+                                {submitting ? "Memproses..." : "Batalkan"}
                             </button>
 
                             <button
@@ -807,11 +850,12 @@ const AdminBookingPage = ({ tipe, title }) => {
                                 ))}
                             </select>
 
-                            <button
+                           <button
                                 className="btn-primary"
                                 onClick={handleAssignGuide}
+                                disabled={submitting}
                             >
-                                Simpan
+                                {submitting ? "Menyimpan..." : "Simpan"}
                             </button>
 
                         </div>
@@ -825,6 +869,40 @@ const AdminBookingPage = ({ tipe, title }) => {
                 autoClose={2500}
                 hideProgressBar
             />
+
+            {modal.show && (
+                <div className="custom-modal-overlay">
+                    <div className="custom-modal modal-center">
+                        <div className="modal-icon-wrapper">
+
+                            {modal.type === "success" && (
+                            <div className="modal-icon success">✓</div>
+                            )}
+
+                            {modal.type === "error" && (
+                            <div className="modal-icon error">✕</div>
+                            )}
+
+                        </div>
+
+                        <h3 className="modal-title">
+                            {modal.type === "success" && "Berhasil"}
+                            {modal.type === "error" && "Terjadi Kesalahan"}
+                        </h3>
+
+                        <p className="modal-message">
+                            {modal.message}
+                        </p>
+
+                        <button
+                            className="modal-button"
+                            onClick={() => setModal({ ...modal, show: false })}
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
         </>
 
     );

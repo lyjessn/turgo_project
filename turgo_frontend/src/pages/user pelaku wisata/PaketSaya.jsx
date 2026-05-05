@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { useNavigate } from "react-router-dom";
 import { FiSearch, FiMapPin, FiClock } from "react-icons/fi";
 import { useAuth } from "../../auth/useAuth";
@@ -102,6 +103,12 @@ const PaketSaya = () => {
         <h1>Paket Saya</h1>
 
         <div className="admin-header-actions">
+            <button
+              className="btn-primary"
+              onClick={() => navigate("/dashboard/paket-wisata/tambah")}
+            >
+              + Tambah
+            </button>
 
           <div className="admin-search-wrapper">
             <FiSearch/>
@@ -150,7 +157,7 @@ const PaketSaya = () => {
             <div className="paket-image">
 
             <img
-                src={`http://127.0.0.1:8000/storage/${item.url_thumbnail}`}
+                src={`${BASE_URL}/storage/${item.url_thumbnail}`}
             />
 
             {(role === "admin" ||

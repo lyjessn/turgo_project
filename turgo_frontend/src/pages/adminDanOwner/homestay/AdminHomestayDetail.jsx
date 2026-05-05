@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../../utils/baseUrl";
 import { getDetailHomestay } from "../../../api/apiHomestay";
 import { updateKamar } from "../../../api/apiKamar";
-
 import { FiWifi, FiX } from "react-icons/fi";
 import { FaBed, FaBath } from "react-icons/fa";
 
@@ -100,11 +100,11 @@ const AdminHomestayDetail = () => {
         <div className="admin-homestay-gallery">
 
           <img
-            src={`http://127.0.0.1:8000/storage/${images[currentImage]}`}
+            src={`${BASE_URL}/storage/${images[currentImage]}`}
             className="admin-homestay-image"
             onClick={() =>
               setPreviewImage(
-                `http://127.0.0.1:8000/storage/${images[currentImage]}`
+                `${BASE_URL}/storage/${images[currentImage]}`
               )
             }
           />
@@ -227,11 +227,11 @@ const AdminHomestayDetail = () => {
             >
 
               <img
-                src={`http://127.0.0.1:8000/storage/${kamar.foto}`}
+                src={`${BASE_URL}/storage/${kamar.foto}`}
                 className="admin-kamar-image"
                 onClick={() =>
                   setPreviewImage(
-                    `http://127.0.0.1:8000/storage/${kamar.foto}`
+                    `${BASE_URL}/storage/${kamar.foto}`
                   )
                 }
               />
@@ -341,7 +341,7 @@ const AdminHomestayDetail = () => {
           <div className="modal-body">
 
             <img
-              src={`http://127.0.0.1:8000/storage/${selectedKamar.foto}`}
+              src={`${BASE_URL}/storage/${selectedKamar.foto}`}
               className="modal-image"
             />
 

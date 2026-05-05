@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import "./css/Kuliner.css";
-
-import {
-  FiMapPin,
-  FiClock,
-  FiPhone,
-  FiMenu,
-} from "react-icons/fi";
-
+import { FiMapPin, FiClock, FiPhone, FiMenu } from "react-icons/fi";
 import { getAllUmkm } from "../../api/apiUmkm";
 
 const Kuliner = () => {
@@ -71,12 +64,14 @@ const Kuliner = () => {
             <div className={`kuliner-overlay ${isLeft ? "left" : "right"}`}>
 
               <div className="kuliner-content">
-                <h2 className="kuliner-title">
-                  {kuliner.nama_usaha}
-                </h2>
+                <div className="kuliner-header">
+                  <h2 className="kuliner-title">
+                    {kuliner.nama_usaha}
+                  </h2>
 
-                <div className={`status-pill ${kuliner.is_buka ? "open" : "closed"}`}>
-                  {kuliner.is_buka ? "Buka" : "Tutup"}
+                  <div className={`status-pill ${kuliner.is_buka ? "open" : "closed"}`}>
+                    {kuliner.is_buka ? "Buka" : "Tutup"}
+                  </div>
                 </div>
                 
                 <div className="kuliner-info">
@@ -102,19 +97,30 @@ const Kuliner = () => {
                 {kuliner.fotos?.length > 0 && (
                   <div className="kuliner-gallery">
 
-                    {kuliner.fotos.slice(0, 3).map((foto, i) => (
-                      <div
-                        key={foto.id}
-                        className="kuliner-thumb"
-                        style={{
-                          backgroundImage: `url(http://127.0.0.1:8000/storage/${foto.url_foto})`,
-                        }}
-                        onClick={() => {
-                          setPreviewFotos(kuliner.fotos);
-                          setPreviewIndex(i);
-                        }}
-                      />
-                    ))}
+                    {kuliner.fotos.slice(0, 3).map((foto, i) => {
+                      const isLast = i === 2;
+                      const remaining = kuliner.fotos.length - 3;
+
+                      return (
+                        <div
+                          key={foto.id}
+                          className="kuliner-thumb"
+                          style={{
+                            backgroundImage: `url(http://127.0.0.1:8000/storage/${foto.url_foto})`,
+                          }}
+                          onClick={() => {
+                            setPreviewFotos(kuliner.fotos);
+                            setPreviewIndex(i);
+                          }}
+                        >
+                          {isLast && remaining > 0 && (
+                            <div className="thumb-overlay">
+                              +{remaining}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
 
                   </div>
                 )}

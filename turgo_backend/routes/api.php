@@ -95,7 +95,6 @@ Route::middleware(['auth:sanctum', 'cekrole:owner,admin'])->group(function () {
     // Route::put('/umkm/{id}', [UmkmController::class, 'update']);
     Route::get('/admin/users-umkm', [UmkmController::class, 'getUsersUmkm']);
 
-    Route::post('/paket-wisata', [PaketWisataController::class, 'store']);
     Route::get('admin/paket-wisata', [PaketWisataController::class, 'index']);
 
     Route::post('/tour-guide', [TourGuideController::class, 'store']);
@@ -192,6 +191,7 @@ Route::middleware(['auth:sanctum', 'cekrole:admin'])->group(function () {
 
 //ADMIN, OWNER, PELAKU WISATA
 Route::middleware(['auth:sanctum', 'cekrole:owner,admin,pelaku_wisata'])->group(function () {
+    Route::post('/paket-wisata', [PaketWisataController::class, 'store']);
     Route::put('/paket-wisata/{id}', [PaketWisataController::class, 'update']);
 
 });

@@ -6,14 +6,14 @@ import Footer from "../components/footer/Footer";
 
 const PublicLayout = () => {
   const location = useLocation();
-  const isOverlayPage = ["/", "/budaya", "/kuliner"].includes(location.pathname);
+  const isOverlayPage = ["/"].includes(location.pathname);
   const navigate = useNavigate();
   
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
-    if (token && role) {
+
+    if (token && role && location.pathname === "/login") {
       navigate(redirectByRole(role), { replace: true });
     }
   }, [location.pathname]);

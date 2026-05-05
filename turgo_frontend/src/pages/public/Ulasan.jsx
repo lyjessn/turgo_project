@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import { getRatingsByTarget } from "../../api/apiRating";
 import { getMyHomestay } from "../../api/apiHomestay";
 import "./css/Detail.css";
@@ -129,7 +130,7 @@ const Ulasan = () => {
               <div className="review-avatar">
                 {r.user?.foto_profil ? (
                   <img
-                    src={`http://127.0.0.1:8000/storage/${r.user.foto_profil}`}
+                    src={`${BASE_URL}/storage/${r.user.foto_profil}`}
                     alt={r.user.username}
                   />
                 ) : (

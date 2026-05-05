@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { BASE_URL } from "../../../utils/baseUrl";
 import { useAuth } from "../../../auth/useAuth";
 import "../css/AdminShared.css";
 import "../css/AdminPaketWisata.css";
@@ -14,6 +15,8 @@ const EditPaketWisata = () => {
   const { user } = useAuth();
   const role = user?.role?.name;
   const [step, setStep] = useState(1);
+  const [error, setError] = useState("");
+   const [submitting, setSubmitting] = useState(false);
   const [pelakuList, setPelakuList] = useState([]);
   const [selectedPelaku, setSelectedPelaku] = useState("");
   const [participants, setParticipants] = useState([]);
@@ -21,8 +24,10 @@ const EditPaketWisata = () => {
   const [existingPhotos, setExistingPhotos] = useState([]);
   const [newPhotos, setNewPhotos] = useState([]);
   const [deletedPhotoIds, setDeletedPhotoIds] = useState([]);
-
   const [thumbnail, setThumbnail] = useState(null);
+
+  const hasThumbnail = thumbnail !== null ? 1 : 0;
+  const totalPhotos = existingPhotos.length + newPhotos.length + hasThumbnail;
 
   const [modal, setModal] = useState({
     show: false,
@@ -138,17 +143,13 @@ const EditPaketWisata = () => {
   const handleSubmit = async () => {
 
     if (totalPersen !== 100) {
-
-      setModal({
-        show: true,
-        type: "error",
-        message: "Total persentase harus 100%"
-      });
-
+      setError("Total persentase harus 100%");
       return;
     }
 
     try {
+      setSubmitting(true);
+      setError("");
 
       const formData = new FormData();
 
@@ -159,11 +160,13 @@ const EditPaketWisata = () => {
       formData.append("participants", JSON.stringify(participants));
 
       deletedPhotoIds.forEach(id => {
-        formData.append("deleted_photos[]", id);
+        if (typeof id === "number") {
+          formData.append("deleted_photos[]", id);
+        }
       });
 
-      newPhotos.forEach(file => {
-        formData.append("new_photos[]", file);
+      newPhotos.forEach(item => {
+        formData.append("new_photos[]", item.file);
       });
 
       if (thumbnail?.type === "existing") {
@@ -171,7 +174,10 @@ const EditPaketWisata = () => {
       }
 
       if (thumbnail?.type === "new") {
-        formData.append("thumbnail_index", thumbnail.value);
+        const selected = newPhotos.find(p => p.id === thumbnail.value);
+        if (selected) {
+          formData.append("thumbnail_file", selected.file);
+        }
       }
 
       await updatePaketWisata(id, formData);
@@ -183,12 +189,21 @@ const EditPaketWisata = () => {
       });
 
     } catch (err) {
+      console.log("ERROR FULL:", err);
+
+      if (err.response) {
+        console.log("ERROR DATA:", err.response.data);
+        console.log("ERROR STATUS:", err.response.status);
+      }
 
       setModal({
         show: true,
         type: "error",
-        message: "Terjadi kesalahan saat update"
+        message: err.response?.data?.message || "Terjadi kesalahan saat update"
       });
+
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -200,101 +215,112 @@ const EditPaketWisata = () => {
 
         {step === 1 && (
           <div className="card-form">
+            {error && <div className="error-text">{error}</div>}
+            <div className="form-group">
+              <label>Nama Paket</label>
+              <input
+                placeholder="Nama Paket"
+                value={form.nama}
+                onChange={(e) => {
+                  setForm({ ...form, nama: e.target.value });
+                  setError("");
+                }}
+              />
+            </div>
+           
+            <div className="form-group">
+              <label>Harga Paket (per orang)</label>
+              <input
+                type="number"
+                placeholder="Harga"
+                value={form.harga}
+                onChange={(e) => {
+                  setForm({ ...form, harga: e.target.value });
+                  setError("");
+                }}
+              />
+            </div>
 
-            <input
-              placeholder="Nama Paket"
-              value={form.nama}
-              onChange={(e) =>
-                setForm({ ...form, nama: e.target.value })
-              }
-            />
+            <div className="form-group">
+              <label>Pilih Kategori Paket</label>
+              <select
+                value={form.kategori_paket}
+                onChange={(e) => {
+                  setForm({
+                    ...form,
+                    kategori_paket: e.target.value
+                  });
+                  setError("");
+                }}
+              >
+                <option value="alam">Alam</option>
+                <option value="kesenian">Kesenian</option>
+                <option value="kebudayaan">Kebudayaan</option>
+                <option value="lainnya">Lainnya</option>
+              </select>
+            </div>
+            
+            <div className="form-group">
+              <label>Deskripsi Singkat</label>
+              <textarea
+                placeholder="Deskripsi Singkat"
+                value={form.preview}
+                onChange={(e) => {
+                  setForm({ ...form, preview: e.target.value });
+                  setError("");
+                }}
+              />
+            </div>
 
-            <input
-              type="number"
-              placeholder="Harga"
-              value={form.harga}
-              onChange={(e) =>
-                setForm({ ...form, harga: e.target.value })
-              }
-            />
+            <div className="form-group">
+              <label>Upload Foto Paket (Minimal 3)</label>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files);
 
-            <select
-              value={form.kategori_paket}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  kategori_paket: e.target.value
-                })
-              }
-            >
-              <option value="alam">Alam</option>
-              <option value="kesenian">Kesenian</option>
-              <option value="kebudayaan">Kebudayaan</option>
-              <option value="lainnya">Lainnya</option>
-            </select>
+                  const mapped = files.map(file => ({
+                    id: Date.now() + Math.random(),
+                    file
+                  }));
 
-            <textarea
-              placeholder="Deskripsi Singkat"
-              value={form.preview}
-              onChange={(e) =>
-                setForm({ ...form, preview: e.target.value })
-              }
-            />
+                  setNewPhotos(prev => [...prev, ...mapped]);
 
-            <input
-              type="file"
-              multiple
-              onChange={(e) => {
-
-                const files = Array.from(e.target.files);
-                setNewPhotos(prev => [...prev, ...files]);
-
-                e.target.value = null;
-              }}
-            />
-
+                  e.target.value = null;
+                }}
+              />
+            </div>
+            
             <div className="preview-grid">
-              {thumbnail?.type === "existing" &&
-                !existingPhotos.some(f => f.url_foto === thumbnail.value) && (
 
-                  <div className="preview-item">
+              {thumbnail?.type === "existing" && (
+                <div className="preview-item">
+                  <img src={`${BASE_URL}/storage/${thumbnail.value}`} />
+                  <span className="thumbnail-badge">Thumbnail</span>
+                </div>
+              )}
 
-                    <img src={`http://127.0.0.1:8000/storage/${thumbnail.value}`} />
-
-                    <span className="thumbnail-badge">
-                      Thumbnail
-                    </span>
-
-                  </div>
-
-                )}
- 
-                {existingPhotos.map((foto) => {
-                  const isThumbnail =
-                    thumbnail?.type === "existing" &&
-                    thumbnail.value === foto.url_foto;
-
+              {existingPhotos
+                .filter(f => f.url_foto !== thumbnail?.value)
+                .map((foto) => {
                   return (
                     <div key={foto.id} className="preview-item">
 
-                      <img src={`http://127.0.0.1:8000/storage/${foto.url_foto}`} />
+                      <img src={`${BASE_URL}/storage/${foto.url_foto}`} />
 
-                      {isThumbnail ? (
-                        <span className="thumbnail-badge">Thumbnail</span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="set-thumb"
-                          onClick={() =>
-                            setThumbnail({
-                              type: "existing",
-                              value: foto.url_foto
-                            })
-                          }
-                        >
-                          Set Thumbnail
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        className="set-thumb"
+                        onClick={() =>
+                          setThumbnail({
+                            type: "existing",
+                            value: foto.url_foto
+                          })
+                        }
+                      >
+                        Set Thumbnail
+                      </button>
 
                       <button
                         type="button"
@@ -302,20 +328,14 @@ const EditPaketWisata = () => {
                         onClick={() => {
 
                           if (typeof foto.id === "number") {
-                            setDeletedPhotoIds(prev => [
-                              ...prev,
-                              foto.id
-                            ]);
+                            setDeletedPhotoIds(prev => [...prev, foto.id]);
                           }
 
                           setExistingPhotos(prev =>
                             prev.filter(f => f.id !== foto.id)
                           );
 
-                          if (
-                            thumbnail?.type === "existing" &&
-                            thumbnail.value === foto.url_foto
-                          ) {
+                          if (thumbnail?.value === foto.url_foto) {
                             setThumbnail(null);
                           }
                         }}
@@ -327,16 +347,17 @@ const EditPaketWisata = () => {
                   );
                 })}
 
-              {newPhotos.map((file, i) => {
+              {/* ✅ NEW PHOTOS */}
+              {newPhotos.map((item) => {
 
                 const isThumbnail =
                   thumbnail?.type === "new" &&
-                  thumbnail.value === i;
+                  thumbnail.value === item.id;
 
                 return (
-                  <div key={i} className="preview-item">
+                  <div key={item.id} className="preview-item">
 
-                    <img src={URL.createObjectURL(file)} />
+                    <img src={URL.createObjectURL(item.file)} />
 
                     {isThumbnail ? (
                       <span className="thumbnail-badge">Thumbnail</span>
@@ -347,7 +368,7 @@ const EditPaketWisata = () => {
                         onClick={() =>
                           setThumbnail({
                             type: "new",
-                            value: i
+                            value: item.id
                           })
                         }
                       >
@@ -359,14 +380,13 @@ const EditPaketWisata = () => {
                       type="button"
                       className="remove-photo"
                       onClick={() => {
-
                         setNewPhotos(prev =>
-                          prev.filter((_, idx) => idx !== i)
+                          prev.filter(f => f.id !== item.id)
                         );
 
                         if (
                           thumbnail?.type === "new" &&
-                          thumbnail.value === i
+                          thumbnail.value === item.id
                         ) {
                           setThumbnail(null);
                         }
@@ -392,7 +412,26 @@ const EditPaketWisata = () => {
 
               <button
                 className="btn-primary"
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  setError("");
+
+                  if (!form.nama || !form.harga) {
+                    setError("Semua field wajib diisi");
+                    return;
+                  }
+
+                  if (totalPhotos < 3) {
+                    setError("Minimal harus ada 3 foto paket");
+                    return;
+                  }
+
+                  if (!thumbnail) {
+                    setError("Pilih thumbnail terlebih dahulu");
+                    return;
+                  }
+
+                  setStep(2);
+                }}
               >
                 Lanjutkan
               </button>
@@ -402,30 +441,39 @@ const EditPaketWisata = () => {
         )}
 
         {step === 2 && (
-            <div className="card-form">
-                <textarea
+          <div className="card-form">
+            {error && <div className="error-text">{error}</div>}
+            <div className="form-group">
+              <label>Lokasi Kegiatan</label>
+              <textarea
                 placeholder="Lokasi"
                 value={form.lokasi}
                 onChange={(e) =>
                     setForm({ ...form, lokasi: e.target.value })
                 }
-                />
-
-                <input
+              />
+            </div>
+              
+            <div className="form-group">
+              <label>Durasi Kegiatan</label>
+              <input
                 placeholder="Durasi"
                 value={form.durasi}
                 onChange={(e) =>
                     setForm({ ...form, durasi: e.target.value })
                 }
                 />
-
-                <div className="row">
+            </div>
+              
+            <div className="form-group">
+              <label>Kapasitas Paket</label>
+              <div className="row">
                 <input
                     type="number"
                     placeholder="Kapasitas Min"
                     value={form.kapasitas_min}
                     onChange={(e) =>
-                    setForm({ ...form, kapasitas_min: e.target.value })
+                      setForm({ ...form, kapasitas_min: e.target.value })
                     }
                 />
 
@@ -434,51 +482,57 @@ const EditPaketWisata = () => {
                     placeholder="Kapasitas Max"
                     value={form.kapasitas_max}
                     onChange={(e) =>
-                    setForm({ ...form, kapasitas_max: e.target.value })
+                      setForm({ ...form, kapasitas_max: e.target.value })
                     }
                 />
                 </div>
-
-                <textarea
+            </div>
+                
+            <div className="form-group">
+              <label>Perlengkapan Paket</label>
+              <textarea
                 placeholder="Perlengkapan"
                 value={form.perlengkapan}
                 onChange={(e) =>
                     setForm({ ...form, perlengkapan: e.target.value })
                 }
-                />
-
-                <textarea
+              />
+            </div>
+               
+            <div className="form-group">
+              <label>Deskripsi Lengkap</label>
+              <textarea
                 placeholder="Deskripsi Panjang"
                 value={form.deskripsi}
                 onChange={(e) =>
                     setForm({ ...form, deskripsi: e.target.value })
                 }
-                />
-
-                <div className="button-group">
-                  <button
-                      className="btn-secondary"
-                      onClick={() => setStep(1)}
-                  >
-                      Kembali
-                  </button>
-
-                  <button
-                    className="btn-primary"
-                    onClick={() => {
-                      if (role === "admin" || role === "owner") {
-                        setStep(3);
-                      } else {
-                        handleSubmit();
-                      }
-                    }}
-                  >
-                    {role === "admin" || role === "owner"
-                      ? "Lanjutkan"
-                      : "Update"}
-                  </button>
-                </div>
+              />
             </div>
+              
+            <div className="button-group">
+              <button
+                  className="btn-secondary"
+                  onClick={() => setStep(1)}
+              >
+                  Kembali
+              </button>
+
+              <button
+                className="btn-primary"
+                disabled={submitting}
+                onClick={() => {
+                  if (role === "admin" || role === "owner") {
+                    setStep(3);
+                  } else {
+                    handleSubmit();
+                  }
+                }}
+              >
+                {submitting ? "Mengupdate..." : (role === "admin" || role === "owner" ? "Lanjutkan" : "Update")}
+              </button>
+            </div>
+          </div>
         )}
 
         {step === 3 && (role === "admin" || role === "owner") && (
@@ -551,8 +605,9 @@ const EditPaketWisata = () => {
               <button
                 className="btn-primary"
                 onClick={handleSubmit}
+                disabled={submitting}
               >
-                Update
+                {submitting ? "Mengupdate..." : "Update"}
               </button>
             </div>
 
@@ -562,7 +617,7 @@ const EditPaketWisata = () => {
 
       {modal.show && (
         <div className="custom-modal-overlay">
-          <div className="custom-modal">
+          <div className="custom-modal modal-center">
             <div className="modal-icon-wrapper">
               {modal.type === "success" && (
                 <div className="modal-icon success">✓</div>

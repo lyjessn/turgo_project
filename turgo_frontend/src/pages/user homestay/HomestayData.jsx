@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiMapPin, FiClock, FiEdit } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { getMyHomestay, updateHomestay } from "../../api/apiHomestay";
@@ -129,7 +130,7 @@ const HomestayData = () => {
 
                 <div className="homestay-gallery">
                     <img
-                        src={`http://localhost:8000/storage/${images[currentImage]}`}
+                        src={`${BASE_URL}/storage/${images[currentImage]}`}
                         className="homestay-main-image"
                     />
 
@@ -296,7 +297,7 @@ const HomestayData = () => {
 
                                 <div className="preview-item">
 
-                                    <img src={`http://localhost:8000/storage/${thumbnail.value}`} />
+                                    <img src={`${BASE_URL}/storage/${thumbnail.value}`} />
 
                                     <span className="thumbnail-badge">
                                         Thumbnail
@@ -306,7 +307,6 @@ const HomestayData = () => {
 
                                 )}
 
-                                {/* existing photos */}
                                 {existingPhotos.map((foto)=>{
 
                                     const isThumbnail =
@@ -316,7 +316,7 @@ const HomestayData = () => {
                                     return(
                                         <div key={foto.id} className="preview-item">
 
-                                            <img src={`http://localhost:8000/storage/${foto.url_foto}`} />
+                                            <img src={`${BASE_URL}/storage/${foto.url_foto}`} />
 
                                             {isThumbnail ? (
                                                 <span className="thumbnail-badge">Thumbnail</span>

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiSearch, FiUserPlus, FiEye, FiX, FiEdit, FiTrash2 } from "react-icons/fi";
 import "./css/AdminShared.css";
 import "./css/Modal.css";
@@ -508,7 +509,7 @@ const AdminMitra = () => {
                 className="modal-data-image"
                 src={
                   selectedItem.foto_profil
-                    ? `http://127.0.0.1:8000/storage/${selectedItem.foto_profil}`
+                    ? `${BASE_URL}/storage/${selectedItem.foto_profil}`
                     : "/default-profile.png"
                 }
               />

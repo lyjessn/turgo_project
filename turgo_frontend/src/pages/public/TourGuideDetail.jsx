@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import { createBooking } from "../../api/apiBooking";
 import { getDetailTourGuide, getAvailableTourGuide } from "../../api/apiTourGuide";
 import { useAuth } from "../../auth/useAuth";
@@ -151,7 +152,7 @@ const TourGuideDetail = () => {
       <div style={{ textAlign: "center" }}>
 
         <img
-          src={`http://127.0.0.1:8000/storage/${guide.foto_profil}`}
+          src={`${BASE_URL}/storage/${guide.foto_profil}`}
           style={{
             width: 200,
             height: 200,
@@ -309,7 +310,7 @@ const TourGuideDetail = () => {
 
               <div className="review-avatar">
                 <img
-                  src={`http://127.0.0.1:8000/storage/${r.user?.foto_profil}`}
+                  src={`${BASE_URL}/storage/${r.user?.foto_profil}`}
                   alt="avatar"
                 />
               </div>

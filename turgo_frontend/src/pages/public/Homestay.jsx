@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import "./css/Catalog.css";
 import "../../components/homepage/paketwisatasection.css";
 import { FiMapPin, FiSearch } from "react-icons/fi";
@@ -125,10 +126,7 @@ const Homestay = () => {
                         <div
                             key={homestay.id}
                             className="paket-card-small"
-                            style={{
-                            backgroundImage:
-                                `url(http://127.0.0.1:8000/storage/${homestay.url_thumbnail})`,
-                            }}
+                            style={{backgroundImage:`url(${BASE_URL}/storage/${homestay.url_thumbnail})`,}}
                         >
                             <div className="paket-kecil-content">
                                 <div className="paket-title-row">
@@ -141,16 +139,16 @@ const Homestay = () => {
                                 <div className="paket-kecil-meta">
                                     <FiMapPin />
                                     {" "}
-                                    {homestay.lokasi}
+                                    {homestay.lokasi.length > 40
+                                    ? homestay.lokasi.slice(0, 40) + "..."
+                                    : homestay.lokasi}
                                 </div>
 
                                 <div className="paket-kecil-meta">
                                     <BiMoney />
                                     {" "}
                                     Rp{" "}
-                                    {Number(
-                                        homestay.kamars_min_harga_per_malam
-                                    ).toLocaleString("id-ID")}
+                                    {Number(homestay.kamars_min_harga_per_malam).toLocaleString("id-ID")}
 
                                     {homestay.kamars_min_harga_per_malam !==
                                         homestay.kamars_max_harga_per_malam &&

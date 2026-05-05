@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import { getHomepagePaketWisata } from "../../api/apiPaketWisata";
 import { FiClock, FiMapPin, FiShoppingCart, FiTool, FiDollarSign } from "react-icons/fi";
 import "./PaketWisataSection.css";
@@ -46,7 +47,7 @@ const PaketWisataSection = () => {
                         key={paket.id}
                         className={`paket-card-large ${idx === 0 ? "left" : "right"}`}
                         style={{
-                        backgroundImage: `url(http://127.0.0.1:8000/storage/${paket.url_thumbnail})`,
+                        backgroundImage: `url(${BASE_URL}/storage/${paket.url_thumbnail})`,
                         }}
                     >
                         <div className="paket-besar-content">
@@ -112,7 +113,7 @@ const PaketWisataSection = () => {
                         key={paket.id}
                         className="paket-card-small"
                         style={{
-                            backgroundImage: `url(http://127.0.0.1:8000/storage/${paket.url_thumbnail})`,
+                            backgroundImage: `url(${BASE_URL}/storage/${paket.url_thumbnail})`,
                         }}
                         >
                             <div className="paket-kecil-content">

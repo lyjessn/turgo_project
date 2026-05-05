@@ -2,8 +2,6 @@
   vertical-align: middle;
 }
 
-/* ===== STEPPER ===== */
-
 .stepper-wrapper {
   display: flex;
   align-items: center;
@@ -160,15 +158,11 @@
   color: #dc2626;
 }
 
-/* ===== HEADER TITLE ===== */
-
 .admin-paket-title{
   display:flex;
   align-items:center;
   gap:10px;
 }
-
-/* ===== BADGE KATEGORI ===== */
 
 .paket-badge{
   padding:4px 10px;
@@ -197,8 +191,6 @@
   background:#dcfce7;
   color:#166534;
 }
-
-/* ===== LIST PELAKU ===== */
 
 .admin-pelaku-list{
   display:flex;

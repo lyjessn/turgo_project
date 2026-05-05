@@ -1,8 +1,9 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 
 const ProtectedRoute = ({ roles }) => {
   const { user, role, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -13,7 +14,14 @@ const ProtectedRoute = ({ roles }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location }}
+      />
+    );
   }
 
   const normalizedRole = role?.toLowerCase().replace(/\s+/g, "_");

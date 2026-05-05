@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import { getDetailHomestay } from "../../api/apiHomestay";
 import { FiWifi } from "react-icons/fi";
 import { FaBed, FaBath } from "react-icons/fa";
@@ -91,7 +92,7 @@ const HomestayDetail = () => {
 
         <div className="detail-carousel">
           <img
-            src={`http://127.0.0.1:8000/storage/${images[currentImage]}`}
+            src={`${BASE_URL}/storage/${images[currentImage]}`}
             className="detail-image"
           />
           {images.length > 1 && (
@@ -116,7 +117,7 @@ const HomestayDetail = () => {
                 activeKamars.map(kamar => (
                   <div key={kamar.id} className="homestay-kamar-card">
                     <img
-                      src={`http://127.0.0.1:8000/storage/${kamar.foto}`}
+                      src={`${BASE_URL}/storage/${kamar.foto}`}
                       className="homestay-kamar-image"
                     />
 
@@ -164,7 +165,7 @@ const HomestayDetail = () => {
               <div key={r.id} className="review-card">
                 <div className="review-avatar">
                   <img
-                    src={`http://127.0.0.1:8000/storage/${r.user?.foto_profil}`}
+                    src={`${BASE_URL}/storage/${r.user?.foto_profil}`}
                     alt="avatar"
                   />
                 </div>

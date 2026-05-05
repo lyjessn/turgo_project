@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiSearch, FiX, FiMapPin, FiClock, FiPhone, FiTrash2 } from "react-icons/fi";
 import { FaUtensils } from "react-icons/fa";
 import "./css/BudayaDanUmkm.css";
@@ -20,6 +21,16 @@ const AdminUmkm = () => {
     const itemsPerPage = 10;
     const formRef = useRef(null);
 
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+
+    const [modal, setModal] = useState({
+        show: false,
+        type: "",
+        message: ""
+    });
+
     const defaultForm = {
         user_id: "",
         nama_usaha: "",
@@ -30,8 +41,7 @@ const AdminUmkm = () => {
         existingFotos: [],
         newFotos: [],
         deletedFotoIds: [],
-        thumbnailPath: "",   
-        thumbnailIndex: 0
+        thumbnail: null
     };
     const [form, setForm] = useState(defaultForm);
 
@@ -115,60 +125,113 @@ const AdminUmkm = () => {
     );
 
     const handleAdd = async () => {
-        const formData = new FormData();
+        try {
+            setSubmitting(true);
+            setError("");
+            setSuccess("");
 
-        formData.append("user_id", form.user_id);
-        formData.append("nama_usaha", form.nama_usaha);
-        formData.append("lokasi", form.lokasi);
-        formData.append("nomor_telepon", form.nomor_telepon);
-        formData.append("jam_operasional", form.jam_operasional);
-        formData.append("menu_tersedia", form.menu_tersedia);
+            const totalFotos = form.newFotos.length;
 
-        if (form.newFotos.length > 0) {
-            formData.append("thumbnail", form.newFotos[0]);
+            if (totalFotos === 0) {
+                setError("Minimal harus upload 1 foto");
+                setSubmitting(false);
+                return;
+            }
 
-            form.newFotos.forEach(file=>{
-            formData.append("fotos[]", file);
+            const formData = new FormData();
+
+            formData.append("user_id", form.user_id);
+            formData.append("nama_usaha", form.nama_usaha);
+            formData.append("lokasi", form.lokasi);
+            formData.append("nomor_telepon", form.nomor_telepon);
+            formData.append("jam_operasional", form.jam_operasional);
+            formData.append("menu_tersedia", form.menu_tersedia);
+            if (form.thumbnail?.type === "new") {
+                formData.append("thumbnail", form.newFotos[form.thumbnail.value]);
+            } else {
+                formData.append("thumbnail", form.newFotos[0]);
+            }
+
+            form.newFotos.forEach(file => {
+                formData.append("fotos[]", file);
             });
-        }
 
-        await createUmkm(formData);
-        setShowAddModal(false);
-        setForm(defaultForm);
-        fetchData();
-        fetchUsers();
+            await createUmkm(formData);
+
+            setSuccess("Berhasil menambahkan UMKM");
+
+            setShowAddModal(false);
+            setForm(defaultForm);
+
+            fetchData();
+            fetchUsers();
+
+        } catch (err) {
+            setError("Gagal menambahkan UMKM");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleEdit = async () => {
-        const formData = new FormData();
+        try {
+            if (submitting) return;
 
-        formData.append("nama_usaha", form.nama_usaha);
-        formData.append("lokasi", form.lokasi);
-        formData.append("nomor_telepon", form.nomor_telepon);
-        formData.append("jam_operasional", form.jam_operasional);
-        formData.append("menu_tersedia", form.menu_tersedia);
+            setSubmitting(true);
+            setError("");
+            setSuccess("");
 
-        form.deletedFotoIds.forEach(id=>{
-            formData.append("deleted_fotos[]", id);
-        });
+            const formData = new FormData();
 
-        form.newFotos.forEach(file=>{
-            formData.append("new_fotos[]", file);
-        });
+            formData.append("nama_usaha", form.nama_usaha);
+            formData.append("lokasi", form.lokasi);
+            formData.append("nomor_telepon", form.nomor_telepon);
+            formData.append("jam_operasional", form.jam_operasional);
+            formData.append("menu_tersedia", form.menu_tersedia);
 
-        if (form.thumbnailPath) {
-            formData.append("thumbnail_path", form.thumbnailPath);
-        } else if (form.newFotos.length > 0) {
-            formData.append(
-                "thumbnail",
-                form.newFotos[form.thumbnailIndex]
-            );
+            form.deletedFotoIds.forEach(id => {
+                formData.append("deleted_fotos[]", id);
+            });
+
+            form.newFotos.forEach(file => {
+                formData.append("new_fotos[]", file);
+            });
+
+            if (form.thumbnail?.type === "existing") {
+                formData.append("thumbnail_path", form.thumbnail.value);
+            }
+
+            if (form.thumbnail?.type === "new") {
+                formData.append("thumbnail", form.newFotos[form.thumbnail.value]);
+            }
+
+            await updateUmkm(selectedItem.id, formData);
+            setSuccess("Berhasil update UMKM");
+
+            setModal({
+                show: true,
+                type: "success",
+                message: "UMKM berhasil diupdate"
+            });
+
+            setShowEditModal(false);
+            setForm(defaultForm);
+            setSelectedItem(null);
+
+            fetchData();
+
+        } catch (err) {
+            setError("Gagal mengupdate UMKM");
+
+            setModal({
+                show: true,
+                type: "error",
+                message: "Terjadi kesalahan saat update"
+            });
+
+        } finally {
+            setSubmitting(false);
         }
-
-        await updateUmkm(selectedItem.id, formData);
-        setShowEditModal(false);
-        setForm(defaultForm);
-        fetchData();
     };
 
     const handleDelete = async () => {
@@ -197,6 +260,8 @@ const AdminUmkm = () => {
                         className="btn-primary"
                         onClick={() => {
                             setForm(defaultForm);
+                            setError("");
+                            setSuccess("");
                             setShowAddModal(true);
                         }}
                     >
@@ -235,7 +300,7 @@ const AdminUmkm = () => {
                             <img
                             src={
                             item.url_thumbnail
-                                ? `http://127.0.0.1:8000/storage/${item.url_thumbnail}`
+                                ? `${BASE_URL}/storage/${item.url_thumbnail}`
                                 : "/no-image.png"
                             }
                             />
@@ -269,6 +334,8 @@ const AdminUmkm = () => {
                                 <button className="btn-edit"
                                     onClick={()=>{
                                         setSelectedItem(item);
+                                        setError("");
+                                        setSuccess("");
                                         setForm({
                                             user_id: item.user_id,
                                             nama_usaha: item.nama_usaha,
@@ -279,8 +346,9 @@ const AdminUmkm = () => {
                                             existingFotos: item.fotos || [],
                                             newFotos: [],
                                             deletedFotoIds: [],
-                                            thumbnailPath: item.url_thumbnail,
-                                            thumbnailIndex: 0
+                                            thumbnail: item.url_thumbnail
+                                                ? { type: "existing", value: item.url_thumbnail }
+                                                : null
                                         });
                                         setShowEditModal(true);
                                     }}>
@@ -330,11 +398,15 @@ const AdminUmkm = () => {
         </div>
 
         {(showAddModal || showEditModal) && (
+            <>
+            {error && <div className="error-text">{error}</div>}
             <div
                 className="modal-overlay"
                 onClick={() => {
                     setShowAddModal(false);
                     setShowEditModal(false);
+                    setError("");
+                    setSuccess("");
                     setForm(defaultForm);
                 }}
             >
@@ -345,12 +417,16 @@ const AdminUmkm = () => {
                             onClick={() => {
                                 setShowAddModal(false);
                                 setShowEditModal(false);
+                                setError("");
+                                setSuccess("");
                                 setForm(defaultForm);
                             }}
                         />
                     </div>
 
                     <div className="modal-body column" ref={formRef}>
+                        {error && <div className="error-text">{error}</div>}
+                        {success && <div className="success-text">{success}</div>}
 
                         {showAddModal && (
                         <select
@@ -423,28 +499,44 @@ const AdminUmkm = () => {
                             type="file"
                             multiple
                             onChange={(e) => {
-                                const newFiles = Array.from(e.target.files);
+                            const newFiles = Array.from(e.target.files);
 
-                                setForm((prev) => ({
-                                ...prev,
-                                newFotos: [...prev.newFotos, ...newFiles]
-                                }));
+                            setForm(prev => {
+                                const updatedFotos = [...prev.newFotos, ...newFiles];
 
-                                e.target.value = null;
-                            }}
-                            required={showAddModal}
+                                let newThumbnail = prev.thumbnail;
+
+                                if (!prev.thumbnail && updatedFotos.length > 0) {
+                                    newThumbnail = {
+                                        type: "new",
+                                        value: 0
+                                    };
+                                }
+
+                                return {
+                                    ...prev,
+                                    newFotos: updatedFotos,
+                                    thumbnail: newThumbnail
+                                };
+                            });
+
+                            e.target.value = null;
+                        }}
+                            
                         />
 
                         <div className="preview-grid">
 
                             {(form.existingFotos || []).map((foto) => {
+                                const normalize = (path) => path?.replace(/^storage\//, "");
                                 const isThumbnail =
-                                form.thumbnailPath === foto.url_foto;
+                                    form.thumbnail?.type === "existing" &&
+                                    normalize(form.thumbnail.value) === normalize(foto.url_foto);
 
                                 return (
                                 <div key={foto.id} className="preview-item">
                                     <img
-                                    src={`http://127.0.0.1:8000/storage/${foto.url_foto}`}
+                                    src={`${BASE_URL}/storage/${foto.url_foto}`}
                                     alt=""
                                     />
 
@@ -458,15 +550,29 @@ const AdminUmkm = () => {
                                     type="button"
                                     className="remove-photo"
                                     onClick={()=>{
-                                        setForm(prev=>({
-                                        ...prev,
-                                        existingFotos: prev.existingFotos.filter(f=>f.id!==foto.id),
-                                        deletedFotoIds: [...prev.deletedFotoIds, foto.id],
-                                        thumbnailPath:
-                                            prev.thumbnailPath === foto.url_foto
-                                            ? ""
-                                            : prev.thumbnailPath
-                                        }));
+                                        setForm(prev=>{
+                                            let newThumbnail = prev.thumbnail;
+
+                                            if (
+                                                prev.thumbnail?.type === "existing" &&
+                                                prev.thumbnail.value === foto.url_foto
+                                            ) {
+                                                const remaining = prev.existingFotos.filter(f => f.id !== foto.id);
+
+                                                newThumbnail = remaining.length > 0
+                                                    ? { type: "existing", value: remaining[0].url_foto }
+                                                    : prev.newFotos.length > 0
+                                                        ? { type: "new", value: 0 }
+                                                        : null;
+                                            }
+
+                                            return {
+                                                ...prev,
+                                                existingFotos: prev.existingFotos.filter(f=>f.id!==foto.id),
+                                                deletedFotoIds: [...prev.deletedFotoIds, foto.id],
+                                                thumbnail: newThumbnail
+                                            };
+                                        });
                                     }}
                                     >
                                     ✕
@@ -477,10 +583,13 @@ const AdminUmkm = () => {
                                         type="button"
                                         className="set-thumb"
                                         onClick={()=>{
-                                        setForm(prev=>({
-                                            ...prev,
-                                            thumbnailPath: foto.url_foto
-                                        }));
+                                            setForm(prev=>({
+                                                ...prev,
+                                                thumbnail: {
+                                                type: "existing",
+                                                value: foto.url_foto
+                                                }
+                                            }));
                                         }}
                                     >
                                         Set Thumbnail
@@ -493,7 +602,8 @@ const AdminUmkm = () => {
 
                             {(form.newFotos || []).map((file,i)=>{
                                 const isThumbnail =
-                                !form.thumbnailPath && form.thumbnailIndex === i;
+                                    form.thumbnail?.type === "new" &&
+                                    form.thumbnail.value === i;
 
                                 return (
                                 <div key={i} className="preview-item">
@@ -509,10 +619,26 @@ const AdminUmkm = () => {
                                     type="button"
                                     className="remove-photo"
                                     onClick={()=>{
-                                        setForm(prev=>({
-                                        ...prev,
-                                        newFotos: prev.newFotos.filter((_,index)=>index!==i)
-                                        }));
+                                        setForm(prev=>{
+                                            const updated = prev.newFotos.filter((_,index)=>index!==i);
+
+                                            let newThumbnail = prev.thumbnail;
+
+                                            if (
+                                                prev.thumbnail?.type === "new" &&
+                                                prev.thumbnail.value === i
+                                            ) {
+                                                newThumbnail = updated.length > 0
+                                                    ? { type: "new", value: 0 }
+                                                    : null;
+                                            }
+
+                                            return {
+                                                ...prev,
+                                                newFotos: updated,
+                                                thumbnail: newThumbnail
+                                            };
+                                        });
                                     }}
                                     >
                                     ✕
@@ -523,11 +649,13 @@ const AdminUmkm = () => {
                                         type="button"
                                         className="set-thumb"
                                         onClick={()=>{
-                                        setForm(prev=>({
-                                            ...prev,
-                                            thumbnailPath: "",
-                                            thumbnailIndex: i
-                                        }));
+                                            setForm(prev=>({
+                                                ...prev,
+                                                thumbnail: {
+                                                type: "new",
+                                                value: i
+                                                }
+                                            }));
                                         }}
                                     >
                                         Set Thumbnail
@@ -542,23 +670,62 @@ const AdminUmkm = () => {
 
                         <button
                             className="btn-primary"
+                            disabled={submitting}
                             onClick={() => {
+                                if (submitting) return;
+
                                 const inputs = formRef.current.querySelectorAll("input, select, textarea");
 
                                 for (let input of inputs) {
-                                    if (!input.checkValidity()) {
-                                        input.reportValidity();
-                                        return;
-                                    }
+                                if (!input.checkValidity()) {
+                                    input.reportValidity();
+                                    return;
+                                }
                                 }
 
                                 showAddModal ? handleAdd() : handleEdit();
                             }}
-                        >
-                            {showAddModal ? "Simpan" : "Update"}
-                        </button>
+                            >
+                            {submitting
+                                ? (showAddModal ? "Menyimpan..." : "Mengupdate...")
+                                : (showAddModal ? "Simpan" : "Update")}
+                            </button>
 
                     </div>
+                </div>
+            </div>
+            </>
+        )}
+
+        {modal.show && (
+            <div className="custom-modal-overlay">
+                <div className="custom-modal modal-center">
+                    <div className="modal-icon-wrapper">
+                    {modal.type==="success" &&
+                        <div className="modal-icon success">✓</div>}
+                    {modal.type==="error" &&
+                        <div className="modal-icon error">✕</div>}
+                    </div>
+
+                    <h3 className="modal-title">
+                    {modal.type==="success"?"Berhasil":"Terjadi Kesalahan"}
+                    </h3>
+
+                    <p className="modal-message">
+                    {modal.message}
+                    </p>
+
+                    <button
+                    className="modal-button"
+                    onClick={()=>{
+                        setModal({...modal,show:false});
+                        if(modal.type==="success"){
+                        navigate("/dashboard/umkm");
+                        }
+                    }}
+                    >
+                    OK
+                    </button>
                 </div>
             </div>
         )}
@@ -582,7 +749,7 @@ const AdminUmkm = () => {
                             <img
                                 src={
                                 selectedItem.url_thumbnail
-                                    ? `http://127.0.0.1:8000/storage/${selectedItem.url_thumbnail}`
+                                    ? `${BASE_URL}/storage/${selectedItem.url_thumbnail}`
                                     : "/no-image.png"
                                 }
                                 alt=""
@@ -596,7 +763,7 @@ const AdminUmkm = () => {
                                     {selectedItem.fotos.map((foto) => (
                                     <img
                                         key={foto.id}
-                                        src={`http://127.0.0.1:8000/storage/${foto.url_foto}`}
+                                        src={`${BASE_URL}/storage/${foto.url_foto}`}
                                         alt=""
                                     />
                                     ))}

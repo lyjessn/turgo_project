@@ -170,7 +170,11 @@ const AdminHomestay = () => {
               <tr key={item.id}>
                 <td>{item.id}</td>
                 <td>{item.nama}</td>
-                <td>{item.lokasi}</td>
+                <td title={item.lokasi}>
+                  {item.lokasi.length > 40
+                    ? item.lokasi.slice(0, 40) + "..."
+                    : item.lokasi}
+                </td>
                 <td>
                   Rp {Number(item.kamars_min_harga_per_malam ?? 0)
                     .toLocaleString("id-ID")}

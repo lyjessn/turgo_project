@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiSearch, FiX, FiWifi, FiHome } from "react-icons/fi";
 import { FaBed, FaBath } from "react-icons/fa";
 import "./css/KamarSaya.css";
@@ -235,7 +236,7 @@ const KamarSaya = () => {
                 {filteredData.map(item => (
                     <div key={item.id} className="kamar-card">
                         <div className="kamar-image">
-                            <img src={`http://127.0.0.1:8000/storage/${item.foto}`}/>
+                            <img src={`${BASE_URL}/storage/${item.foto}`}/>
                             <label className="switch">
                                 <input
                                     type="checkbox"
@@ -346,7 +347,7 @@ const KamarSaya = () => {
 
                     <img
                     className="modal-image"
-                    src={`http://127.0.0.1:8000/storage/${selectedItem.foto}`}
+                    src={`${BASE_URL}/storage/${selectedItem.foto}`}
                     />
 
                     <div>

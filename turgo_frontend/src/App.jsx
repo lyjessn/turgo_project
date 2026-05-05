@@ -156,7 +156,7 @@ function App() {
 
         <Route element={<ProtectedRoute roles={["admin","owner","pelaku_wisata"]}/>}>
           <Route path="paket-wisata/edit/:id" element={<EditPaketWisata />} />
-          
+          <Route path="paket-wisata/tambah" element={<TambahPaketWisata />} />
           <Route path="paket-wisata/:id" element={<AdminPaketWisataDetail />} />
 
         </Route>
@@ -168,7 +168,7 @@ function App() {
           <Route path="umkm" element={<AdminUmkm />} />
 
           <Route path="paket-wisata" element={<AdminPaketWisata />} />
-          <Route path="paket-wisata/tambah" element={<TambahPaketWisata />} />
+          
           
           <Route path="homestay" element={<AdminHomestay />} />
           <Route path="homestay/:id" element={<AdminHomestayDetail />} />

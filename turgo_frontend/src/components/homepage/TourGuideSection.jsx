@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import { getHomepageTourGuide } from "../../api/apiTourGuide";
 import { FiUser, FiUserCheck, FiGlobe, FiStar} from "react-icons/fi";
 import "./TourGuideSection.css";
@@ -69,13 +70,13 @@ const TourGuideSection = () => {
                 <div className="tg-col">
                     <div className="tg-title-block">
                         <h2>Tour Guide</h2>
-                        <p style={{fontSize: "22px", fontStyle:"italic"}}>terbaik untuk menemani perjalananmu</p>
+                        <p className="subtext-tg">terbaik untuk menemani perjalananmu</p>
                     </div>
 
                     {best && (
                     <div
                         className="tg-card tg-best"
-                        style={{ backgroundImage: `url(http://127.0.0.1:8000/storage/${best.foto_profil})` }}
+                        style={{ backgroundImage: `url(${BASE_URL}/storage/${best.foto_profil})` }}
                     >
                         <div className="tg-overlay" />
                         <div className="tg-best-badge">🎖️ Top Guide</div>
@@ -120,7 +121,7 @@ const TourGuideSection = () => {
                     {others[0] && (
                     <div
                         className="tg-card tg-small"
-                        style={{ backgroundImage: `url(http://127.0.0.1:8000/storage/${others[0].foto_profil})` }}
+                        style={{ backgroundImage: `url(${BASE_URL}/storage/${others[0].foto_profil})` }}
                     >
                         {renderCardContent(others[0])}
                     </div>
@@ -129,7 +130,7 @@ const TourGuideSection = () => {
                     {others[2] && (
                     <div
                         className="tg-card tg-small"
-                        style={{ backgroundImage: `url(http://127.0.0.1:8000/storage/${others[2].foto_profil})` }}
+                        style={{ backgroundImage: `url(${BASE_URL}/storage/${others[2].foto_profil})` }}
                     >
                         {renderCardContent(others[2])}
                     </div>
@@ -140,7 +141,7 @@ const TourGuideSection = () => {
                     {others[1] && (
                     <div
                         className="tg-card tg-normal"
-                        style={{ backgroundImage: `url(http://127.0.0.1:8000/storage/${others[1].foto_profil})` }}
+                        style={{ backgroundImage: `url(${BASE_URL}/storage/${others[1].foto_profil})` }}
                     >
                         {renderCardContent(others[1])}
                     </div>

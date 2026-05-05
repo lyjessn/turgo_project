@@ -275,12 +275,23 @@ class BlockoutController extends Controller
                 && $blockout->id_target === $user->homestays->id;
         }
 
-        if ($user->role->name === 'pelaku_wisata') {
-            return $blockout->kategori === 'paket_wisata'
-                && PaketWisata::where('id', $blockout->id_target)
-                    ->whereHas('participants', fn ($q) =>
-                        $q->where('user_id', $user->id)
-                    )->exists();
+       if ($user->role->name === 'pelaku wisata') {
+
+            if ($blockout->kategori !== 'paket_wisata') {
+                return false;
+            }
+
+            $paket = PaketWisata::with('participants')
+                ->find($blockout->id_target);
+
+            if (!$paket) return false;
+
+            $isCreator = $paket->id_pembuat === $user->id;
+
+            $isParticipant = $paket->participants
+                ->contains('user_id', $user->id);
+
+            return $isCreator || $isParticipant;
         }
 
         return false;

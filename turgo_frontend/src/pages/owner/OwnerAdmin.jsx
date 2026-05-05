@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiSearch, FiUserPlus, FiEye, FiX, FiEdit, FiTrash2 } from "react-icons/fi";
 import "../adminDanOwner/css/AdminShared.css";
 import "../adminDanOwner/css/Modal.css";
@@ -499,7 +500,7 @@ const OwnerAdmin = () => {
                 className="modal-data-image"
                 src={
                   selectedItem.foto_profil
-                    ? `http://127.0.0.1:8000/storage/${selectedItem.foto_profil}`
+                    ? `${BASE_URL}/storage/${selectedItem.foto_profil}`
                     : "/default-profile.png"
                 }
               />
@@ -570,7 +571,7 @@ const OwnerAdmin = () => {
                 className="modal-data-image"
                 src={
                   selectedItem.foto_profil
-                  ? `http://127.0.0.1:8000/storage/${selectedItem.foto_profil}`
+                  ? `${BASE_URL}/storage/${selectedItem.foto_profil}`
                   : "/default-profile.png"
                 }
               />

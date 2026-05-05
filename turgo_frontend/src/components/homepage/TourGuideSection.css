@@ -183,6 +183,11 @@
     font-size: 13px;
 }
 
+.subtext-tg {
+    font-size: 22px;
+    font-style: italic;
+}
+
 
 @media (max-width: 768px) {
     .tg-grid {

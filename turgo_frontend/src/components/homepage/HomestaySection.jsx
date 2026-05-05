@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiMapPin, FiHeart, FiShoppingCart } from "react-icons/fi";
 import { getHomepageHomestay } from "../../api/apiHomestay";
 import "./HomestaySection.css";
@@ -37,7 +38,7 @@ const HomestaySection = () => {
             <div className="homestay-grid">
                 <div className="homestay-card-main"
                     style={{
-                        backgroundImage: `url(http://127.0.0.1:8000/storage/${featured.url_thumbnail})`,
+                        backgroundImage: `url(${BASE_URL}/storage/${featured.url_thumbnail})`,
                     }}
                 >
                     <div className="homestay-favorite-pill">
@@ -84,7 +85,7 @@ const HomestaySection = () => {
                     key={item.id}
                     className="homestay-card-small"
                     style={{
-                    backgroundImage: `url(http://127.0.0.1:8000/storage/${item.url_thumbnail})`,
+                    backgroundImage: `url(${BASE_URL}/storage/${item.url_thumbnail})`,
                     }}
                 >
                     <div className="homestay-small-content">
@@ -100,8 +101,11 @@ const HomestaySection = () => {
                             </div>
                         </div>
 
-                        <div className="homestay-small-meta">
-                            <FiMapPin /> {item.lokasi}
+                        <div className="homestay-small-meta" title={item.lokasi}>
+                            <FiMapPin />{" "}
+                            {item.lokasi.length > 40
+                                ? item.lokasi.slice(0, 40) + "..."
+                                : item.lokasi}
                         </div>
 
                         <button className="homestay-small-btn"

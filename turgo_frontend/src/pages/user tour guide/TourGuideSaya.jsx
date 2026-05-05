@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { useAuth } from "../../auth/useAuth";
 import { getMyTourGuide, updateTourGuide } from "../../api/apiTourGuide";
 import { useNavigate } from "react-router-dom";
-
 import { FiUsers, FiGlobe, FiStar, FiX } from "react-icons/fi";
 import { BiMoney } from "react-icons/bi";
 
@@ -89,7 +89,7 @@ const TourGuideSaya = () => {
       <div style={{ textAlign: "center" }}>
 
         <img
-          src={`http://127.0.0.1:8000/storage/${guide.foto_profil}`}
+          src={`${BASE_URL}/storage/${guide.foto_profil}`}
           style={{
             width: 200,
             height: 200,
