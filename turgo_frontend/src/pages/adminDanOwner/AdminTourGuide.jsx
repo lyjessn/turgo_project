@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiSearch, FiEdit, FiEye, FiTrash2, FiX } from "react-icons/fi";
 import "./css/AdminShared.css";
 import "./css/AdminPaketWisata.css";
@@ -38,6 +39,12 @@ const AdminTourGuide = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [submitting, setSubmitting] = useState(false);
+
+    const [modal, setModal] = useState({
+        show: false,
+        type: "",
+        message: ""
+    });
 
     useEffect(() => {
         loadUser();
@@ -173,11 +180,20 @@ const AdminTourGuide = () => {
 
             setShowEditModal(false);
             setForm(defaultForm);
+            setModal({
+                show: true,
+                type: "success",
+                message: "Guide berhasil diupdate"
+            });
             setSelectedItem(null);
             fetchData();
 
         } catch (err) {
-            setError("Gagal update tour guide");
+            setModal({
+                show: true,
+                type: "error",
+                message: "Terjadi kesalahan saat update"
+            });
         } finally {
             setSubmitting(false);
         }
@@ -309,8 +325,8 @@ const AdminTourGuide = () => {
                                     <button
                                         className="btn-icon"
                                         onClick={()=>{
-                                        setSelectedItem(item);
-                                        setShowDetailModal(true);
+                                            setSelectedItem(item);
+                                            setShowDetailModal(true);
                                         }}
                                     >
                                         <FiEye/>
@@ -319,23 +335,21 @@ const AdminTourGuide = () => {
                                     <button
                                         className="btn-icon"
                                         onClick={()=>{
+                                            setSelectedItem(item);
 
-                                        setSelectedItem(item);
+                                            setForm({
+                                                bio:item.bio||"",
+                                                harga_per_hari:item.harga_per_hari,
+                                                bahasa:item.bahasa,
+                                                spesialisasi:item.spesialisasi,
+                                                kapasitas_min:item.kapasitas_min,
+                                                kapasitas_max:item.kapasitas_max,
+                                                foto_profil:null
+                                            });
 
-                                        setForm({
-                                            bio:item.bio||"",
-                                            harga_per_hari:item.harga_per_hari,
-                                            bahasa:item.bahasa,
-                                            spesialisasi:item.spesialisasi,
-                                            kapasitas_min:item.kapasitas_min,
-                                            kapasitas_max:item.kapasitas_max,
-                                            foto_profil:null
-                                        });
-
-                                        setError("");
-                                        setSuccess("");
-                                        setShowEditModal(true);
-
+                                            setError("");
+                                            setSuccess("");
+                                            setShowEditModal(true);
                                         }}
                                     >
                                         <FiEdit/>
@@ -400,7 +414,7 @@ const AdminTourGuide = () => {
 
                             <img
                             className="modal-data-image"
-                            src={`http://127.0.0.1:8000/storage/${selectedItem.foto_profil}`}
+                            src={`${BASE_URL}/storage/${selectedItem.foto_profil}`}
                             alt={selectedItem.user?.nama_lengkap}
                             />
 
@@ -767,6 +781,39 @@ const AdminTourGuide = () => {
                                 {submitting ? "Menyimpan..." : "Update"}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {modal.show && (
+                <div className="custom-modal-overlay">
+                    <div className="custom-modal modal-center">
+                        <div className="modal-icon-wrapper">
+                        {modal.type==="success" &&
+                            <div className="modal-icon success">✓</div>}
+                        {modal.type==="error" &&
+                            <div className="modal-icon error">✕</div>}
+                        </div>
+
+                        <h3 className="modal-title">
+                        {modal.type==="success"?"Berhasil":"Terjadi Kesalahan"}
+                        </h3>
+
+                        <p className="modal-message">
+                        {modal.message}
+                        </p>
+
+                        <button
+                        className="modal-button"
+                        onClick={()=>{
+                            setModal({...modal,show:false});
+                            if(modal.type==="success"){
+                            navigate("/dashboard/tour-guide");
+                            }
+                        }}
+                        >
+                        OK
+                        </button>
                     </div>
                 </div>
             )}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../../utils/baseUrl";
 import { getDetailPaketWisata } from "../../../api/apiPaketWisata";
 import { useAuth } from "../../../auth/useAuth";
 
@@ -81,7 +82,7 @@ const AdminPaketWisataDetail = () => {
           <div className="admin-homestay-gallery">
   
             <img
-              src={`http://127.0.0.1:8000/storage/${images[currentImage]}`}
+              src={`${BASE_URL}/storage/${images[currentImage]}`}
               className="admin-homestay-image"
             />
   
@@ -201,23 +202,23 @@ const AdminPaketWisataDetail = () => {
           <h2 className="admin-section-title">Penilaian</h2>
           <div className="admin-info-grid">
               <div>
-                  <b>Rating Rata-rata</b>
-                  <p>⭐ {Number(data.ratings_avg_bintang ?? 0).toFixed(2)}</p>
+                <b>Rating Rata-rata</b>
+                <p>⭐ {Number(data.ratings_avg_bintang ?? 0).toFixed(2)}</p>
               </div>
   
               <div>
-                  <b>Total Ulasan</b>
-                  <p>{data.ratings_count ?? 0} ulasan</p>
-                  {(data.ratings_count ?? 0) > 0 && (
-                      <button
+                <b>Total Ulasan</b>
+                <p>{data.ratings_count ?? 0} ulasan</p>
+                {(data.ratings_count ?? 0) > 0 && (
+                    <button
                       className="btn-secondary"
                       onClick={() =>
-                          navigate(`/dashboard/reviews/paket_wisata/${id}`)
+                        navigate(`/dashboard/reviews/paket_wisata/${id}`)
                       }
-                      >
+                    >
                       Lihat Ulasan
-                      </button>
-                  )}
+                    </button>
+                )}
               </div>
   
           </div>

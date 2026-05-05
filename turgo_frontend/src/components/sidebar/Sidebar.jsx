@@ -8,6 +8,7 @@ import "./Sidebar.css";
 const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { role, user, logout } = useAuth();
   const menus = MenuConfig[role?.toLowerCase().replace(/\s+/g, "_")] || [];
 
@@ -136,11 +137,40 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
             </div>
           </div>
 
-          <button className="logout-btn" onClick={logout}>
+          <button className="logout-btn"  onClick={() => setShowLogoutModal(true)}>
             Logout
           </button>
         </div>
       </aside>
+
+      {showLogoutModal && (
+        <div className="logout-modal-overlay">
+            <div className="logout-modal">
+                <h3>Konfirmasi Logout</h3>
+                <p>Apakah Anda yakin ingin logout?</p>
+
+                <div className="logout-modal-actions">
+                    <button
+                        className="btn-secondary"
+                        onClick={() => setShowLogoutModal(false)}
+                    >
+                        Batal
+                    </button>
+
+                    <button
+                        className="btn-danger"
+                        onClick={() => {
+                            logout();
+                            setShowLogoutModal(false);
+                            navigate("/");
+                        }}
+                    >
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </>
   );
 };

@@ -744,7 +744,6 @@ class BookingController extends Controller
                 ->where('id', $detail->id)
                 ->update([
                     'tour_guide_id' => $tourGuideId,
-                    'harga_tour_guide' => $harga
                 ]);
         }
 
@@ -757,7 +756,7 @@ class BookingController extends Controller
     public function sendEmail(Request $request, $id)
     {
         try {
-            if ($request->user()->role->name !== 'admin') {
+            if (!in_array($request->user()->role->name, ['admin', 'owner'])) {
                 abort(403);
             }
 

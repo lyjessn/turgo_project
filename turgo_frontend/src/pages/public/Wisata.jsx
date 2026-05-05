@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./css/Catalog.css";
 import "../../components/homepage/paketwisatasection.css";
@@ -12,6 +12,7 @@ const Wisata = () => {
   const [available, setAvailable] = useState([]);
   const [search, setSearch] = useState("");
   const [tanggal, setTanggal] = useState("");
+  const inputRef = useRef(null);
   const [showPicker, setShowPicker] = useState(false);
   const navigate = useNavigate();
 
@@ -91,16 +92,19 @@ const Wisata = () => {
       <div className="catalog-filter-row">
         <div className="date-filter">
           <input
+            ref={inputRef}
             type="date"
             min={minDateString}
             value={tanggal}
-            onChange={(e) => setTanggal(e.target.value)}
-            className={showPicker ? "show" : ""}
+            onChange={(e) => {
+              setTanggal(e.target.value);
+              e.target.blur();
+            }}
           />
 
           <div
             className="date-toggle"
-            onClick={() => setShowPicker(!showPicker)}
+            onClick={() => inputRef.current?.showPicker()}
           >
             <span>{tanggal ? tanggal : "Pilih Tanggal"}</span>
 

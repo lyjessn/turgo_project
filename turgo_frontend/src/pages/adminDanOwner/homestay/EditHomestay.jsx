@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { BASE_URL } from "../../../utils/baseUrl";
 import "../css/AdminShared.css";
 import "../css/AdminPaketWisata.css";
 import "../css/Modal.css";
@@ -10,11 +11,16 @@ const EditHomestay = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [step, setStep] = useState(1);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [existingPhotos, setExistingPhotos] = useState([]);
   const [newPhotos, setNewPhotos] = useState([]);
   const [deletedPhotoIds, setDeletedPhotoIds] = useState([]);
   const [thumbnail, setThumbnail] = useState(null);
   const [kamars, setKamars] = useState([]);
+  
+  const hasThumbnail = thumbnail !== null ? 1 : 0;
+  const totalPhotos = existingPhotos.length + newPhotos.length + hasThumbnail;
 
   const [modal, setModal] = useState({
     show: false,
@@ -45,8 +51,6 @@ const EditHomestay = () => {
     const res = await getDetailHomestay(id);
     const data = res.data;
 
-    console.log(data.kamars);
-
     setForm({
       nama: data.nama,
       lokasi: data.lokasi,
@@ -56,9 +60,21 @@ const EditHomestay = () => {
       peliharaan: data.peliharaan
     });
 
-    setExistingPhotos(data.fotos || []);
+    let fotos = data.fotos || [];
 
     if (data.url_thumbnail) {
+      const exists = fotos.some(f => f.url_foto === data.url_thumbnail);
+
+      if (!exists) {
+        fotos = [
+          ...fotos,
+          {
+            id: "thumbnail-temp",
+            url_foto: data.url_thumbnail
+          }
+        ];
+      }
+
       setThumbnail({
         type: "existing",
         value: data.url_thumbnail
@@ -66,6 +82,8 @@ const EditHomestay = () => {
     } else {
       setThumbnail(null);
     }
+
+    setExistingPhotos(fotos);
 
     setKamars(
       data.kamars.map(k => ({
@@ -76,9 +94,16 @@ const EditHomestay = () => {
     );
   };
 
-
   const handleSubmit = async () => {
+
+    if (!thumbnail) {
+      setError("Pilih thumbnail terlebih dahulu");
+      return;
+    }
+
     try {
+      setSubmitting(true);
+      setError("");
 
       const homestayFormData = new FormData();
 
@@ -87,24 +112,28 @@ const EditHomestay = () => {
       });
 
       deletedPhotoIds.forEach(id => {
-        homestayFormData.append("deleted_photos[]", id);
+        if (typeof id === "number") {
+          homestayFormData.append("deleted_photos[]", id);
+        }
       });
 
-      newPhotos.forEach(file => {
-        homestayFormData.append("new_photos[]", file);
+      newPhotos.forEach(item => {
+        homestayFormData.append("new_photos[]", item.file);
       });
+
+      if (thumbnail?.type === "new") {
+        const selected = newPhotos.find(p => p.id === thumbnail.value);
+        if (selected) {
+          homestayFormData.append("thumbnail_file", selected.file);
+        }
+      }
 
       if (thumbnail?.type === "existing") {
         homestayFormData.append("thumbnail_path", thumbnail.value);
       }
 
-      if (thumbnail?.type === "new") {
-        homestayFormData.append("thumbnail_index", thumbnail.value);
-      }
-
       await Promise.all(
         kamars.map(async (kamar) => {
-
           const kamarFormData = new FormData();
 
           kamarFormData.append("nama", kamar.nama);
@@ -125,12 +154,10 @@ const EditHomestay = () => {
           }
 
           return updateKamar(kamar.id, kamarFormData);
-
         })
       );
 
       await updateHomestay(id, homestayFormData);
-
 
       setModal({
         show: true,
@@ -138,16 +165,24 @@ const EditHomestay = () => {
         message: "Homestay berhasil diupdate"
       });
 
-    } catch {
+    } catch (err) {
+      console.log("ERROR FULL:", err);
+
+      if (err.response) {
+        console.log("ERROR DATA:", err.response.data);
+        console.log("ERROR STATUS:", err.response.status);
+      }
 
       setModal({
         show: true,
         type: "error",
         message: "Terjadi kesalahan saat update"
       });
-
+    } finally {
+      setSubmitting(false);
     }
   };
+
 
   const handleAddKamar = () => {
     setKamars([
@@ -203,6 +238,7 @@ const EditHomestay = () => {
 
         {step === 1 && (
           <div className="card-form">
+            {error && <div className="error-text">{error}</div>}
             <div className="form-group">
               <label>Nama Homestay</label>
               <input
@@ -264,28 +300,19 @@ const EditHomestay = () => {
                 multiple
                 onChange={(e)=>{
                   const files = Array.from(e.target.files);
-                  setNewPhotos(prev=>[...prev,...files]);
+
+                  const mapped = files.map(file => ({
+                    id: Date.now() + Math.random(),
+                    file
+                  }));
+
+                  setNewPhotos(prev=>[...prev,...mapped]);
                   e.target.value=null;
                 }}
               />
             </div>
 
             <div className="preview-grid">
-              {thumbnail?.type === "existing" &&
-                !existingPhotos.some(f => f.url_foto === thumbnail.value) && (
-
-                  <div className="preview-item">
-
-                    <img src={`http://127.0.0.1:8000/storage/${thumbnail.value}`} />
-
-                    <span className="thumbnail-badge">
-                      Thumbnail
-                    </span>
-
-                  </div>
-
-              )}
-
               {existingPhotos.map((foto)=>{
 
                 const isThumbnail =
@@ -295,7 +322,7 @@ const EditHomestay = () => {
                 return(
                   <div key={foto.id} className="preview-item">
 
-                    <img src={`http://127.0.0.1:8000/storage/${foto.url_foto}`} />
+                    <img src={`${BASE_URL}/storage/${foto.url_foto}`} />
 
                     {isThumbnail ? (
                       <span className="thumbnail-badge">Thumbnail</span>
@@ -303,36 +330,12 @@ const EditHomestay = () => {
                       <button
                         type="button"
                         className="set-thumb"
-                        onClick={() => {
-                          const oldThumb =
-                            thumbnail?.type === "existing"
-                              ? thumbnail.value
-                              : null;
-
+                        onClick={() =>
                           setThumbnail({
                             type:"existing",
                             value:foto.url_foto
-                          });
-
-                          if(oldThumb && oldThumb !== foto.url_foto){
-                            setExistingPhotos(prev => {
-
-                              if(prev.some(p => p.url_foto === oldThumb)){
-                                return prev
-                              }
-
-                              return [
-                                ...prev,
-                                {
-                                  id:`temp-${Date.now()}`,
-                                  url_foto:oldThumb
-                                }
-                              ]
-
-                            })
-                          }
-
-                        }}
+                          })
+                        }
                       >
                         Set Thumbnail
                       </button>
@@ -368,16 +371,15 @@ const EditHomestay = () => {
                 )
               })}
 
-              {newPhotos.map((file,i)=>{
-
+              {newPhotos.map((item)=>{
                 const isThumbnail =
                   thumbnail?.type==="new" &&
-                  thumbnail.value===i
+                  thumbnail.value===item.id
 
                 return(
-                  <div key={i} className="preview-item">
+                  <div key={item.id} className="preview-item">
 
-                    <img src={URL.createObjectURL(file)} />
+                    <img src={URL.createObjectURL(item.file)} />
 
                     {isThumbnail ? (
                       <span className="thumbnail-badge">Thumbnail</span>
@@ -388,7 +390,7 @@ const EditHomestay = () => {
                         onClick={() =>
                           setThumbnail({
                             type:"new",
-                            value:i
+                            value:item.id
                           })
                         }
                       >
@@ -400,18 +402,16 @@ const EditHomestay = () => {
                       type="button"
                       className="remove-photo"
                       onClick={()=>{
-
                         setNewPhotos(prev =>
-                          prev.filter((_,idx)=>idx!==i)
+                          prev.filter(f=>f.id!==item.id)
                         )
 
                         if(
                           thumbnail?.type==="new" &&
-                          thumbnail.value===i
+                          thumbnail.value===item.id
                         ){
                           setThumbnail(null)
                         }
-
                       }}
                     >
                       ✕
@@ -419,7 +419,6 @@ const EditHomestay = () => {
 
                   </div>
                 )
-
               })}
 
             </div>
@@ -432,22 +431,47 @@ const EditHomestay = () => {
                 Batal
               </button>
 
-              <button
+             <button
                 className="btn-primary"
-                onClick={()=>setStep(2)}
+                onClick={() => {
+                  setError("");
+
+                  if (!form.nama || !form.lokasi) {
+                    setError("Semua field wajib diisi");
+                    return;
+                  }
+
+                  if (totalPhotos < 3) {
+                    setError("Minimal 3 foto homestay");
+                    return;
+                  }
+
+                  if (!thumbnail) {
+                    setError("Pilih thumbnail terlebih dahulu");
+                    return;
+                  }
+
+                  setStep(2);
+                  setError("");
+                }}
               >
                 Lanjutkan
               </button>
             </div>
-
           </div>
         )}
 
         {step === 2 && (
           <div className="card-form">
-
+            {error && <div className="error-text">{error}</div>}
             {kamars.map((kamar,index)=>(
-              <div key={kamar.id || index} className="kamar-card">
+              <div key={index} style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: "10px",
+                padding: "16px",
+                marginBottom: "20px",
+                background: "#f9fafb"
+              }}>
 
                 <div className="kamar-header">
                   <h3>Kamar {index+1}</h3>
@@ -467,6 +491,7 @@ const EditHomestay = () => {
                       const updated=[...kamars];
                       updated[index].nama=e.target.value;
                       setKamars(updated);
+                      setError("");
                     }}
                   />
                 </div>
@@ -480,6 +505,7 @@ const EditHomestay = () => {
                       const updated=[...kamars];
                       updated[index].harga_per_malam=e.target.value;
                       setKamars(updated);
+                      setError("");
                     }}
                   />
                 </div>
@@ -492,6 +518,7 @@ const EditHomestay = () => {
                       const updated=[...kamars];
                       updated[index].wifi=e.target.value;
                       setKamars(updated);
+                      setError("");
                     }}
                   />
                 </div>
@@ -505,6 +532,7 @@ const EditHomestay = () => {
                       const updated=[...kamars];
                       updated[index].jumlah_kasur=e.target.value;
                       setKamars(updated);
+                      setError("");
                     }}
                   />
                 </div>
@@ -517,6 +545,7 @@ const EditHomestay = () => {
                       const updated=[...kamars];
                       updated[index].deskripsi_kasur=e.target.value;
                       setKamars(updated);
+                      setError("");
                     }}
                   />
                 </div>
@@ -530,6 +559,7 @@ const EditHomestay = () => {
                       const updated=[...kamars];
                       updated[index].jumlah_toilet=e.target.value;
                       setKamars(updated);
+                      setError("");
                     }}
                   />
                 </div>
@@ -542,6 +572,7 @@ const EditHomestay = () => {
                       const updated=[...kamars];
                       updated[index].deskripsi_toilet=e.target.value;
                       setKamars(updated);
+                      setError("");
                     }}
                   />
                 </div>
@@ -556,6 +587,7 @@ const EditHomestay = () => {
                       updated[index].foto_new = e.target.files[0];
                       updated[index].foto_existing = null;
                       setKamars(updated);
+                      setError("");
                     }}
                   />
 
@@ -563,7 +595,7 @@ const EditHomestay = () => {
                     {kamar.foto_existing && !kamar.foto_new && (
                       <div className="preview-item">
                         <img
-                          src={`http://127.0.0.1:8000/storage/${kamar.foto_existing}`}
+                          src={`${BASE_URL}/storage/${kamar.foto_existing}`}
                         />
                       </div>
                     )}
@@ -579,6 +611,7 @@ const EditHomestay = () => {
                             const updated = [...kamars];
                             updated[index].foto_new = null;
                             setKamars(updated);
+                            setError("");
                           }}
                         >
                           ✕
@@ -609,9 +642,48 @@ const EditHomestay = () => {
 
               <button
                 className="btn-primary"
-                onClick={handleSubmit}
+                disabled={submitting}
+                onClick={() => {
+                  setError("");
+
+                  if (!kamars.length) {
+                    setError("Minimal harus ada 1 kamar");
+                    return;
+                  }
+
+                  for (let i = 0; i < kamars.length; i++) {
+                    const kamar = kamars[i];
+
+                    if (!kamar.nama) {
+                      setError(`Nama kamar ke-${i + 1} wajib diisi`);
+                      return;
+                    }
+
+                    if (!kamar.harga_per_malam) {
+                      setError(`Harga kamar ke-${i + 1} wajib diisi`);
+                      return;
+                    }
+
+                    if (!kamar.jumlah_kasur) {
+                      setError(`Jumlah kasur kamar ke-${i + 1} wajib diisi`);
+                      return;
+                    }
+
+                    if (!kamar.jumlah_toilet) {
+                      setError(`Jumlah toilet kamar ke-${i + 1} wajib diisi`);
+                      return;
+                    }
+
+                    if (!kamar.foto_existing && !kamar.foto_new) {
+                      setError(`Foto kamar ke-${i + 1} wajib diisi`);
+                      return;
+                    }
+                  }
+
+                  handleSubmit();
+                }}
               >
-                Update
+                {submitting ? "Mengupdate..." : "Update"}
               </button>
             </div>
 
@@ -622,7 +694,7 @@ const EditHomestay = () => {
 
       {modal.show && (
         <div className="custom-modal-overlay">
-          <div className="custom-modal">
+          <div className="custom-modal modal-center">
             <div className="modal-icon-wrapper">
               {modal.type==="success" &&
                 <div className="modal-icon success">✓</div>}
@@ -655,7 +727,7 @@ const EditHomestay = () => {
 
       {confirmDelete.show && (
         <div className="custom-modal-overlay">
-          <div className="custom-modal">
+          <div className="custom-modal modal-center">
 
             <div className="modal-icon-wrapper">
               <div className="modal-icon error">!</div>
@@ -669,7 +741,7 @@ const EditHomestay = () => {
               Apakah Anda yakin ingin menghapus kamar ini?
             </p>
 
-            <div className="button-group">
+            <div className="button-center">
 
               <button
                 className="btn-secondary"
@@ -685,7 +757,7 @@ const EditHomestay = () => {
               </button>
 
               <button
-                className="btn-primary"
+                className="btn-danger"
                 onClick={confirmDeleteKamar}
               >
                 Hapus

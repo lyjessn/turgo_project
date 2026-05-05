@@ -1,5 +1,6 @@
 import {useEffect,useState} from "react";
 import {useParams,useNavigate} from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import {getRateableItems, createRating} from "../../api/apiRating";
 import "../public/css/Detail.css";
 
@@ -124,7 +125,7 @@ const BeriUlasan=()=>{
                             <div key={key} className="review-card">
 
                                 <img
-                                    src={`http://127.0.0.1:8000/storage/${item.thumbnail}`}
+                                    src={`${BASE_URL}/storage/${item.thumbnail}`}
                                     className="detail-thumb-small"
                                 />
 

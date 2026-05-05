@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useMemo, useState, useEffect } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { useAuth } from "../../auth/useAuth";
 import { FiWifi, FiClock, FiCalendar } from "react-icons/fi";
 import { FaBed, FaBath, FaSmoking, FaPaw } from "react-icons/fa";
@@ -96,7 +97,7 @@ const KamarDetail = () => {
     <div className="detail-container">
 
       <div className="detail-carousel">
-        <img src={`http://127.0.0.1:8000/storage/${kamar.foto}`} className="detail-image"/>
+        <img src={`${BASE_URL}/storage/${kamar.foto}`} className="detail-image"/>
       </div>
 
       <div className="detail-section">

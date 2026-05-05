@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import "./css/Budaya.css";
 import { getAllKebudayaan } from "../../api/apiKebudayaan";
 
@@ -29,7 +30,7 @@ const Budaya = () => {
         <div key={budaya.id} className="budaya-section">
           <div className="budaya-image"
             style={{
-              backgroundImage: `url(http://127.0.0.1:8000/storage/${budaya.foto})`,
+              backgroundImage: `url(${BASE_URL}/storage/${budaya.foto})`,
             }}
           />
 

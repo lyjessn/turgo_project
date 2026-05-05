@@ -26,7 +26,7 @@ const Footer = () => {
 
           <div className="footer-item">
             <FiPhone />
-            <span>0812-3456-7890</span>
+            <span>0823-1351-5092</span>
           </div>
 
           <div className="footer-item">

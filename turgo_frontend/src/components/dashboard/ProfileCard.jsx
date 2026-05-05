@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { useAuth } from "../../auth/useAuth";
 import { updateProfile } from "../../api/apiUser";
 import "./ProfileCard.css";
@@ -51,7 +52,7 @@ const ProfileCard = () => {
 
                 {user?.foto_profil ? (
                 <img
-                    src={`http://127.0.0.1:8000/storage/${user.foto_profil}`}
+                    src={`${BASE_URL}/storage/${user.foto_profil}`}
                     className="profile-avatar"
                 />
                 ) : (

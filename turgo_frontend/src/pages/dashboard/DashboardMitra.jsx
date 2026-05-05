@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth/useAuth";
+import { getMyIncome } from "../../api/apiRiwayatSaldo";
 import ProfileCard from "../../components/dashboard/ProfileCard";
 import "./Dashboard.css";
 
@@ -10,7 +11,24 @@ import { getPelakuWisataBookings } from "../../api/apiBooking";
 const DashboardMitra = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
+  const [totalPenghasilan, setTotalPenghasilan] = useState(0);
   const role = user?.role?.name;
+
+  const fetchPenghasilan = async () => {
+    try {
+      const res = await getMyIncome();
+
+      const total = res.data.reduce(
+        (sum, item) => sum + Number(item.jumlah || 0),
+        0
+      );
+
+      setTotalPenghasilan(total);
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
 
@@ -43,6 +61,7 @@ const DashboardMitra = () => {
     };
 
     fetchBookings();
+    fetchPenghasilan();
   }, [role]);
 
   const validBookings = bookings.filter(
@@ -59,10 +78,6 @@ const DashboardMitra = () => {
   const selesai = validBookings.filter(
     b => b.status_pemesanan === "selesai"
   ).length;
-
-  const totalPenghasilan = bookings
-    .filter(b => b.status_pemesanan === "selesai")
-    .reduce((sum,b)=> sum + Number(b.total_harga),0);
 
   const latestBookings = [...validBookings]
     .sort((a,b)=> new Date(b.tanggal_booking) - new Date(a.tanggal_booking))

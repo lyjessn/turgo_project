@@ -189,13 +189,18 @@
 @media (max-width: 768px) {
 
   .catalog-container {
-    padding: 20px;
+    padding: 32px;
   }
 
   .catalog-filter-row {
     flex-direction: column;
     gap: 8px;
     align-items: stretch;
+  }
+
+  .catalog-search-wrapper {
+    width: 100%;
+    margin-left: 0;
   }
 
   .catalog-search {

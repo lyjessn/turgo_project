@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiSearch, FiX } from "react-icons/fi";
 import "./css/BudayaDanUmkm.css";
 import "./css/AdminShared.css";
@@ -237,7 +238,7 @@ const AdminKebudayaan = () => {
                     <div key={item.id} className="admin-kebudayaan-card">
                         <div className="admin-kebudayaan-image">
                             <img
-                            src={`http://127.0.0.1:8000/storage/${item.foto}`}
+                            src={`${BASE_URL}/storage/${item.foto}`}
                             />
 
                             <label className="switch">
@@ -372,7 +373,7 @@ const AdminKebudayaan = () => {
 
                     <div className="modal-body">
                         <img className="modal-image"
-                            src={`http://127.0.0.1:8000/storage/${selectedItem.foto}`}
+                            src={`${BASE_URL}/storage/${selectedItem.foto}`}
                         />
 
                         <div>

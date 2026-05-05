@@ -1,10 +1,9 @@
 import { useEffect, useState, useMemo, useRef } from "react";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiSearch, FiEdit, FiEye, FiTrash2, FiX } from "react-icons/fi";
-
 import "./css/AdminShared.css";
 import "./css/AdminPaketWisata.css";
 import "./css/Modal.css"
-
 import {
   getAllPelakuWisata,
   createPelakuWisata,
@@ -13,7 +12,6 @@ import {
   togglePelakuWisata,
   getAllUsersPelakuWisata
 } from "../../api/apiPelakuWisata";
-
 import { GetUserData } from "../../api/apiAuth";
 
 const AdminPelakuWisata = () => {
@@ -31,6 +29,12 @@ const AdminPelakuWisata = () => {
     const [page, setPage] = useState(1);
     const itemsPerPage = 10;
     const formRef = useRef(null);
+
+    const [modal, setModal] = useState({
+        show: false,
+        type: "",
+        message: ""
+    });
 
     const defaultForm = {
         user_id: "",
@@ -129,7 +133,6 @@ const AdminPelakuWisata = () => {
         }
     };
 
-
     const handleAdd = async()=>{
         try{
             setSubmitting(true);
@@ -166,6 +169,7 @@ const AdminPelakuWisata = () => {
 
     const handleEdit = async()=>{
         try{
+            setSubmitting(true);
             const formData = new FormData();
             Object.keys(form).forEach(key=>{
                 if(form[key])
@@ -176,11 +180,23 @@ const AdminPelakuWisata = () => {
 
             setShowEditModal(false);
             setForm(defaultForm);
+            setModal({
+                show: true,
+                type: "success",
+                message: "Pelaku Wisata berhasil diupdate"
+            });
             setSelectedItem(null);
 
             fetchData();
         } catch (err) {
             console.error(err);
+            setModal({
+                show: true,
+                type: "error",
+                message: "Terjadi kesalahan saat update"
+            });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -390,7 +406,7 @@ const AdminPelakuWisata = () => {
                 <div className="modal-data-body">
                     <img
                         className="modal-data-image"
-                        src={`http://127.0.0.1:8000/storage/${selectedItem.foto_profil}`}
+                        src={`${BASE_URL}/storage/${selectedItem.foto_profil}`}
                     />
 
                     <div className="modal-data-info">
@@ -553,6 +569,39 @@ const AdminPelakuWisata = () => {
         </div>
     )}
 
+    {modal.show && (
+        <div className="custom-modal-overlay">
+            <div className="custom-modal modal-center">
+                <div className="modal-icon-wrapper">
+                {modal.type==="success" &&
+                    <div className="modal-icon success">✓</div>}
+                {modal.type==="error" &&
+                    <div className="modal-icon error">✕</div>}
+                </div>
+
+                <h3 className="modal-title">
+                {modal.type==="success"?"Berhasil":"Terjadi Kesalahan"}
+                </h3>
+
+                <p className="modal-message">
+                {modal.message}
+                </p>
+
+                <button
+                className="modal-button"
+                onClick={()=>{
+                    setModal({...modal,show:false});
+                    if(modal.type==="success"){
+                    navigate("/dashboard/pelaku-wisata");
+                    }
+                }}
+                >
+                OK
+                </button>
+            </div>
+        </div>
+    )}
+
     {showEditModal && selectedItem && (
         <div className="modal-overlay">
             <div className="modal-data">
@@ -573,7 +622,7 @@ const AdminPelakuWisata = () => {
                         form.foto_profil
                         ? URL.createObjectURL(form.foto_profil)
                         : selectedItem.foto_profil
-                            ? `http://127.0.0.1:8000/storage/${selectedItem.foto_profil}`
+                            ? `${BASE_URL}/storage/${selectedItem.foto_profil}`
                             : "/default-image.png"
                     }
                     />

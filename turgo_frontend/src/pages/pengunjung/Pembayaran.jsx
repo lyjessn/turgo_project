@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import { useAuth } from "../../auth/useAuth";
 import { useEffect, useState } from "react";
 import { confirmPayment, getBookingDetail } from "../../api/apiBooking";
@@ -30,7 +31,6 @@ const Pembayaran = () => {
 
   const isValid = bukti && form.norek && form.bank && form.nama;
 
-  // fetch booking
   useEffect(() => {
 
     if (!id) return;
@@ -51,7 +51,6 @@ const Pembayaran = () => {
 
   }, [id, navigate]);
 
-  // check login
   useEffect(() => {
 
     if (!user) {
@@ -60,7 +59,6 @@ const Pembayaran = () => {
 
   }, [user, navigate]);
 
-  // timer pembayaran
   useEffect(() => {
 
     if (!booking?.expired_at) return;
@@ -147,7 +145,6 @@ const Pembayaran = () => {
     }
   };
 
-  // ambil paket dari booking
   const items = [];
 
   if (booking?.custom_details?.length) {
@@ -182,24 +179,39 @@ const Pembayaran = () => {
 
           <div className="payment-summary-list">
 
-            {items.map(p => (
+            {items.map(p => {
 
-              <div key={p.id} className="payment-summary">
+              const jumlah = booking?.jumlah_orang || 1;
+              const subtotal = p.harga * jumlah;
 
-                <img
-                  src={`http://127.0.0.1:8000/storage/${p.url_thumbnail}`}
-                />
+              return (
+                <div key={p.id} className="payment-summary">
 
-                <div>
-                  <b>{p.nama}</b>
-                  <p>
-                    Rp {Number(p.harga).toLocaleString("id-ID")} /orang
-                  </p>
+                  <img
+                    src={`${BASE_URL}/storage/${p.url_thumbnail}`}
+                  />
+
+                  <div>
+                    <b>{p.nama}</b>
+
+                    <p>
+                      Rp {Number(p.harga).toLocaleString("id-ID")} / orang
+                    </p>
+
+                    <p>
+                      <FaUsers style={{marginRight:6}}/>
+                      {jumlah} orang
+                    </p>
+
+                    <p style={{fontWeight:"600"}}>
+                      Subtotal: Rp {subtotal.toLocaleString("id-ID")}
+                    </p>
+
+                  </div>
+
                 </div>
-
-              </div>
-
-            ))}
+              );
+            })}
 
             {guideJenis !== "tanpa" && (
               <div className="payment-summary">

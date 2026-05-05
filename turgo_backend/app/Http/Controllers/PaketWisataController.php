@@ -156,7 +156,7 @@ class PaketWisataController extends Controller
 
         $user = $request->user();
 
-        if ($user->role->name === 'pelaku_wisata') {
+        if ($user->role->name === 'pelaku wisata') {
 
             $participants = [
                 [
@@ -296,7 +296,7 @@ class PaketWisataController extends Controller
             "new_photos"      => "sometimes|array",
             "new_photos.*"    => "image|mimes:jpg,jpeg,png|max:2048",
 
-            "thumbnail"       => "sometimes|image|mimes:jpg,jpeg,png|max:2048",
+            "thumbnail_file"  => "sometimes|image|mimes:jpg,jpeg,png|max:2048",
             "thumbnail_path"  => "sometimes|string"
         ]);
 
@@ -314,7 +314,7 @@ class PaketWisataController extends Controller
             "participants",
             "deleted_photos",
             "new_photos",
-            "thumbnail",
+            "thumbnail_file",
             "thumbnail_path"
         ]));
 
@@ -374,6 +374,11 @@ class PaketWisataController extends Controller
                 $foto = PaketWisataFoto::find($fotoId);
 
                 if ($foto) {
+
+                    if ($paket->url_thumbnail === $foto->url_foto) {
+                        $paket->url_thumbnail = null;
+                    }
+
                     Storage::disk("public")->delete($foto->url_foto);
                     $foto->delete();
                 }
@@ -393,23 +398,29 @@ class PaketWisataController extends Controller
             }
         }
 
-        if ($request->hasFile("thumbnail")) {
+        if ($request->hasFile("thumbnail_file")) {
 
             if ($paket->url_thumbnail) {
                 Storage::disk("public")->delete($paket->url_thumbnail);
             }
 
-            $paket->url_thumbnail = $request->file("thumbnail")
+            $paket->url_thumbnail = $request->file("thumbnail_file")
                 ->store("paket_wisata/thumbnails", "public");
 
-            $paket->save();
         }
-
-        if ($request->has("thumbnail_path")) {
-
+        elseif ($request->filled("thumbnail_path")) {
             $paket->url_thumbnail = $request->thumbnail_path;
-            $paket->save();
         }
+
+        if (!$paket->url_thumbnail) {
+            $firstPhoto = PaketWisataFoto::where('paket_wisata_id', $paket->id)->first();
+
+            if ($firstPhoto) {
+                $paket->url_thumbnail = $firstPhoto->url_foto;
+            }
+        }
+
+        $paket->save();
 
         return response()->json([
             "success" => true,

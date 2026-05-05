@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../auth/useAuth";
 import "../css/AdminShared.css";
 import "../css/AdminPaketWisata.css";
 import "../css/Modal.css";
@@ -8,6 +9,9 @@ import { getAllPelakuWisata } from "../../../api/apiPelakuWisata";
 
 const TambahPaketWisata = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const role = user?.role?.name;
+    const normalizedRole = role?.toLowerCase().replace(" ", "_");
     const [step, setStep] = useState(1);
     const [pelakuList, setPelakuList] = useState([]);
     const [selectedPelaku, setSelectedPelaku] = useState("");
@@ -91,6 +95,12 @@ const TambahPaketWisata = () => {
         }
 
         setError("");
+
+        if (role !== "admin" && role !== "owner") {
+            handleSubmit();
+            return;
+        }
+
         handleNext();
     };
 
@@ -132,56 +142,65 @@ const TambahPaketWisata = () => {
 
     const handleSubmit = async () => {
 
-    if (newPhotos.length < 3) {
-        setModal({
-        show: true,
-        type: "error",
-        message: "Minimal 3 foto paket"
-        });
-        return;
-    }
-
-    if (participants.length === 0) {
-        setError("Minimal 1 pelaku wisata");
-        return;
-    }
-
-    if (totalPersen !== 100) {
-        setError("Total persentase harus 100%");
-        return;
-    }
-
-    try {
-        const formData = new FormData();
-
-        Object.keys(form).forEach(key => {
-        formData.append(key, form[key]);
-        });
-
-        formData.append("thumbnail", newPhotos[thumbnailIndex]);
-
-        newPhotos.forEach(file => {
-        formData.append("photos[]", file);
-        });
-
-        formData.append("participants", JSON.stringify(participants));
-
-        await createPaketWisata(formData);
-        setError("");
-
-        setModal({
-            show: true,
-            type: "success",
-            message: "Paket wisata berhasil ditambahkan"
-        });
-
-    } catch (err) {
-        setModal({
+        if (newPhotos.length < 3) {
+            setModal({
             show: true,
             type: "error",
-            message: "Terjadi kesalahan saat menyimpan data"
-        });
-    }
+            message: "Minimal 3 foto paket"
+            });
+            return;
+        }
+
+        if ((role === "admin" || role === "owner") && participants.length === 0) {
+            setError("Minimal 1 pelaku wisata");
+            return;
+        }
+
+        if ((role === "admin" || role === "owner") && totalPersen !== 100) {
+            setError("Total persentase harus 100%");
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+
+            Object.keys(form).forEach(key => {
+            formData.append(key, form[key]);
+            });
+
+            formData.append("thumbnail", newPhotos[thumbnailIndex]);
+
+            newPhotos.forEach(file => {
+            formData.append("photos[]", file);
+            });
+
+            if (role === "pelaku_wisata") {
+                formData.append("participants", JSON.stringify([
+                    { user_id: user.id, persentase: 100 }
+                ]));
+            }
+
+            if (role === "admin" || role === "owner") {
+                formData.append("participants", JSON.stringify(participants));
+            }
+
+            await createPaketWisata(formData);
+            setError("");
+
+            setModal({
+                show: true,
+                type: "success",
+                message: "Paket wisata berhasil ditambahkan"
+            });
+
+        } catch (err) {
+
+            setModal({
+                show: true,
+                type: "error",
+                message: "Terjadi kesalahan saat menyimpan data"
+            });
+        }
     };
 
   return (
@@ -207,14 +226,18 @@ const TambahPaketWisata = () => {
                 </span>
             </div>
 
-            <div className={`step-line ${step >= 3 ? "active" : ""}`}></div>
+            {(role === "admin" || role === "owner") && (
+                <>
+                    <div className={`step-line ${step >= 3 ? "active" : ""}`}></div>
 
-            <div className="step-item">
-                <div className={`step-circle ${step >= 3 ? "active" : ""}`}>3</div>
-                <span className={step >= 3 ? "active-text" : ""}>
-                Pelaku & Persentase
-                </span>
-            </div>
+                    <div className="step-item">
+                    <div className={`step-circle ${step >= 3 ? "active" : ""}`}>3</div>
+                    <span className={step >= 3 ? "active-text" : ""}>
+                        Pelaku & Persentase
+                    </span>
+                    </div>
+                </>
+            )}
 
         </div>
 
@@ -233,7 +256,7 @@ const TambahPaketWisata = () => {
                         }}
                         required
                     />
-                </ div>
+                </div>
                 
                 <div className="form-group">
                     <label>Harga Paket (per orang)</label>
@@ -434,7 +457,9 @@ const TambahPaketWisata = () => {
 
                 <div className="button-group">
                     <button className="btn-secondary" onClick={handleBack}>Kembali</button>
-                    <button className="btn-primary" onClick={handleNextStep2}>Lanjutkan</button>
+                    <button className="btn-primary" onClick={handleNextStep2}>
+                        {(role === "admin" || role === "owner") ? "Lanjutkan" : "Tambah"}
+                    </button>
                 </div>
             </div>
         )}
@@ -538,9 +563,15 @@ const TambahPaketWisata = () => {
                         onClick={() => {
                         setModal({ ...modal, show: false });
 
-                        if (modal.type === "success") {
-                            navigate("/dashboard/paket-wisata");
-                        }
+                            if (modal.type === "success") {
+
+                                if (normalizedRole === "admin" || normalizedRole === "owner") {
+                                    navigate("/dashboard/paket-wisata");
+                                } else {
+                                    navigate("/dashboard/paket-saya");
+                                }
+
+                            }
                         }}
                     >
                         OK

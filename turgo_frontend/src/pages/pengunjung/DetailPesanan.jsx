@@ -1,5 +1,6 @@
 import {useEffect,useState} from "react";
 import {useParams,useNavigate} from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import {getBookingDetail} from "../../api/apiBooking";
 import "../public/css/Detail.css";
 
@@ -44,7 +45,7 @@ const DetailPesanan=()=>{
                         <div key={d.id} className="detail-info-item">
 
                             <img
-                                src={`http://127.0.0.1:8000/storage/${d.paket_wisata.url_thumbnail}`}
+                                src={`${BASE_URL}/storage/${d.paket_wisata.url_thumbnail}`}
                                 className="detail-thumb-small"
                             />
 
@@ -76,7 +77,7 @@ const DetailPesanan=()=>{
                         <div className="detail-info-item">
 
                             <img
-                                src={`http://127.0.0.1:8000/storage/${booking.paket_wisata_details.paket_wisata.url_thumbnail}`}
+                                src={`${BASE_URL}/storage/${booking.paket_wisata_details.paket_wisata.url_thumbnail}`}
                                 className="detail-thumb-small"
                             />
 
@@ -99,7 +100,7 @@ const DetailPesanan=()=>{
                         <div className="detail-info-item">
 
                             <img
-                                src={`http://127.0.0.1:8000/storage/${booking.homestay_details.kamar.foto}`}
+                                src={`${BASE_URL}/storage/${booking.homestay_details.kamar.foto}`}
                                 className="detail-thumb-small"
                             />
 
@@ -128,7 +129,7 @@ const DetailPesanan=()=>{
                         <div className="detail-info-item">
 
                             <img
-                                src={`http://127.0.0.1:8000/storage/${booking.tour_guide_details.tour_guide.foto_profil}`}
+                                src={`${BASE_URL}/storage/${booking.tour_guide_details.tour_guide.foto_profil}`}
                                 className="detail-thumb-avatar"
                             />
 

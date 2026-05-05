@@ -328,58 +328,46 @@ class HomestayController extends Controller
             }
         }
 
-        if ($request->thumbnail_path) {
+        if ($request->hasFile('thumbnail_file') && $request->hasFile('new_photos')) {
 
-            $oldThumbnail = $homestay->url_thumbnail;
+            foreach ($request->file('new_photos') as $index => $photo) {
+
+                if ($photo->getClientOriginalName() === $request->file('thumbnail_file')->getClientOriginalName()) {
+
+                    if (isset($uploadedPaths[$index])) {
+                        $homestay->url_thumbnail = $uploadedPaths[$index];
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        elseif ($request->filled('thumbnail_path')) {
+
             $newThumbnail = $request->thumbnail_path;
 
-            if ($oldThumbnail !== $newThumbnail) {
+            if ($homestay->url_thumbnail !== $newThumbnail) {
 
-                // hapus new thumbnail dari gallery jika ada
-                HomestayFoto::where('homestay_id',$homestay->id)
+                $homestay->url_thumbnail = $newThumbnail;
+
+                if (!HomestayFoto::where('homestay_id',$homestay->id)
                     ->where('url_foto',$newThumbnail)
-                    ->delete();
-
-                // masukkan old thumbnail ke gallery jika belum ada
-                if ($oldThumbnail &&
-                    !HomestayFoto::where('homestay_id',$homestay->id)
-                        ->where('url_foto',$oldThumbnail)
-                        ->exists()) {
+                    ->exists()) {
 
                     HomestayFoto::create([
                         'homestay_id'=>$homestay->id,
-                        'url_foto'=>$oldThumbnail
+                        'url_foto'=>$newThumbnail
                     ]);
                 }
-
-                $homestay->update([
-                    'url_thumbnail'=>$newThumbnail
-                ]);
             }
 
-        } elseif ($request->hasFile('new_photos') && $request->thumbnail_index !== null) {
+        }elseif ($request->hasFile('new_photos') && $request->thumbnail_index !== null) {
 
             if (isset($uploadedPaths[$request->thumbnail_index])) {
 
-                $oldThumbnail = $homestay->url_thumbnail;
-                $newThumbnail = $uploadedPaths[$request->thumbnail_index];
-
-                if ($oldThumbnail && $oldThumbnail !== $newThumbnail) {
-
-                    if (!HomestayFoto::where('homestay_id',$homestay->id)
-                        ->where('url_foto',$oldThumbnail)
-                        ->exists()) {
-
-                        HomestayFoto::create([
-                            'homestay_id'=>$homestay->id,
-                            'url_foto'=>$oldThumbnail
-                        ]);
-                    }
-                }
-
-                $homestay->url_thumbnail = $newThumbnail;
+                $homestay->url_thumbnail = $uploadedPaths[$request->thumbnail_index];
             }
-
         }
 
         if (!$homestay->url_thumbnail) {

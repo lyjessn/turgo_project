@@ -290,4 +290,21 @@
         background: rgba(0,0,0,0.1);
         margin: 8px 0;
     }
+
+    .public-navbar {
+        height: 64px;
+        /* padding-bottom: 20px; */
+    }
+
+    .public-navbar-logo img {
+        height: 48px;
+        transform: translateY(0);
+    }
+
+    .public-navbar.overlay {
+        position: fixed;
+        top: 0;
+    }
+  
+    
 }

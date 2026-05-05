@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import { useAuth } from "../../auth/useAuth";
 import "./css/Custom.css";
 import "./css/Catalog.css";
@@ -240,13 +241,8 @@ const Custom = () => {
 						return (
 							<div
 								key={paket.id}
-								className={`paket-card-small ${
-									!availableStatus ? "unavailable" : ""
-								}`}
-								style={{
-									backgroundImage:
-										`url(http://127.0.0.1:8000/storage/${paket.url_thumbnail})`
-								}}
+								className={`paket-card-small ${!availableStatus ? "unavailable" : ""}`}
+								style={{backgroundImage:`url(${BASE_URL}/storage/${paket.url_thumbnail})`}}
 							>
 
 								{!availableStatus && (

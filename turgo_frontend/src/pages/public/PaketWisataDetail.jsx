@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import { FiClock, FiMapPin, FiUsers, FiTool } from "react-icons/fi";
 import { createBooking } from "../../api/apiBooking";
 import { getDetailPaketWisata, getAvailablePaketWisata } from "../../api/apiPaketWisata";
@@ -19,11 +20,13 @@ const DetailPaketWisata = () => {
     const [isAvailable, setIsAvailable] = useState(true);
 
     const images = paket
-        ? [
-            paket.url_thumbnail,
-            ...(paket.fotos?.map(f => f.url_foto) || [])
+    ? [
+        paket.url_thumbnail,
+        ...(paket.fotos
+            ?.map(f => f.url_foto)
+            .filter(f => f !== paket.url_thumbnail) || [])
         ]
-        : [];
+    : [];
 
     useEffect(() => {
         fetchDetail();
@@ -165,7 +168,7 @@ const DetailPaketWisata = () => {
 
             <div className="detail-carousel">
                 <img
-                    src={`http://127.0.0.1:8000/storage/${images[currentImage]}`}
+                    src={`${BASE_URL}/storage/${images[currentImage]}`}
                     className="detail-image"
                 />
 
@@ -327,7 +330,7 @@ const DetailPaketWisata = () => {
                         <div key={r.id} className="review-card">
                             <div className="review-avatar">
                                 <img
-                                    src={`http://127.0.0.1:8000/storage/${r.user?.foto_profil}`}
+                                    src={`${BASE_URL}/storage/${r.user?.foto_profil}`}
                                     alt="avatar"
                                 />
                             </div>
