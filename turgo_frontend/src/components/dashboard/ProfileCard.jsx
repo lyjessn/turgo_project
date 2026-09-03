@@ -7,6 +7,8 @@ import "./ProfileCard.css";
 const ProfileCard = () => {
   const { user, setUser } = useAuth();
   const [editMode,setEditMode] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [modal, setModal] = useState({
         show: false,
         type: "success",
@@ -15,34 +17,49 @@ const ProfileCard = () => {
 
   const [form,setForm] = useState({
     nama_lengkap:user?.nama_lengkap || "",
+    username:user?.username || "",
     email:user?.email || "",
     nomor_telepon:user?.nomor_telepon || "",
     foto_profil:null
-  });
+    });
 
-  const handleUpdate = async () => {
-
+ const handleUpdate = async () => {
     try{
-      const formData = new FormData();
 
-      Object.keys(form).forEach(key=>{
+        setIsSubmitting(true);
+
+        const formData = new FormData();
+
+        Object.keys(form).forEach(key=>{
         if(form[key] !== null)
-          formData.append(key,form[key]);
-      });
+            formData.append(key,form[key]);
+        });
 
-      const res = await updateProfile(formData);
-      setUser(res.data);
-      setModal({
-        show: true,
-        type: "success",
-        message: "Profil berhasil diperbarui"
-      });
-      setEditMode(false);
-    }catch(err){
-      console.error(err);
+        const res = await updateProfile(formData);
+
+        setUser(res.data);
+
+        setModal({
+            show: true,
+            type: "success",
+            message: "Profil berhasil diperbarui"
+        });
+
+        setEditMode(false);
+    } catch(err) {
+
+        console.error(err);
+
+        setModal({
+            show: true,
+            type: "error",
+            message: err.response?.data?.message ||"Gagal memperbarui profil"
+        });
+
+    } finally {
+        setIsSubmitting(false);
     }
-
-  };
+ };
 
   return (
     <>
@@ -114,6 +131,17 @@ const ProfileCard = () => {
                                 type="text"
                                 value={form.nama_lengkap}
                                 onChange={(e)=>setForm({...form,nama_lengkap:e.target.value})}
+                            />
+                        </div>
+
+                        <div className="column">
+                            <label>Username</label>
+                            <input
+                                type="text"
+                                value={form.username}
+                                onChange={(e)=>
+                                    setForm({...form,username:e.target.value})
+                                }
                             />
                         </div>
 

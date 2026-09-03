@@ -78,15 +78,15 @@ const PaketSaya = () => {
 
     formData.append(
         "is_aktif",
-        item.is_aktif === 1 ? 0 : 1
+        item.is_aktif == 1 ? 0 : 1
     );
 
     await updatePaketWisata(item.id, formData);
 
     setData(prev =>
         prev.map(p =>
-        p.id === item.id
-            ? {...p, is_aktif: p.is_aktif === 1 ? 0 : 1}
+        p.id == item.id
+            ? {...p, is_aktif: p.is_aktif == 1 ? 0 : 1}
             : p
         )
     );
@@ -162,11 +162,11 @@ const PaketSaya = () => {
 
             {(role === "admin" ||
                 role === "owner" ||
-                item.id_pembuat === userId) && (
+                item.id_pembuat == userId) && (
                 <label className="switch">
                   <input
                       type="checkbox"
-                      checked={item.is_aktif === 1}
+                      checked={item.is_aktif == 1}
                       onChange={() => toggleStatus(item)}
                   />
                   <span className="slider"></span>

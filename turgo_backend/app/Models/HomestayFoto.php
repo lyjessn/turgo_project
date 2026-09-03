@@ -12,4 +12,5 @@ class HomestayFoto extends Model
     {
         return $this->belongsTo(Homestay::class);
     }
+    
 }

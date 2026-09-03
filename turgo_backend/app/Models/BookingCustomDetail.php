@@ -33,4 +33,5 @@ class BookingCustomDetail extends Model
     {
         return $this->belongsTo(TourGuide::class, 'tour_guide_id');
     }
+    
 }

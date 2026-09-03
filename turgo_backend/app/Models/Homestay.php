@@ -45,4 +45,5 @@ class Homestay extends Model
             ->where('tipe_target', 'homestay');
     }
 
+    
 }

@@ -36,7 +36,9 @@ const HomestayDetail = () => {
       ? [homestay.url_thumbnail, ...(homestay.fotos?.map(f => f.url_foto) || [])]
       : [];
 
-    const activeKamars = homestay?.kamars?.filter(k => k.is_aktif === 1) || [];
+    const activeKamars = homestay?.kamars?.filter(
+      k => Number(k.is_aktif) === 1
+    ) || [];
 
     const getTopReviews = () => {
       if (!homestay?.ratings?.length) return [];
@@ -128,6 +130,31 @@ const HomestayDetail = () => {
                           Rp {Number(kamar.harga_per_malam).toLocaleString("id-ID")}
                           <span>/ malam</span>
                         </div>
+                      </div>
+
+                      <div className="homestay-kamar-features">
+
+                        <div className="kamar-feature">
+                          <FaBed />
+                          <span>
+                            {""} {kamar.deskripsi_kasur || `${kamar.jumlah_kasur} kasur`}
+                          </span>
+                        </div>
+
+                        <div className="kamar-feature">
+                          <FaBath />
+                          <span>
+                            {""} {kamar.deskripsi_toilet || `${kamar.jumlah_toilet} kamar mandi`}
+                          </span>
+                        </div>
+
+                        <div className="kamar-feature">
+                          <FiWifi />
+                          <span>
+                            {""} {kamar.wifi && kamar.wifi !== "-" ? "WiFi tersedia" : "Tanpa WiFi"}
+                          </span>
+                        </div>
+
                       </div>
 
                       <button

@@ -9,6 +9,15 @@ export const getAllMitra = async () => {
   }
 };
 
+export const getParticipants = async () => {
+  try {
+    const res = await axiosClient.get("/participants");
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
 export const updateUser = async (id, formData) => {
   try {
     const res = await axiosClient.post(`/user/${id}`, formData, {

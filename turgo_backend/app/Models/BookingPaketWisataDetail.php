@@ -26,4 +26,5 @@ class BookingPaketWisataDetail extends Model
     {
         return $this->belongsTo(PaketWisata::class);
     }
+    
 }

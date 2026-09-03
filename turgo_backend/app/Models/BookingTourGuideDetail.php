@@ -27,4 +27,5 @@ class BookingTourGuideDetail extends Model
     {
         return $this->belongsTo(TourGuide::class);
     }
+    
 }

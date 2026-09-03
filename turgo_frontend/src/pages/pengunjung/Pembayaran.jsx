@@ -22,6 +22,7 @@ const Pembayaran = () => {
   });
 
   const [bukti, setBukti] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [modal, setModal] = useState({
     show: false,
@@ -37,8 +38,8 @@ const Pembayaran = () => {
 
     const fetchBooking = async () => {
       try {
-
         const data = await getBookingDetail(id);
+        console.log("BOOKING DETAIL:", data);
         setBooking(data);
 
       } catch (err) {
@@ -116,6 +117,8 @@ const Pembayaran = () => {
   const handleSubmit = async () => {
     try {
 
+      setSubmitting(true);
+
       const formData = new FormData();
 
       formData.append("bukti_pembayaran", bukti);
@@ -133,8 +136,29 @@ const Pembayaran = () => {
 
     } catch (err) {
 
-      const message =
-        err.response?.data?.message || "Gagal mengirim pembayaran.";
+      console.log("FULL ERROR:", err);
+
+      let message = "Gagal mengirim pembayaran.";
+
+      if (err.response) {
+
+        const responseErrors = err.response.data?.errors;
+
+        if (responseErrors) {
+          message = Object.values(responseErrors)
+            .flat()
+            .join("\n");
+        } else {
+          message =
+            err.response.data?.message ||
+            "Terjadi kesalahan.";
+        }
+
+      } else if (err.message) {
+        message = err.message;
+      } else {
+        message = "Tidak dapat terhubung ke server.";
+      }
 
       setModal({
         show: true,
@@ -142,6 +166,8 @@ const Pembayaran = () => {
         message
       });
 
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -156,6 +182,13 @@ const Pembayaran = () => {
   if (booking?.paket_wisata_details?.paket_wisata) {
     items.push(booking.paket_wisata_details.paket_wisata);
   }
+
+  const homestayDetail = booking?.homestay_details;
+  const kamar = homestayDetail?.kamar;
+  const homestay = homestayDetail?.homestay;
+
+  const tourGuideDetail = booking?.tour_guide_details;
+  const guide = tourGuideDetail?.tour_guide;
 
   const total = booking?.total_harga || 0;
 
@@ -181,15 +214,25 @@ const Pembayaran = () => {
 
             {items.map(p => {
 
-              const jumlah = booking?.jumlah_orang || 1;
+              let detail = null;
+
+              if (booking?.paket_wisata_details) {
+                detail = booking.paket_wisata_details;
+              }
+
+              if (!detail && booking?.custom_details?.length) {
+                detail = booking.custom_details.find(
+                  d => d.paket_wisata?.id === p.id
+                );
+              }
+
+              const jumlah = detail?.jumlah_orang || 1;
               const subtotal = p.harga * jumlah;
 
               return (
                 <div key={p.id} className="payment-summary">
 
-                  <img
-                    src={`${BASE_URL}/storage/${p.url_thumbnail}`}
-                  />
+                  <img src={`${BASE_URL}/storage/${p.url_thumbnail}`} />
 
                   <div>
                     <b>{p.nama}</b>
@@ -213,7 +256,52 @@ const Pembayaran = () => {
               );
             })}
 
-            {guideJenis !== "tanpa" && (
+            {guide && (
+              <div className="payment-summary">
+
+                <img src={`${BASE_URL}/storage/${guide.foto_profil}`} />
+
+                <div>
+                  <b>{guide.user?.nama_lengkap}</b>
+
+                  <p>
+                    Rp {Number(guide.harga_per_hari).toLocaleString("id-ID")} / hari
+                  </p>
+
+                  <p>
+                    {tourGuideDetail?.durasi} 
+                    {tourGuideDetail?.sesi && ` (${tourGuideDetail.sesi})`}
+                  </p>
+
+                </div>
+
+              </div>
+            )}
+
+            {kamar && (
+              <div className="payment-summary">
+
+                <img src={`${BASE_URL}/storage/${kamar.foto}`} />
+
+                <div>
+                  <b>{kamar.nama}</b>
+
+                  <p>{homestay?.nama}</p>
+
+                  <p>
+                    Rp {Number(kamar.harga_per_malam).toLocaleString("id-ID")} / malam
+                  </p>
+
+                  <p>
+                    {booking.tanggal_mulai} - {booking.tanggal_selesai}
+                  </p>
+
+                </div>
+
+              </div>
+            )}
+
+            {guideJenis !== "tanpa" && !guide && (
               <div className="payment-summary">
                 <div>
                   <b>Tour Guide ({guideJenis})</b>
@@ -288,8 +376,10 @@ const Pembayaran = () => {
 
         <div className="payment-card">
 
-          <h3>Pembayaran</h3>
-          <p>Transfer ke BCA 12345678 a/n Desa Wisata Turgo</p>
+          <h3>
+            Upload Bukti Transfer <span style={{color:"red"}}>*</span>
+          </h3>
+          <p>Transfer ke BCA 12345678 a/n Desa Wisata Turgo (Max 4mb)</p>
 
           <input
             type="file"
@@ -330,10 +420,10 @@ const Pembayaran = () => {
 
         <button
           className="payment-btn"
-          disabled={!isValid}
+          disabled={!isValid || submitting}
           onClick={handleSubmit}
         >
-          Konfirmasi Pembayaran
+          {submitting ? "Mengirim..." : "Konfirmasi Pembayaran"}
         </button>
 
       </div>

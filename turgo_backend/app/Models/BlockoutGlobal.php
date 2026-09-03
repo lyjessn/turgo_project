@@ -11,4 +11,5 @@ class BlockoutGlobal extends Model
         'tanggal_mulai',
         'tanggal_selesai',
     ];
+    
 }

@@ -34,4 +34,5 @@ class TourGuide extends Model
             ->where('tipe_target', 'tour_guide');
     }
 
+    
 }

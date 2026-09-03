@@ -149,7 +149,7 @@ class RiwayatSaldoController extends Controller
                 }
 
                 if ($booking->tipe_booking === 'custom') {
-                    $aktivitas = "Custom Paket";
+                    $aktivitas = $booking->customDetails?->paketWisata?->nama ?? 'Custom Paket';
                 }
 
                 fputcsv($handle, [

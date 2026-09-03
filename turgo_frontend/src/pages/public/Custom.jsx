@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../utils/baseUrl";
 import { useAuth } from "../../auth/useAuth";
@@ -22,7 +22,7 @@ const Custom = () => {
 	const [tanggal, setTanggal] = useState("");
 	const [jumlahOrang, setJumlahOrang] = useState(1);
 	const [search, setSearch] = useState("");
-	const [showPicker, setShowPicker] = useState(false);
+	const inputRef = useRef(null);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => { fetchAll(); }, []);
@@ -119,6 +119,10 @@ const Custom = () => {
 	const hasUnavailable = selectedPakets.some(p => !isAvailable(p.id));
 
     const handleBooking = async () => {
+		if (selectedPakets.length < 2) {
+			return;
+		}
+
 		if (!user) {
             navigate("/login", {
                 state: {
@@ -154,9 +158,9 @@ const Custom = () => {
                 selectedGuide ? guideMap[selectedGuide] : "tanpa"
             );
 
-            const res = await createBooking(formData);
+            const booking = await createBooking(formData);
 
-            navigate(`/pembayaran/${res.data.id}`);
+            navigate(`/pembayaran/${booking.id}`);
 
         }catch(err){
 			console.log(err);
@@ -188,17 +192,22 @@ const Custom = () => {
 
 				<div className="date-filter">
 					<input
+						ref={inputRef}
 						type="date"
 						min={minDateString}
 						value={tanggal}
-						onChange={(e) => setTanggal(e.target.value)}
-						className={showPicker ? "show" : ""}
+						onChange={(e) => {
+							setTanggal(e.target.value);
+							e.target.blur();
+						}}
 					/>
+
 					<div
 						className="date-toggle"
-						onClick={() => setShowPicker(!showPicker)}
+						onClick={() => inputRef.current?.showPicker()}
 					>
 						<span>{tanggal || "Pilih Tanggal"}</span>
+
 						<div className="date-icon">
 							<FiCalendar />
 						</div>
@@ -308,6 +317,12 @@ const Custom = () => {
 							{selectedPakets.length === 0 && (
 								<p className="summary-empty">
 									Belum ada paket dipilih
+								</p>
+							)}
+
+							{selectedPakets.length > 0 && selectedPakets.length < 2 && (
+								<p className="custom-warning">
+									Pilih minimal 2 paket wisata
 								</p>
 							)}
 
@@ -487,7 +502,7 @@ const Custom = () => {
 						<button
 							className="btn-checkout"
 							disabled={
-								selectedCount === 0 ||
+								selectedCount < 2 ||
 								!tanggal ||
 								jumlahOrang < 1 ||
                                 hasUnavailable

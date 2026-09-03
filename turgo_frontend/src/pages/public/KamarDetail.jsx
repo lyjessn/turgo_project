@@ -79,8 +79,7 @@ const KamarDetail = () => {
       formData.append("tanggal_mulai", checkIn);
       formData.append("tanggal_selesai", checkOut);
 
-      const res = await createBooking(formData);
-      const booking = res.data;
+      const booking = await createBooking(formData);
 
       navigate(`/pembayaran/${booking.id}`);
 

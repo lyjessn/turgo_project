@@ -23,4 +23,5 @@ class Kamar extends Model
     {
         return $this->belongsTo(Homestay::class);
     }
+    
 }

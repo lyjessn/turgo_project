@@ -64,12 +64,23 @@ const AdminTourGuide = () => {
         }
     };
 
-    const fetchData = async()=>{
+    const fetchData = async()=> {
         try {
             const res = await getAllTourGuide();
-            setData(res.data);
+
+            console.log(res);
+
+            setData(
+                Array.isArray(res)
+                    ? res
+                    : Array.isArray(res.data)
+                    ? res.data
+                    : []
+            );
+
         } catch (err) {
             console.error(err);
+            setData([]);
         } finally {
             setLoading(false);
         }
@@ -88,10 +99,10 @@ const AdminTourGuide = () => {
         let result = [...data];
 
         if(filter==="aktif")
-        result = result.filter(d=>d.is_aktif===1);
+        result = result.filter(d=>d.is_aktif==1);
 
         if(filter==="nonaktif")
-        result = result.filter(d=>d.is_aktif===0);
+        result = result.filter(d=>d.is_aktif==0);
 
         if(search)
         result = result.filter(d =>
@@ -119,14 +130,14 @@ const AdminTourGuide = () => {
             const formData = new FormData();
             formData.append(
                 "is_aktif",
-                item.is_aktif===1 ? 0 : 1
+                item.is_aktif==1 ? 0 : 1
             );
             await updateTourGuide(item.id,formData);
 
             setData(prev =>
                 prev.map(d =>
-                d.id===item.id
-                    ? {...d,is_aktif:d.is_aktif===1?0:1}
+                d.id==item.id
+                    ? {...d,is_aktif:d.is_aktif==1?0:1}
                     : d
                 )
             );
@@ -312,7 +323,7 @@ const AdminTourGuide = () => {
 
                                             <input
                                             type="checkbox"
-                                            checked={item.is_aktif===1}
+                                            checked={item.is_aktif==1}
                                             onChange={()=>toggleStatus(item)}
                                             />
 
@@ -456,10 +467,10 @@ const AdminTourGuide = () => {
                                         <span className="modal-data-label">Status</span>
                                         <span
                                             className={`modal-data-status ${
-                                            selectedItem.is_aktif ? "aktif" : "nonaktif"
+                                            selectedItem.is_aktif == 1 ? "aktif" : "nonaktif"
                                             }`}
                                         >
-                                            {selectedItem.is_aktif ? "Aktif" : "Nonaktif"}
+                                            {selectedItem.is_aktif == 1 ? "Aktif" : "Nonaktif"}
                                         </span>
                                     </div>
 

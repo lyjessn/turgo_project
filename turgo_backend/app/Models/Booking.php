@@ -103,4 +103,5 @@ class Booking extends Model
         return null;
     }
 
+    
 }

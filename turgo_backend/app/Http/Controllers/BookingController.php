@@ -39,6 +39,8 @@ class BookingController extends Controller
                 'norek_refund'          => 'nullable|digits_between:8,20',
                 'bank_refund'           => 'nullable|string|max:100',
                 'nama_rekening_refund'  => 'nullable|string|max:150',
+            ], [
+                'norek_refund.digits_between' => 'Nomor rekening minimal 8 digit.',
             ]);
 
             $total = 0;
@@ -186,7 +188,7 @@ class BookingController extends Controller
                     $request->tanggal_selesai
                 )) {
                     return response()->json([
-                        'message' => 'Paket wisata diblokir pada tanggal tersebut'
+                        'message' => 'Paket wisata tidak tersedia pada tanggal tersebut'
                     ], 422);
                 }
 
@@ -284,7 +286,7 @@ class BookingController extends Controller
         }
 
         $request->validate([
-            'bukti_pembayaran' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'bukti_pembayaran' => 'required|image|mimes:jpg,jpeg,png|max:4096',
             'norek_refund' => 'required|digits_between:8,20',
             'bank_refund' => 'required|string|max:100',
             'nama_rekening_refund' => 'required|string|max:150',
@@ -307,39 +309,52 @@ class BookingController extends Controller
         ]);
     }
 
-
     public function cancel(Request $request, $id)
     {
         $user = $request->user();
+    
+        if (!$user) {
+            return response()->json([
+                'message' => 'USER NULL'
+            ], 401);
+        }
+    
         $booking = Booking::find($id);
-
+    
         if (!$booking) {
-            return response()->json(['message' => 'Booking tidak ditemukan'], 404);
+            return response()->json([
+                'message' => 'Booking tidak ditemukan'
+            ], 404);
         }
-
-        if ($booking->user_id !== $user->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+    
+        if ($booking->user_id != $user->id) {
+            return response()->json([
+                'message' => 'USER TIDAK SESUAI',
+                'auth_user' => $user->id,
+                'booking_user' => $booking->user_id
+            ], 401);
         }
-
-        if ($booking->status_pemesanan !== 'menunggu verifikasi') {
+    
+        if ($booking->status_pemesanan !== 'dikonfirmasi') {
             return response()->json([
                 'message' => 'Booking tidak dapat dibatalkan'
             ], 400);
         }
-
+    
         $today = now()->startOfDay();
         $start = Carbon::parse($booking->tanggal_mulai)->startOfDay();
-
-        if ($today->diffInDays($start, false) < 3) {
+    
+        $hMinus3 = $start->copy()->subDays(3);
+    
+        if ($today->gte($hMinus3)) {
             return response()->json([
                 'message' => 'Pembatalan hanya bisa maksimal H-3 sebelum kegiatan'
             ], 403);
         }
-
-        $booking->update([
-            'status_pemesanan' => 'batal'
-        ]);
-
+    
+        $booking->status_pemesanan = 'batal';
+        $booking->save();
+    
         return response()->json([
             'success' => true,
             'message' => 'Booking berhasil dibatalkan'
