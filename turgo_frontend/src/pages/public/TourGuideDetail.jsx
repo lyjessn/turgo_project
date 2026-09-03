@@ -137,7 +137,7 @@ const TourGuideDetail = () => {
         formData.append("sesi", sesi);
       }
 
-      const res = await createBooking(formData);
+      const booking = await createBooking(formData);
 
       navigate(`/pembayaran/${booking.id}`);
 

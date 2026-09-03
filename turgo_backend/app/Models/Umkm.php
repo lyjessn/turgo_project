@@ -14,7 +14,8 @@ class Umkm extends Model
         'jam_operasional',
         'menu_tersedia',
         'url_thumbnail',
-        'is_aktif', 'is_buka'
+        'is_aktif',
+        'is_buka'
     ];
 
     public function user()
@@ -26,4 +27,5 @@ class Umkm extends Model
     {
         return $this->hasMany(UmkmFoto::class);
     }
+    
 }

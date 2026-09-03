@@ -17,4 +17,5 @@ class UmkmFoto extends Model
     {
         return $this->belongsTo(Umkm::class);
     }
+    
 }

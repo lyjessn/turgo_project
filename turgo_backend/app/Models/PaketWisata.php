@@ -55,4 +55,5 @@ class PaketWisata extends Model
             ->where('tipe_target', 'paket_wisata');
     }
 
+    
 }

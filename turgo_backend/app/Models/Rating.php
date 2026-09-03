@@ -41,4 +41,5 @@ class Rating extends Model
         return $this->belongsTo(Homestay::class, 'id_target')
             ->where('tipe_target', 'homestay');
     }
+    
 }

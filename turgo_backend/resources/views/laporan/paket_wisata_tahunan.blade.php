@@ -2,7 +2,7 @@
 @section('content')
 
 @php
-$grouped = $data->groupBy('bulan');
+    $grouped = $data->groupBy('bulan');
 @endphp
 
 @for($bulan = 1; $bulan <= 12; $bulan++)

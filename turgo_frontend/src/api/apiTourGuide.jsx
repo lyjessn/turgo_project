@@ -12,7 +12,7 @@ export const getHomepageTourGuide = async () => {
 export const getAllTourGuide = async () => {
   try {
     const res = await axiosClient.get(`/tour-guide`);
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error.response?.data || error;
   }

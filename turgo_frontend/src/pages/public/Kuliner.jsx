@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./css/Kuliner.css";
 import { FiMapPin, FiClock, FiPhone, FiMenu } from "react-icons/fi";
 import { getAllUmkm } from "../../api/apiUmkm";
+import { BASE_URL } from "../../utils/baseUrl";
 
 const Kuliner = () => {
   const [kuliners, setKuliners] = useState([]);
@@ -57,7 +58,7 @@ const Kuliner = () => {
 
             <div className="kuliner-bg"
               style={{
-                backgroundImage: `url(http://127.0.0.1:8000/storage/${kuliner.url_thumbnail})`,
+                backgroundImage: `url(${BASE_URL}/storage/${kuliner.url_thumbnail})`,
               }}
             />
 
@@ -106,7 +107,7 @@ const Kuliner = () => {
                           key={foto.id}
                           className="kuliner-thumb"
                           style={{
-                            backgroundImage: `url(http://127.0.0.1:8000/storage/${foto.url_foto})`,
+                            backgroundImage: `url(${BASE_URL}/storage/${foto.url_foto})`,
                           }}
                           onClick={() => {
                             setPreviewFotos(kuliner.fotos);
@@ -143,7 +144,7 @@ const Kuliner = () => {
             />
 
             <img
-              src={`http://127.0.0.1:8000/storage/${previewFotos[previewIndex].url_foto}`}
+              src={`${BASE_URL}/storage/${previewFotos[previewIndex].url_foto}`}
               className="preview-image"
             />
             

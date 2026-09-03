@@ -31,4 +31,5 @@ class BlockoutSpesifik extends Model
     {
         return $this->belongsTo(Homestay::class, 'id_target');
     }
+    
 }

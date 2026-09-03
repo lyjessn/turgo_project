@@ -25,7 +25,6 @@ class BlockoutService
                 $selesai
             );
         }
-
         return false;
     }
 
@@ -39,7 +38,7 @@ class BlockoutService
               ->orWhere(function ($q2) use ($mulai, $selesai) {
                   $q2->where('tanggal_mulai', '<=', $mulai)
                      ->where('tanggal_selesai', '>=', $selesai);
-              });
+            });
         })->exists();
     }
 

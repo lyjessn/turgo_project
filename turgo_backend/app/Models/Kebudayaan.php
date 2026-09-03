@@ -12,4 +12,5 @@ class Kebudayaan extends Model
         'foto',
         'is_aktif',
     ];
+    
 }

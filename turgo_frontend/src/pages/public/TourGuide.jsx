@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../utils/baseUrl";
 import "./css/Catalog.css";
 import "../../components/homepage/paketwisatasection.css";
 import { FiUsers, FiCalendar, FiGlobe, FiStar, FiSearch } from "react-icons/fi";
@@ -22,7 +23,7 @@ const TourGuide = () => {
   const fetchData = async () => {
     try {
       const res = await getAllTourGuide();
-      setGuides(res.data || []);
+      setGuides(res || []);
     } catch (err) {
       console.error(err);
     }
@@ -125,7 +126,7 @@ const TourGuide = () => {
               key={guide.id}
               className="paket-card-small"
               style={{
-                backgroundImage: `url(http://127.0.0.1:8000/storage/${guide.foto_profil})`,
+                backgroundImage: `url(${BASE_URL}/storage/${guide.foto_profil})`,
               }}
             >
 

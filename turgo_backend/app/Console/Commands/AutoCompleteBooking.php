@@ -18,7 +18,6 @@ class AutoCompleteBooking extends Command
 
         $this->info("=== AUTO COMPLETE BOOKING START ===");
 
-        // reject booking yang tidak diverifikasi
         $rejected = Booking::where('status_pemesanan', 'menunggu verifikasi')
             ->whereDate('tanggal_selesai', '<', $today)
             ->update([
@@ -27,7 +26,6 @@ class AutoCompleteBooking extends Command
 
         $this->info("Booking ditolak otomatis: ".$rejected);
 
-        // ambil booking yang sudah lewat tanggal layanan
         $bookings = Booking::with([
             'homestayDetails.homestay',
             'tourGuideDetails.tourGuide',
@@ -45,7 +43,6 @@ class AutoCompleteBooking extends Command
 
             $this->info("Processing booking ID: ".$booking->id." | tipe: ".$booking->tipe_booking);
 
-            // ubah status menjadi selesai
             DB::table('bookings')
                 ->where('id', $booking->id)
                 ->update([

@@ -50,10 +50,10 @@ const AdminHomestay = () => {
     let result = [...data];
 
     if (filter === "aktif")
-      result = result.filter(d => d.is_aktif === 1);
+      result = result.filter(d => d.is_aktif == 1);
 
     if (filter === "nonaktif")
-      result = result.filter(d => d.is_aktif === 0);
+      result = result.filter(d => d.is_aktif == 0);
 
     if (search)
       result = result.filter(d =>
@@ -72,14 +72,14 @@ const AdminHomestay = () => {
 
   const toggleStatus = async (item) => {
     const formData = new FormData();
-    formData.append("is_aktif", item.is_aktif === 1 ? 0 : 1);
+    formData.append("is_aktif", item.is_aktif == 1 ? 0 : 1);
 
     await updateHomestay(item.id, formData);
 
     setData(prev =>
       prev.map(d =>
-        d.id === item.id
-          ? { ...d, is_aktif: d.is_aktif === 1 ? 0 : 1 }
+        d.id == item.id
+          ? { ...d, is_aktif: d.is_aktif == 1 ? 0 : 1 }
           : d
       )
     );
@@ -93,7 +93,6 @@ const AdminHomestay = () => {
           setSelectedItem(null);
 
           fetchData();
-          fetchUsers();
       } catch (err) {
           console.error(err);
       }
@@ -188,7 +187,7 @@ const AdminHomestay = () => {
                   <label className="switch">
                     <input
                       type="checkbox"
-                      checked={item.is_aktif === 1}
+                      checked={item.is_aktif == 1}
                       onChange={() => toggleStatus(item)}
                     />
                     <span className="slider"></span>

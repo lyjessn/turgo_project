@@ -81,10 +81,10 @@ const PaketWisataSection = () => {
                                 <FiTool /> {paket.perlengkapan}
                             </div>
 
-                            <p className="paket-besar-note">
+                            {/* <p className="paket-besar-note">
                                 Perhatian: Setiap paket wisata sudah termasuk guide.
                                 Guide akan disesuaikan dengan kebutuhan aktivitas.
-                            </p>
+                            </p> */}
 
                             <div className="paket-besar-footer">
                                 <span className="paket-besar-price">

@@ -132,10 +132,10 @@ export default function Penjadwalan() {
 
             if(!paket) return false;
 
-            const isCreator = paket.id_pembuat === user.id;
+            const isCreator = paket.id_pembuat == user.id;
 
             const isParticipant = paket.participants?.some(
-                p => p.user_id === user.id
+                p => p.user_id == user.id
             );
 
             return isCreator || isParticipant;

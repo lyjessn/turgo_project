@@ -5,7 +5,7 @@ import "../css/AdminShared.css";
 import "../css/AdminPaketWisata.css";
 import "../css/Modal.css";
 import { createPaketWisata } from "../../../api/apiPaketWisata";
-import { getAllPelakuWisata } from "../../../api/apiPelakuWisata";
+import { getParticipants } from "../../../api/apiUser";
 
 const TambahPaketWisata = () => {
     const navigate = useNavigate();
@@ -45,10 +45,12 @@ const TambahPaketWisata = () => {
     }, []);
 
     const fetchPelaku = async () => {
-        const res = await getAllPelakuWisata();
-        const data = res.data ?? res;
-  
-        setPelakuList(data);
+        try {
+            const res = await getParticipants();
+            setPelakuList(res.data ?? res);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const handleNext = () => setStep(prev => prev + 1);
@@ -110,13 +112,13 @@ const TambahPaketWisata = () => {
         const already = participants.find(p => p.user_id == selectedPelaku);
         if (already) return;
 
-        const pelaku = pelakuList.find(p => p.user_id == selectedPelaku);
+        const pelaku = pelakuList.find(p => p.id == selectedPelaku);
 
         setParticipants([
         ...participants,
         {
             user_id: selectedPelaku,
-            nama: pelaku?.user?.nama_lengkap,
+            nama: pelaku?.nama_lengkap,
             persentase: 0
         }
         ]);
@@ -162,6 +164,8 @@ const TambahPaketWisata = () => {
         }
 
         try {
+            setSubmitting(true);
+
             const formData = new FormData();
 
             Object.keys(form).forEach(key => {
@@ -200,6 +204,8 @@ const TambahPaketWisata = () => {
                 type: "error",
                 message: "Terjadi kesalahan saat menyimpan data"
             });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -457,8 +463,17 @@ const TambahPaketWisata = () => {
 
                 <div className="button-group">
                     <button className="btn-secondary" onClick={handleBack}>Kembali</button>
-                    <button className="btn-primary" onClick={handleNextStep2}>
-                        {(role === "admin" || role === "owner") ? "Lanjutkan" : "Tambah"}
+                    <button
+                        className="btn-primary"
+                        onClick={handleNextStep2}
+                        disabled={submitting}
+                    >
+                        {submitting
+                            ? "Menyimpan..."
+                            : (role === "admin" || role === "owner")
+                                ? "Lanjutkan"
+                                : "Tambah"
+                        }
                     </button>
                 </div>
             </div>
@@ -476,8 +491,8 @@ const TambahPaketWisata = () => {
                         >
                             <option value="">Pilih Pelaku Wisata</option>
                             {pelakuList.map((p) => (
-                                <option key={p.user_id} value={p.user_id}>
-                                {p.user.nama_lengkap}
+                                <option key={p.id} value={p.id}>
+                                    {p.nama_lengkap} ({p.role?.name})
                                 </option>
                             ))}
                         </select>
@@ -531,8 +546,12 @@ const TambahPaketWisata = () => {
 
                 <div className="button-group">
                     <button className="btn-secondary" onClick={handleBack}>Kembali</button>
-                    <button className="btn-primary" onClick={handleSubmit}>
-                    Tambah
+                    <button
+                        className="btn-primary"
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                    >
+                        {submitting ? "Menyimpan..." : "Tambah"}
                     </button>
                 </div>
             </div>

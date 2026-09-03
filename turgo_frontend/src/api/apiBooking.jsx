@@ -5,7 +5,7 @@ export const createBooking = async (formData) => {
     const res = await axiosClient.post(`/booking`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    return res.data;
+    return res.data.data || res.data;
   } catch (error) {
     throw error.response?.data || error;
   }
@@ -57,8 +57,12 @@ export const getMyBookingHistory = async () => {
 };
 
 export const cancelBooking = async (id) => {
-  const res = await axiosClient.post(`/booking/${id}/cancel`);
-  return res.data;
+  try {
+    const res = await axiosClient.post(`/booking/${id}/cancel`);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
 };
 
 export const getAllBookings = async () => {

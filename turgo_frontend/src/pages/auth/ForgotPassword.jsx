@@ -21,7 +21,7 @@ const ForgotPassword = () => {
 
       setMessage(
         err.response?.data?.message ||
-        "Terjadi kesalahan"
+        "Email tidak ditemukan. Silakan periksa kembali email yang Anda masukkan."
       );
 
     }

@@ -86,17 +86,22 @@ class UserController extends Controller
 
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
-            'email' => 'required|email',
+            'username' => 'required|string|max:255|unique:user,username,' . $user->id,
+            'email' => 'required|email|unique:user,email,' . $user->id,
             'nomor_telepon' => 'nullable|string|max:20',
             'foto_profil' => 'nullable|image|max:2048'
         ]);
 
         if ($request->hasFile('foto_profil')) {
-            $path = $request->file('foto_profil')->store('profiles', 'public');
+
+            $path = $request->file('foto_profil')
+                ->store('profiles', 'public');
+
             $user->foto_profil = $path;
         }
 
         $user->nama_lengkap = $request->nama_lengkap;
+        $user->username = $request->username;
         $user->email = $request->email;
         $user->nomor_telepon = $request->nomor_telepon;
 

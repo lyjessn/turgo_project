@@ -22,4 +22,5 @@ class RiwayatSaldo extends Model
     {
         return $this->belongsTo(Booking::class);
     }
+    
 }

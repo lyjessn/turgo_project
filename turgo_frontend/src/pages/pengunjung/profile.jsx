@@ -14,6 +14,7 @@ const Profile = () => {
     const [activeBookings, setActiveBookings] = useState([]);
     const [historyBookings, setHistoryBookings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
     const [modal, setModal] = useState({
         show: false,
@@ -31,6 +32,7 @@ const Profile = () => {
 
     const [editForm, setEditForm] = useState({
         nama_lengkap: "",
+        username: "",
         email: "",
         nomor_telepon: "",
         foto_profil: null
@@ -126,23 +128,29 @@ const Profile = () => {
 
     const handleUpdateProfile = async () => {
         try {
+            setSubmitting(true);
+
             const formData = new FormData();
 
             Object.keys(editForm).forEach(key => {
-            if (editForm[key] !== null)
-                formData.append(key, editForm[key]);
+                if (editForm[key] !== null)
+                    formData.append(key, editForm[key]);
             });
 
             const res = await updateProfile(formData);
 
             setUser(res.data);
+
             setModal({
                 show: true,
                 type: "success",
                 message: "Profil berhasil diperbarui"
             });
+
             setEditMode(false);
+
         } catch (err) {
+
             console.error(err.response?.data);
 
             setModal({
@@ -151,6 +159,8 @@ const Profile = () => {
                 message: "Gagal memperbarui profil"
             });
 
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -350,7 +360,17 @@ const Profile = () => {
 
                         <button
                         className="btn-primary"
-                        onClick={() => setEditMode(true)}
+                        onClick={() => {
+                            setEditForm({
+                                nama_lengkap: user?.nama_lengkap || "",
+                                username: user?.username || "",
+                                email: user?.email || "",
+                                nomor_telepon: user?.nomor_telepon || "",
+                                foto_profil: null
+                            });
+
+                            setEditMode(true);
+                        }}
                         >
                         Edit Profil
                         </button>
@@ -384,6 +404,20 @@ const Profile = () => {
                                 value={editForm.nama_lengkap}
                                 onChange={(e)=>
                                 setEditForm({...editForm,nama_lengkap:e.target.value})
+                                }
+                            />
+                        </div>
+
+                        <div className="column">
+                            <label>Username</label>
+                            <input
+                                type="text"
+                                value={editForm.username}
+                                onChange={(e)=>
+                                    setEditForm({
+                                        ...editForm,
+                                        username:e.target.value
+                                    })
                                 }
                             />
                         </div>
@@ -427,8 +461,9 @@ const Profile = () => {
                         <button
                             className="btn-primary"
                             onClick={handleUpdateProfile}
+                            disabled={submitting}
                         >
-                        Simpan
+                            {submitting ? "Mengupdate..." : "Simpan"}
                         </button>
 
                         <button
